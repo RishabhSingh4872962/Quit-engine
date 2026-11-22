@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true
     },
@@ -22,7 +22,18 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-localization"
+      "expo-localization",
+      "expo-system-ui",
+      [
+        "expo-font",
+        {
+          "fonts": [
+            "./node_modules/@expo-google-fonts/baloo-2/600SemiBold/Baloo2_600SemiBold.ttf",
+            "./node_modules/@expo-google-fonts/baloo-2/700Bold/Baloo2_700Bold.ttf",
+            "./node_modules/@expo-google-fonts/baloo-2/800ExtraBold/Baloo2_800ExtraBold.ttf"
+          ]
+        }
+      ]
     ]
   }
 }

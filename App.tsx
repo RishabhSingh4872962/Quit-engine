@@ -1,55 +1,27 @@
-import React, { useEffect, useState } from 'react';
-import { SafeAreaView, ActivityIndicator } from 'react-native';
+import './src/i18n'; // initialise translations before anything renders
+import React, { useEffect, useMemo } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { ACTIVE_HABIT as habit } from './src/habits';
-import { EMPTY, State, load, save } from './src/lib/storage';
-import { useDeviceLang } from './src/lib/i18n';
-import { LangToggle } from './src/components/LangToggle';
-import { Onboarding } from './src/screens/Onboarding';
-import { Home } from './src/screens/Home';
-import { Urge } from './src/screens/Urge';
+import * as SystemUI from 'expo-system-ui';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { readThemePref } from './src/lib/storage';
+import { Navigation, navTheme } from './src/navigation';
+import { applyThemePref, useColors } from './src/theme';
 
-type Screen = 'home' | 'urge';
+applyThemePref(readThemePref());
 
 export default function App() {
-  const [state, setState] = useState<State | null>(null);
-  const [screen, setScreen] = useState<Screen>('home');
-  const deviceLang = useDeviceLang();
+  const c = useColors();
+  const theme = useMemo(() => navTheme(c), [c]);
 
-  useEffect(() => { load(habit.id).then(setState); }, []);
-
-  const update = (patch: Partial<State>) => {
-    const next = { ...(state ?? EMPTY), ...patch };
-    setState(next);
-    void save(habit.id, next);
-  };
-
-  if (!state) return <ActivityIndicator style={{ flex: 1 }} />;
-
-  const onboarded = Object.keys(state.quizAnswers).length === habit.quiz.length;
-  const lang = state.lang ?? deviceLang;
+  // Root view colour shows during screen transitions; keep it in step with the theme.
+  useEffect(() => {
+    void SystemUI.setBackgroundColorAsync(c.bg);
+  }, [c.bg]);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
-      <StatusBar style="dark" />
-      {screen !== 'urge' && (
-        <LangToggle lang={lang} accent={habit.accent} onChange={(l) => update({ lang: l })} />
-      )}
-      {!onboarded ? (
-        <Onboarding habit={habit} lang={lang} onDone={(quizAnswers) => update({ quizAnswers })} />
-      ) : screen === 'urge' ? (
-        <Urge habit={habit} lang={lang} onDone={(resisted) => {
-          if (resisted) update({ urgesResisted: state.urgesResisted + 1 });
-          setScreen('home');
-        }} />
-      ) : (
-        <Home
-          habit={habit} lang={lang} state={state}
-          onStart={() => update({ streakStart: Date.now() })}
-          onRelapse={() => update({ relapses: [...state.relapses, Date.now()], streakStart: Date.now() })}
-          onUrge={() => setScreen('urge')}
-        />
-      )}
-    </SafeAreaView>
+    <SafeAreaProvider>
+      <StatusBar style={c.scheme === 'dark' ? 'light' : 'dark'} />
+      <Navigation theme={theme} />
+    </SafeAreaProvider>
   );
 }
