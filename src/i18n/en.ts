@@ -30,7 +30,7 @@ export const en = {
   onboarding: {
     chooseLanguage: 'Choose your language',
     getStarted: 'Get started',
-    privacy: 'Everything stays private on your phone.',
+    privacy: 'Your progress stays on your phone.',
     step: 'Question {{n}} of {{total}}',
     back: 'Back',
   },
@@ -323,6 +323,7 @@ export const en = {
     notificationsOff: 'Notifications are turned off for this app.',
     turnOn: 'Turn on',
     privacy: 'Your progress is stored only on this phone.',
+    privacyPolicy: 'Privacy policy',
     version: 'Version {{version}}',
   },
 } as const;

@@ -31,7 +31,7 @@ export const hi: Shape<typeof en> = {
   onboarding: {
     chooseLanguage: 'अपनी भाषा चुनें',
     getStarted: 'शुरू करें',
-    privacy: 'सब कुछ आपके फ़ोन पर ही निजी रहता है।',
+    privacy: 'आपकी प्रगति आपके फ़ोन पर ही रहती है।',
     step: 'सवाल {{n}} / {{total}}',
     back: 'पीछे',
   },
@@ -324,6 +324,7 @@ export const hi: Shape<typeof en> = {
     notificationsOff: 'इस ऐप के नोटिफ़िकेशन बंद हैं।',
     turnOn: 'चालू करें',
     privacy: 'आपकी प्रगति सिर्फ़ इसी फ़ोन पर सेव होती है।',
+    privacyPolicy: 'गोपनीयता नीति',
     version: 'वर्ज़न {{version}}',
   },
 };

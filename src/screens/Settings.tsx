@@ -43,6 +43,9 @@ import { Screen } from '../components/Screen';
 import { Segmented } from '../components/Segmented';
 import { ToggleRow } from '../components/ToggleRow';
 
+// Hosted on Firebase Hosting (hosting/privacy.html). Also linked from the Play Store listing.
+const PRIVACY_URL = 'https://quit-engine-app.web.app/privacy';
+
 export function SettingsScreen() {
   const { t } = useTranslation();
   const lang = useLang();
@@ -97,6 +100,9 @@ export function SettingsScreen() {
           <Ionicons name="lock-closed" size={14} color={c.textMuted} />
           <AppText variant="caption">{user ? t('backup.privacyOn') : t('settings.privacy')}</AppText>
         </View>
+        <Pressable onPress={() => void Linking.openURL(PRIVACY_URL)} hitSlop={8} accessibilityRole="link">
+          <AppText variant="caption" style={s.policy}>{t('settings.privacyPolicy')}</AppText>
+        </Pressable>
         <AppText variant="caption">{t('settings.version', { version: Constants.expoConfig?.version ?? '' })}</AppText>
       </View>
     </Screen>
@@ -445,5 +451,6 @@ const s = StyleSheet.create({
   link: { fontSize: 14, fontWeight: '700' },
   backupLinks: { flexDirection: 'row', justifyContent: 'space-between', gap: 12 },
   footer: { alignItems: 'center', gap: 6, marginTop: 18 },
+  policy: { textDecorationLine: 'underline' },
   privacy: { flexDirection: 'row', alignItems: 'center', gap: 6 },
 });

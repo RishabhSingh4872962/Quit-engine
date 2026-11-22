@@ -30,6 +30,9 @@ Needs a development build (native modules: MMKV, Reanimated, Firebase), not Expo
 - `src/widget/` — Android home-screen streak widget (react-native-android-widget). Shows days only, never the habit name. Refreshed from `actions.ts` and hourly.
 - `src/lib/premium.ts` + `src/screens/Paywall.tsx` — soft paywall via RevenueCat (entitlement `premium`). Core app is free; Premium today = Reels screen time. Offered once, only when it has value for the user; always closable; no paywall/purchase analytics. Debug builds without `EXPO_PUBLIC_REVENUECAT_ANDROID_KEY` (see `.env.example`) run a test mode with fake plans.
 - `plugins/` — small local config plugins (e.g. Gradle heap), since `android/` is generated.
+- `app.config.ts` + `eas.json` — EAS profiles (development / preview APK / production AAB, version codes managed by EAS). `google-services.json` is not in git; EAS gets it from the `GOOGLE_SERVICES_JSON` file env var.
+- `hosting/` (Firebase Hosting: privacy policy, account deletion) + `docs/play-store/` (launch checklist, Data Safety, Accessibility declaration, store listing). When data handling, permissions or the accessibility service change, update these too.
+- Screen-view analytics use an allow-list of habit-neutral screens (`src/lib/telemetry.ts`); new screens are not logged unless added there.
 - `modules/reel-guard/` — local Expo module (Kotlin) with an Accessibility Service that counts reels/shorts and time inside the reels player, per app per day, on the phone only. Detection = view-ID rules (JSON; defaults in `ReelStore.kt`, override via Remote Config `reel_rules`). YouTube Shorts counts by page change, Instagram by pager scroll (`clips_viewer_view_pager`); both verified on a vivo V2312 (Android 15). Debug log: `adb shell run-as com.quitengine.app cat files/reel_guard_debug.log` (vivo hides app logcat). Instagram must be reopened once after the service is enabled. Force-stopping our app makes Android switch the service off (the app shows Off and the turn-on button). Needs the disclosure screen `ReelCounterSetup` before enabling (Play policy). Don't test with `uiautomator dump` while it runs: it disconnects the service.
 - `modules/screen-time/` — local Expo module (Kotlin) reading Android usage stats. A habit opts in with `screenTime.apps` in its config (Reels does). Usage data never leaves the phone and must not go to analytics.
 
@@ -46,7 +49,7 @@ Focus: Reels addiction (reference: Regain). Reels plan, in order:
 - Phase 5: focus timer, accountability partner/group, website blocking, more languages
 Store/launch:
 1. Set up RevenueCat + Play Console products (subscriptions `premium` monthly/yearly), add the key, test on a Play testing track
-2. Play Store launch: EAS build/submit, Data Safety form, privacy policy, account deletion, app icon
+2. Play Store launch: prep done (icon + splash, eas.json, policy pages, form answers in docs/play-store). Open: fill contact placeholders + deploy hosting, Expo account + `eas init`, Play Console app, closed test (12 testers / 14 days), Firebase SHA-1s of the Play signing key
 3. Later: iOS Screen Time API for Reels
 4. Separate later project: a motorcycle/bicycle/running ride app with a Rust core (`ride-core`: distance, pace, route simplification, crash detection) wrapped for React Native via UniFFI. Not part of this repo.
 

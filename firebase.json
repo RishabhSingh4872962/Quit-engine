@@ -10,5 +10,13 @@
   "react-native": {
     "crashlytics_debug_enabled": false,
     "google_analytics_adid_collection_enabled": false
+  },
+  "hosting": {
+    "public": "hosting",
+    "cleanUrls": true,
+    "ignore": [
+      "firebase.json",
+      "**/.*"
+    ]
   }
 }
