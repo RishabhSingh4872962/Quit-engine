@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { HabitConfig, Lang } from '../habits/types';
+import { StringKey, t } from '../lib/i18n';
 
-const PHASES = [
-  { en: 'Breathe in', hi: 'साँस अंदर', secs: 4 },
-  { en: 'Hold', hi: 'रोकें', secs: 4 },
-  { en: 'Breathe out', hi: 'साँस बाहर', secs: 6 },
-] as const;
+const PHASES: { label: StringKey; secs: number }[] = [
+  { label: 'breatheIn', secs: 4 },
+  { label: 'hold', secs: 4 },
+  { label: 'breatheOut', secs: 6 },
+];
 const TOTAL_CYCLES = 4;
 
 export function Urge({ habit, lang, onDone }: { habit: HabitConfig; lang: Lang; onDone: (resisted: boolean) => void }) {
@@ -31,18 +32,18 @@ export function Urge({ habit, lang, onDone }: { habit: HabitConfig; lang: Lang; 
     <View style={s.wrap}>
       {finished ? (
         <>
-          <Text style={s.big}>{lang === 'hi' ? 'शाबाश!' : 'Well done!'}</Text>
-          <Text style={s.sub}>{lang === 'hi' ? 'क्या तलब कम हुई?' : 'Did the urge pass?'}</Text>
+          <Text style={s.big}>{t(lang, 'wellDone')}</Text>
+          <Text style={s.sub}>{t(lang, 'urgePassed')}</Text>
           <Pressable style={[s.btn, { backgroundColor: habit.accent }]} onPress={() => onDone(true)}>
-            <Text style={s.btnText}>{lang === 'hi' ? 'हाँ' : 'Yes'}</Text>
+            <Text style={s.btnText}>{t(lang, 'yes')}</Text>
           </Pressable>
           <Pressable onPress={() => onDone(false)}>
-            <Text style={s.skip}>{lang === 'hi' ? 'अभी नहीं' : 'Not yet'}</Text>
+            <Text style={s.skip}>{t(lang, 'notYet')}</Text>
           </Pressable>
         </>
       ) : (
         <>
-          <Text style={[s.big, { color: habit.accent }]}>{PHASES[phase][lang]}</Text>
+          <Text style={[s.big, { color: habit.accent }]}>{t(lang, PHASES[phase].label)}</Text>
           <Text style={s.count}>{left}</Text>
           <Text style={s.sub}>{cycle + 1} / {TOTAL_CYCLES}</Text>
         </>

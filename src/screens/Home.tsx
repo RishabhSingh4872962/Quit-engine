@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { HabitConfig, Lang } from '../habits/types';
 import { State, streakDays } from '../lib/storage';
+import { t } from '../lib/i18n';
 
 export function Home({ habit, lang, state, onStart, onRelapse, onUrge }: {
   habit: HabitConfig; lang: Lang; state: State;
@@ -15,21 +16,21 @@ export function Home({ habit, lang, state, onStart, onRelapse, onUrge }: {
       <Text style={s.title}>{habit.name[lang]}</Text>
       <Text style={s.tag}>{habit.tagline[lang]}</Text>
       <Text style={[s.days, { color: habit.accent }]}>{days}</Text>
-      <Text style={s.label}>{lang === 'hi' ? 'दिन' : 'days'}</Text>
+      <Text style={s.label}>{t(lang, 'days')}</Text>
       {next !== undefined && (
-        <Text style={s.next}>{lang === 'hi' ? `अगला लक्ष्य: ${next} दिन` : `Next milestone: ${next} days`}</Text>
+        <Text style={s.next}>{t(lang, 'nextMilestone', { n: next })}</Text>
       )}
       {state.streakStart === null ? (
         <Pressable style={[s.btn, { backgroundColor: habit.accent }]} onPress={onStart}>
-          <Text style={s.btnText}>{lang === 'hi' ? 'शुरू करें' : 'Start streak'}</Text>
+          <Text style={s.btnText}>{t(lang, 'startStreak')}</Text>
         </Pressable>
       ) : (
         <>
           <Pressable style={[s.btn, { backgroundColor: habit.accent }]} onPress={onUrge}>
-            <Text style={s.btnText}>{lang === 'hi' ? 'मुझे तलब हो रही है' : "I'm having an urge"}</Text>
+            <Text style={s.btnText}>{t(lang, 'urgeButton')}</Text>
           </Pressable>
           <Pressable onPress={onRelapse}>
-            <Text style={s.relapse}>{lang === 'hi' ? 'मैं फिसल गया' : 'I slipped'}</Text>
+            <Text style={s.relapse}>{t(lang, 'slipped')}</Text>
           </Pressable>
         </>
       )}

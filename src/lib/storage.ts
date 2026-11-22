@@ -1,13 +1,15 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Lang } from '../habits/types';
 
 export interface State {
   quizAnswers: Record<string, number>;
   streakStart: number | null; // epoch ms
   relapses: number[]; // epoch ms
   urgesResisted: number;
+  lang: Lang | null; // null = follow device language
 }
 
-export const EMPTY: State = { quizAnswers: {}, streakStart: null, relapses: [], urgesResisted: 0 };
+export const EMPTY: State = { quizAnswers: {}, streakStart: null, relapses: [], urgesResisted: 0, lang: null };
 const key = (habitId: string) => `quit-engine:${habitId}`;
 
 export async function load(habitId: string): Promise<State> {
