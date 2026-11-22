@@ -22,6 +22,5 @@ Create `src/habits/<id>.ts` (see `reels.ts`), register it in `src/habits/index.t
 store name to `app.config.ts`.
 
 ## Next
-- Milestone screen + local notifications
 - Paywall after onboarding (RevenueCat)
 - Reels mode: Android UsageStats screen-time tracking

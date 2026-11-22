@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { createMMKV, useMMKVObject, useMMKVString } from 'react-native-mmkv';
+import { createMMKV, useMMKVBoolean, useMMKVObject, useMMKVString } from 'react-native-mmkv';
 import { ACTIVE_HABIT } from '../habits';
 import { Lang } from '../habits/types';
 
@@ -62,4 +62,39 @@ export const readThemePref = () => toThemePref(storage.getString(THEME_KEY));
 export function useThemePref(): ThemePref {
   const [v] = useMMKVString(THEME_KEY, storage);
   return toThemePref(v);
+}
+
+// ---------- Notification preferences ----------
+
+export interface CheckinPref {
+  enabled: boolean;
+  hour: number; // 0–23, local time
+  minute: number;
+}
+
+export const DEFAULT_CHECKIN: CheckinPref = { enabled: true, hour: 21, minute: 0 };
+
+const CHECKIN_KEY = 'prefs.checkin';
+const MILESTONE_ALERTS_KEY = 'prefs.milestoneAlerts';
+
+export function readCheckin(): CheckinPref {
+  const raw = storage.getString(CHECKIN_KEY);
+  return raw ? { ...DEFAULT_CHECKIN, ...JSON.parse(raw) } : DEFAULT_CHECKIN;
+}
+
+export function writeCheckin(patch: Partial<CheckinPref>) {
+  storage.set(CHECKIN_KEY, JSON.stringify({ ...readCheckin(), ...patch }));
+}
+
+export function useCheckin(): CheckinPref {
+  const [v] = useMMKVObject<CheckinPref>(CHECKIN_KEY, storage);
+  return useMemo(() => ({ ...DEFAULT_CHECKIN, ...v }), [v]);
+}
+
+export const readMilestoneAlerts = () => storage.getBoolean(MILESTONE_ALERTS_KEY) ?? true;
+export const writeMilestoneAlerts = (on: boolean) => storage.set(MILESTONE_ALERTS_KEY, on);
+
+export function useMilestoneAlerts(): boolean {
+  const [v] = useMMKVBoolean(MILESTONE_ALERTS_KEY, storage);
+  return v ?? true;
 }

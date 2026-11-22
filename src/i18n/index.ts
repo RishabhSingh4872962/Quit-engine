@@ -1,4 +1,4 @@
-import { createInstance } from 'i18next';
+import { createInstance, TFunction } from 'i18next';
 import { initReactI18next, useTranslation } from 'react-i18next';
 import { getLocales } from 'expo-localization';
 import { AppState } from 'react-native';
@@ -36,6 +36,14 @@ AppState.addEventListener('change', (state) => {
 export function useLang(): Lang {
   const { i18n: instance } = useTranslation();
   return instance.language === 'hi' ? 'hi' : 'en';
+}
+
+/** 7 → "1 week", 30 → "1 month", 365 → "1 year", anything else → "n days". */
+export function milestoneLabel(days: number, t: TFunction) {
+  if (days >= 365 && days % 365 === 0) return t('units.year', { count: days / 365 });
+  if (days >= 30 && days % 30 === 0) return t('units.month', { count: days / 30 });
+  if (days >= 7 && days % 7 === 0) return t('units.week', { count: days / 7 });
+  return t('units.day', { count: days });
 }
 
 export function setLanguage(lang: Lang) {

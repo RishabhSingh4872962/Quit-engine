@@ -6,8 +6,8 @@ import type { ConfigContext, ExpoConfig } from 'expo/config';
  * The package name is permanent once published.
  */
 const HABITS = {
-  reels: 'Reels Quitter',
-  nicotine: 'Quit Nicotine',
+  reels: { name: 'Reels Quitter', accent: '#6C5CE7' },
+  nicotine: { name: 'Quit Nicotine', accent: '#00B894' },
 } as const;
 
 type HabitId = keyof typeof HABITS;
@@ -20,11 +20,25 @@ export default ({ config }: ConfigContext): ExpoConfig => {
   }
   const appId = `com.quitengine.${id}`;
 
+  const habit = HABITS[id];
+
   return {
     ...config,
-    name: HABITS[id],
+    name: habit.name,
     slug: `quit-engine-${id}`,
     android: { ...config.android, package: appId },
     ios: { ...config.ios, bundleIdentifier: appId },
+    plugins: [
+      ...(config.plugins ?? []),
+      '@react-native-community/datetimepicker',
+      [
+        'expo-notifications',
+        {
+          icon: './assets/android-icon-monochrome.png', // small status-bar icon: white on transparent
+          color: habit.accent,
+          enableRemoteNotifications: false, // local notifications only for now
+        },
+      ],
+    ],
   };
 };

@@ -8,7 +8,9 @@ import { useTranslation } from 'react-i18next';
 import { ACTIVE_HABIT } from '../habits';
 import { useHabitState } from '../lib/storage';
 import { Palette } from '../theme';
+import { CelebrateScreen } from '../screens/Celebrate';
 import { HomeScreen } from '../screens/Home';
+import { MilestonesScreen } from '../screens/Milestones';
 import { OnboardingScreen } from '../screens/Onboarding';
 import { SettingsScreen } from '../screens/Settings';
 import { UrgeScreen } from '../screens/Urge';
@@ -33,6 +35,7 @@ const Tabs = createBottomTabNavigator({
   screenOptions: { headerShown: false },
   screens: {
     Home: { screen: HomeScreen, options: tabOptions('home', 'home-outline', 'home') },
+    Milestones: { screen: MilestonesScreen, options: tabOptions('milestones', 'trophy-outline', 'trophy') },
     Settings: { screen: SettingsScreen, options: tabOptions('settings', 'settings-outline', 'settings') },
   },
 });
@@ -55,6 +58,7 @@ const RootStack = createNativeStackNavigator({
       screens: {
         Main: Tabs,
         Urge: { screen: UrgeScreen, options: { presentation: 'fullScreenModal', animation: 'fade_from_bottom' } },
+        Celebrate: { screen: CelebrateScreen, options: { presentation: 'transparentModal', animation: 'fade' } },
       },
     },
   },

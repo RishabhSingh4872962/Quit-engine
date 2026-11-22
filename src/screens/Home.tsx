@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useNavigation } from '@react-navigation/native';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { ACTIVE_HABIT as habit } from '../habits';
 import { useLang } from '../i18n';
@@ -27,6 +27,15 @@ export function HomeScreen() {
   const started = state.streakStart !== null;
   const { days, next, progress } = milestoneProgress(state.streakStart, habit.milestones, now);
   const best = Math.max(state.bestStreakDays, days);
+  const focused = useIsFocused();
+
+  // Celebrate the highest milestone reached since the last celebration (also covers days away from the app).
+  const toCelebrate = [...habit.milestones].reverse().find((m) => started && m <= days && m > state.celebrated);
+  useEffect(() => {
+    if (!focused || toCelebrate === undefined) return;
+    actions.markCelebrated(toCelebrate);
+    navigation.navigate('Celebrate', { days: toCelebrate });
+  }, [focused, toCelebrate, navigation]);
 
   const status = !started
     ? t('home.notStarted')
@@ -67,7 +76,7 @@ export function HomeScreen() {
             <Button variant="ghost" label={t('home.slipped')} onPress={confirmSlip} />
           </>
         ) : (
-          <Button icon="play" label={t('home.startStreak')} onPress={actions.startStreak} />
+          <Button icon="play" label={t('home.startStreak')} onPress={() => void actions.startStreak()} />
         )}
       </Animated.View>
     </Screen>
