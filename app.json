@@ -65,7 +65,27 @@
           }
         }
       ],
-      "expo-sharing"
+      "expo-sharing",
+      [
+        "react-native-android-widget",
+        {
+          "widgets": [
+            {
+              "name": "Streak",
+              "label": "Streak",
+              "description": "Your current streak in days",
+              "minWidth": "110dp",
+              "previewImage": "./assets/widget-preview/streak.png",
+              "minHeight": "110dp",
+              "targetCellWidth": 2,
+              "targetCellHeight": 2,
+              "resizeMode": "horizontal|vertical",
+              "widgetCategory": "home_screen",
+              "updatePeriodMillis": 3600000
+            }
+          ]
+        }
+      ]
     ]
   }
 }

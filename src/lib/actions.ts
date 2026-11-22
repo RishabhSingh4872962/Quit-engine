@@ -13,6 +13,7 @@ import {
 } from './storage';
 import { streakDays } from './streak';
 import { track } from './telemetry';
+import { updateStreakWidget } from '../widget';
 
 /** Every change to habit progress goes through here, so side effects (notifications, sync) have one home. */
 export const actions = {
@@ -25,6 +26,7 @@ export const actions = {
     writeTracked(next);
     writeActive(entries[0].id);
     track(tracked.length ? 'habit_added' : 'onboarding_complete', { habit_count: next.length });
+    updateStreakWidget();
   },
 
   /** Stops tracking a habit. Its data is kept, so adding it back restores the streak. */
@@ -35,15 +37,18 @@ export const actions = {
     if (readActive() === undefined || readActive() === id) writeActive(remaining[0]);
     track('habit_removed', { habit_count: remaining.length });
     void syncNotifications();
+    updateStreakWidget();
   },
 
   setActive(id: HabitId) {
     writeActive(id);
+    updateStreakWidget(); // the widget follows the selected habit
   },
 
   async startStreak(id: HabitId) {
     writeState(id, { streakStart: Date.now(), celebrated: 0 });
     track('streak_started');
+    updateStreakWidget();
     // Ask at a meaningful moment rather than on first launch.
     await requestPermission();
     await syncNotifications();
@@ -62,6 +67,7 @@ export const actions = {
     });
     track('slip_logged');
     void syncNotifications();
+    updateStreakWidget();
   },
 
   resistUrge(id: HabitId) {

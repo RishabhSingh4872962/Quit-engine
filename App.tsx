@@ -10,13 +10,18 @@ import { routeNotificationTaps, setupNotifications, syncNotifications } from './
 import { initRemoteConfig } from './src/lib/remoteConfig';
 import { readThemePref } from './src/lib/storage';
 import { trackScreen } from './src/lib/telemetry';
+import { updateStreakWidget } from './src/widget';
 import { Navigation, navTheme } from './src/navigation';
 import { applyThemePref, useColors } from './src/theme';
 
 applyThemePref(readThemePref());
 initRemoteConfig();
-// Signed-in users get a quiet backup whenever the app goes to the background.
-AppState.addEventListener('change', (state) => state === 'background' && backupInBackground());
+// Going to the background: quiet backup for signed-in users, and a fresh widget.
+AppState.addEventListener('change', (state) => {
+  if (state !== 'background') return;
+  backupInBackground();
+  updateStreakWidget();
+});
 // Create the Android channel, then refresh schedules (permission may have changed in system settings).
 void setupNotifications().then(syncNotifications);
 routeNotificationTaps();

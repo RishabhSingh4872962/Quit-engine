@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { Alert, AppState, Linking, Pressable, StyleSheet, View } from 'react-native';
+import { Alert, AppState, Linking, Platform, Pressable, StyleSheet, View } from 'react-native';
 import Constants from 'expo-constants';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -23,6 +23,7 @@ import { reportError } from '../lib/telemetry';
 import { hasPermission, requestPermission, syncNotifications } from '../lib/notifications';
 import { ThemePref, useCheckin, useMilestoneAlerts, useThemePref, useTracked } from '../lib/storage';
 import { makePalette, radius, setThemePref, useColors } from '../theme';
+import { pinStreakWidget } from '../widget';
 import { AppText } from '../components/AppText';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
@@ -58,6 +59,18 @@ export function SettingsScreen() {
       </Section>
 
       <NotificationSettings />
+
+      {Platform.OS === 'android' && (
+        <Section icon="apps" title={t('widget.title')}>
+          <AppText variant="muted">{t('widget.body')}</AppText>
+          <Button
+            variant="soft"
+            icon="add"
+            label={t('widget.add')}
+            onPress={() => void pinStreakWidget().then((ok) => ok || Alert.alert(t('widget.title'), t('widget.manual')))}
+          />
+        </Section>
+      )}
 
       {remote.cloudBackupEnabled() && <BackupSettings />}
 

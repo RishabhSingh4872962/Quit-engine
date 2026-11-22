@@ -26,6 +26,7 @@ import { HabitId } from '../habits/types';
 import { syncNotifications } from './notifications';
 import { readActive, readState, readTracked, storage, writeActive, writeState, writeTracked } from './storage';
 import { reportError, track } from './telemetry';
+import { updateStreakWidget } from '../widget';
 
 /**
  * Opt-in cloud backup: Google sign-in + Firestore (Enterprise DB "backup", asia-south1).
@@ -166,6 +167,7 @@ export function restoreBackup(backup: CloudBackup) {
   storage.set(LAST_BACKUP_KEY, backup.updatedAt || Date.now());
   track('backup_restored');
   void syncNotifications();
+  updateStreakWidget();
 }
 
 /**

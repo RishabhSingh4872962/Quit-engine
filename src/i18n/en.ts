@@ -116,6 +116,12 @@ export const en = {
     errorBody: 'Please check your internet connection and try again.',
     privacyOn: 'Your progress is backed up to your Google account (stored in India).',
   },
+  widget: {
+    title: 'Home-screen widget',
+    body: 'Shows your streak in days, without naming the habit.',
+    add: 'Add to home screen',
+    manual: 'Long-press an empty spot on your home screen, tap Widgets, then find Quit Engine.',
+  },
   share: {
     title: 'Share your streak',
     showHabit: 'Show the habit name',
