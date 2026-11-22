@@ -41,6 +41,8 @@ Profiles in [`eas.json`](../../eas.json): `development` (dev client APK), `previ
 | Content rating | Questionnaire: utility/productivity; answer *yes* to "references to tobacco" (quitting cigarettes/gutka) and *no* to everything else |
 | Data safety | [data-safety.md](data-safety.md) |
 | Sensitive permissions → Accessibility API | [accessibility-declaration.md](accessibility-declaration.md), plus the unlisted YouTube video |
+| Exact alarms | Nothing to declare: the app uses `SCHEDULE_EXACT_ALARM` (the user allows it in Android settings), not the restricted `USE_EXACT_ALARM`. Used only so the "focus session complete" alert rings on time |
+| Foreground service permissions → Media playback | "Focus sounds, music and guided audio that the user starts keep playing with the screen off; the media notification lets them pause or stop it." Add a short video: Focus tab → play Rain → lock the phone → media notification → pause |
 | Health apps declaration | Habit tracking that isn't medical. Pick the closest non-medical option; never "medical device" |
 | Financial features, Government, News | None |
 | Account deletion | `https://quit-engine-app.web.app/delete-account` |
@@ -52,7 +54,21 @@ Profiles in [`eas.json`](../../eas.json): `development` (dev client APK), `previ
 3. `npx eas-cli env:create --name EXPO_PUBLIC_REVENUECAT_ANDROID_KEY --value <public SDK key> --environment production --environment preview`
 4. Test with a license-tester account on the internal track. Builds without the key show no paywall; only debug builds use the test mode.
 
-## 6. Testing and release
+## 6. Focus sounds, music and videos
+Extra content is listed in the Remote Config parameter `media_catalog` (JSON array; format in
+`src/media/catalog.ts`), with files in Firebase Storage or any https host. Only use files you're allowed to
+use in an app: your own, CC0, or a licence that allows in-app streaming (many "free" music sites forbid
+offering their tracks as standalone music). Put the credit in `by`. Example:
+
+```json
+[
+  { "id": "lofi-1", "kind": "music", "title": { "en": "Late night lofi", "hi": "देर रात लो-फ़ाई" }, "by": "Artist name", "url": "https://firebasestorage.googleapis.com/…" },
+  { "id": "urge-surf", "kind": "guided", "title": { "en": "Ride the urge", "hi": "तलब की लहर" }, "minutes": 5, "url": "https://…/urge-surf.m4a" },
+  { "id": "calm-sea", "kind": "video", "title": { "en": "Calm sea" }, "minutes": 3, "url": "https://…/calm-sea.mp4" }
+]
+```
+
+## 7. Testing and release
 - Personal developer accounts: a **closed test with at least 12 testers for 14 days in a row** is required before
   production access.
 - Before each release: `npx tsc --noEmit`, `npx eslint .`, a `preview` APK on a real phone. Check the reel counter,

@@ -17,6 +17,8 @@ type Events = {
   backup_enabled: undefined;
   backup_restored: undefined;
   account_deleted: undefined;
+  focus_started: { minutes: number };
+  focus_completed: { minutes: number };
 };
 
 export function track<E extends keyof Events>(name: E, ...params: Events[E] extends undefined ? [] : [Events[E]]) {
@@ -31,7 +33,7 @@ export function track<E extends keyof Events>(name: E, ...params: Events[E] exte
  * Screens shared by every habit. Reel screens (ReelStats, Pause…) would reveal the habit and
  * Paywall would be purchase analytics, so any screen not listed here is never logged.
  */
-const NEUTRAL_SCREENS = new Set(['Onboarding', 'Home', 'Milestones', 'Settings', 'Urge', 'Celebrate', 'AddHabit', 'Share']);
+const NEUTRAL_SCREENS = new Set(['Onboarding', 'Home', 'Focus', 'Milestones', 'Settings', 'Urge', 'Celebrate', 'AddHabit', 'Share']);
 
 /** Route names only (Home, Milestones, Urge…), never habit names. */
 export function trackScreen(name: string) {

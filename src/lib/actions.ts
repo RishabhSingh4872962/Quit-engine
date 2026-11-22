@@ -19,6 +19,16 @@ import { streakDays } from './streak';
 import { HABITS } from '../habits';
 import { BlockPrefs, syncReelBlock, writeBlock } from './blocking';
 import {
+  addFocusMinutes,
+  focusEnd,
+  FocusPrefs,
+  readSession,
+  writeExactAsked,
+  writeFocusDone,
+  writeFocusPrefs,
+  writeSession,
+} from './focus';
+import {
   dayTotals,
   endOfDay,
   localDay,
@@ -193,4 +203,73 @@ export const actions = {
     if (on) await requestPermission();
     await syncNotifications();
   },
+
+  /** Starts a focus session. With blockReels (Premium) the reel service blocks reels until it ends. */
+  startFocus(minutes: number, blockReels: boolean) {
+    writeFocusPrefs({ minutes, blockReels });
+    writeFocusDone(null);
+    writeSession({ startedAt: Date.now(), minutes, blockReels });
+    armFocusTimer();
+    syncReelBlock();
+    void syncNotifications(); // "focus complete" alert at the end
+    track('focus_started', { minutes });
+  },
+
+  /** Ends the session early. The minutes so far still count. */
+  endFocus() {
+    const s = readSession();
+    if (!s) return;
+    const now = Date.now();
+    const minutes = Math.floor((Math.min(now, focusEnd(s)) - s.startedAt) / 60_000);
+    addFocusMinutes(now, minutes);
+    writeFocusDone(minutes > 0 ? { minutes, complete: false } : null);
+    finishFocus();
+  },
+
+  /**
+   * Completes the session once its time is up (call on app start/resume and from the timer).
+   * JS timers don't run in the background, so the OS notification covers the exact moment.
+   */
+  checkFocus() {
+    const s = readSession();
+    if (!s) return;
+    if (Date.now() < focusEnd(s)) return armFocusTimer();
+    addFocusMinutes(focusEnd(s), s.minutes);
+    writeFocusDone({ minutes: s.minutes, complete: true });
+    finishFocus();
+    track('focus_completed', { minutes: s.minutes });
+  },
+
+  /** The "end sessions on time?" question is asked at most once. */
+  markExactAlarmsAsked() {
+    writeExactAsked();
+  },
+
+  dismissFocusDone() {
+    writeFocusDone(null);
+  },
+
+  setFocusPrefs(patch: Partial<FocusPrefs>) {
+    writeFocusPrefs(patch);
+  },
 };
+
+let focusTimer: ReturnType<typeof setTimeout> | null = null;
+
+/**
+ * Completes the session on time while the app is open. Hops of at most a minute instead of one
+ * long timer (long timers are unreliable on Android); checkFocus re-arms until the end.
+ */
+function armFocusTimer() {
+  if (focusTimer) clearTimeout(focusTimer);
+  const s = readSession();
+  const wait = s ? focusEnd(s) - Date.now() + 250 : 0;
+  focusTimer = s ? setTimeout(() => actions.checkFocus(), Math.max(0, Math.min(wait, 60_000))) : null;
+}
+
+function finishFocus() {
+  writeSession(null);
+  armFocusTimer();
+  syncReelBlock(); // lifts the focus block (other blocking rules stay)
+  void syncNotifications(); // drops the pending "focus complete" alert
+}

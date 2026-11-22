@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useMMKVString } from 'react-native-mmkv';
 import ReelGuard from '../../modules/reel-guard';
 import i18n from '../i18n';
+import { focusEnd, readSession } from './focus';
 import { readPremium } from './premium';
 import { storage } from './storage';
 import { reportError } from './telemetry';
@@ -98,12 +99,15 @@ export function syncReelBlock() {
           text: i18n.t('blocking.studyNote'),
         }
       : undefined;
+    // A focus session with "pause reels" blocks all reels until it ends, like exam mode.
+    const focus = readSession();
+    const until = Math.max(p.examUntil, focus?.blockReels ? focusEnd(focus) : 0);
     // Study time still blocks reels everywhere; study mode adds the channel check on YouTube videos.
     const anything = p.apps.length || Object.values(p.appLimits).some((n) => n > 0) || windows.length
-      || p.examUntil > Date.now() || study;
+      || until > Date.now() || study;
     ReelGuard?.setBlock(
       readPremium() && anything
-        ? JSON.stringify({ apps: p.apps, appLimits: p.appLimits, windows, until: p.examUntil, text: i18n.t('blocking.note'), study })
+        ? JSON.stringify({ apps: p.apps, appLimits: p.appLimits, windows, until, text: i18n.t('blocking.note'), study })
         : null,
     );
   } catch (e) {

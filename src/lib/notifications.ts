@@ -3,6 +3,7 @@ import { AndroidImportance, IosAuthorizationStatus } from 'expo-notifications';
 import { Linking, Platform } from 'react-native';
 import i18n, { milestoneLabel } from '../i18n';
 import { HABITS, isHabitId } from '../habits';
+import { focusEnd, readSession } from './focus';
 import { isReelCounterOn } from './reels';
 import { readCheckin, readMilestoneAlerts, readState, readTracked, writeActive } from './storage';
 import { DAY_MS } from './streak';
@@ -33,6 +34,29 @@ export async function setupNotifications() {
 export async function hasPermission() {
   const p = await Notifications.getPermissionsAsync();
   return p.granted || p.ios?.status === IosAuthorizationStatus.PROVISIONAL;
+}
+
+/**
+ * Whether scheduled alerts arrive on time. Android 14+ denies exact alarms by default; without them
+ * a 25-minute focus session's end alert can come many minutes late.
+ */
+export async function exactAlarmsAllowed() {
+  if (Platform.OS !== 'android') return true;
+  try {
+    return (await Notifications.getExactAlarmPermissionsAsync()).granted;
+  } catch {
+    return true; // can't tell: don't nag
+  }
+}
+
+/** Opens Android's "Alarms & reminders" setting, then reschedules with whatever the user chose. */
+export async function allowExactAlarms() {
+  try {
+    await Notifications.requestExactAlarmPermissionsAsync();
+  } catch (e) {
+    reportError(e, 'exact alarms');
+  }
+  await syncNotifications();
 }
 
 /** Returns whether notifications are allowed. Asks only if the OS still lets us. */
@@ -89,6 +113,26 @@ async function rebuild() {
         hour: 19,
         minute: 0,
         channelId: CHANNEL,
+      },
+    });
+  }
+
+  // End of a running focus session; opens the Focus tab.
+  const focus = readSession();
+  if (focus && focusEnd(focus) > Date.now()) {
+    await Notifications.scheduleNotificationAsync({
+      identifier: 'focus-done',
+      content: {
+        title: t('notifications.focusTitle'),
+        body: t('notifications.focusBody'),
+        data: { url: 'quitengine://focus' },
+      },
+      // alarmClock: Android never defers it (with exact-alarm permission); a timer should ring on time.
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DATE,
+        date: new Date(focusEnd(focus)),
+        channelId: CHANNEL,
+        delivery: 'alarmClock',
       },
     });
   }

@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { useTracked } from '../lib/storage';
 import { Palette } from '../theme';
 import { CelebrateScreen } from '../screens/Celebrate';
+import { FocusScreen } from '../screens/Focus';
 import { HomeScreen } from '../screens/Home';
 import { MilestonesScreen } from '../screens/Milestones';
 import { AddHabitScreen, OnboardingScreen } from '../screens/Onboarding';
@@ -19,9 +20,10 @@ import { ReelStatsScreen } from '../screens/ReelStats';
 import { SettingsScreen } from '../screens/Settings';
 import { ShareScreen } from '../screens/Share';
 import { UrgeScreen } from '../screens/Urge';
+import { VideoScreen } from '../screens/Video';
 
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
-type TabKey = 'home' | 'milestones' | 'settings';
+type TabKey = 'home' | 'focus' | 'milestones' | 'settings';
 
 /** Label as a component so it re-renders when the language changes. */
 function TabLabel({ tab, color }: { tab: TabKey; color: string }) {
@@ -40,6 +42,8 @@ const Tabs = createBottomTabNavigator({
   screenOptions: { headerShown: false },
   screens: {
     Home: { screen: HomeScreen, options: tabOptions('home', 'home-outline', 'home') },
+    // Also opened by the "focus complete" notification: quitengine://focus
+    Focus: { screen: FocusScreen, linking: 'focus', options: tabOptions('focus', 'timer-outline', 'timer') },
     Milestones: { screen: MilestonesScreen, options: tabOptions('milestones', 'trophy-outline', 'trophy') },
     Settings: { screen: SettingsScreen, options: tabOptions('settings', 'settings-outline', 'settings') },
   },
@@ -71,6 +75,7 @@ const RootStack = createNativeStackNavigator({
         ReelStats: { screen: ReelStatsScreen, linking: 'reels', options: { presentation: 'modal', animation: 'slide_from_bottom' } },
         // Opened by the reel counter at the daily limit: quitengine://pause?app=<package>
         Pause: { screen: PauseScreen, linking: 'pause', options: { presentation: 'fullScreenModal', animation: 'fade' } },
+        Video: { screen: VideoScreen, options: { presentation: 'modal', animation: 'slide_from_bottom' } },
       },
     },
   },

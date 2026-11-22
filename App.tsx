@@ -55,9 +55,11 @@ export default function App() {
     syncReelLimit(); // limit, bubble and their texts
     syncReelBlock(); // blocking rules (also turns them off if Premium ended)
     actions.checkReelLimit(); // a day over the reel limit ends the reel-free streak
+    actions.checkFocus(); // finishes a focus session that ended while the app was closed
     const sub = AppState.addEventListener('change', (s) => {
       if (s !== 'active') return;
       actions.checkReelLimit();
+      actions.checkFocus();
       syncReelBlock();
     });
     const onLang = () => {
