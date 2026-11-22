@@ -15,6 +15,7 @@ import {
   writeTracked,
 } from './storage';
 import { streakDays } from './streak';
+import { openReelSettings, writeReelConsent } from './reels';
 import { track } from './telemetry';
 import { updateStreakWidget } from '../widget';
 
@@ -81,6 +82,12 @@ export const actions = {
   markCelebrated(id: HabitId, milestone: number) {
     writeState(id, { celebrated: milestone });
     track('milestone_reached', { days: milestone });
+  },
+
+  /** Agreed on the reel-counter disclosure: remember consent, then open Accessibility settings. */
+  agreeToReelCounting() {
+    writeReelConsent();
+    openReelSettings();
   },
 
   /** The after-onboarding Premium offer is shown at most once. */

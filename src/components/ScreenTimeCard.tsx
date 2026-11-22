@@ -3,9 +3,9 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
-import type { TFunction } from 'i18next';
 import { useLang } from '../i18n';
 import { actions } from '../lib/actions';
+import { formatDuration } from '../lib/format';
 import { usePremium } from '../lib/premium';
 import { DayUsage, openUsageAccessSettings, useScreenTime } from '../lib/screenTime';
 import { useScreenTimeOff } from '../lib/storage';
@@ -18,14 +18,6 @@ import { ToggleRow } from './ToggleRow';
 type App = { id: string; name: string };
 
 const HOUR = 3_600_000;
-
-/** 72 min -> "1h 12m", 5 min -> "5m" (localised). */
-function formatDuration(ms: number, t: TFunction) {
-  const mins = Math.round(ms / 60_000);
-  const h = Math.floor(mins / 60);
-  const m = mins % 60;
-  return h > 0 ? t('screenTime.hm', { h, m }) : t('screenTime.m', { m });
-}
 
 /** Today's time in the habit's apps, last week's average and a 7-day chart (Android, Premium). */
 export function ScreenTimeCard({ apps }: { apps: App[] }) {

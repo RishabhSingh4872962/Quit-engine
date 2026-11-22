@@ -18,6 +18,7 @@ import {
   useAuthUser,
   useLastBackupAt,
 } from '../lib/backup';
+import { reelCounterAvailable, openReelSettings, useReelCounter } from '../lib/reels';
 import { manageSubscription, premiumAvailable, premiumTestMode, usePremium } from '../lib/premium';
 import { remote } from '../lib/remoteConfig';
 import { reportError } from '../lib/telemetry';
@@ -53,6 +54,8 @@ export function SettingsScreen() {
 
       {premiumAvailable && <PremiumSettings />}
 
+      <ReelCounterSettings />
+
       <Section icon="language" title={t('settings.language')}>
         <Segmented options={LANGS.map((l) => ({ value: l.id, label: l.label }))} value={lang} onChange={setLanguage} />
       </Section>
@@ -85,6 +88,25 @@ export function SettingsScreen() {
         <AppText variant="caption">{t('settings.version', { version: Constants.expoConfig?.version ?? '' })}</AppText>
       </View>
     </Screen>
+  );
+}
+
+/** On/off status of reel counting; turning it off happens in Android's Accessibility settings. */
+function ReelCounterSettings() {
+  const { t } = useTranslation();
+  const navigation = useNavigation();
+  const tracked = useTracked();
+  const { enabled } = useReelCounter(1);
+  if (!reelCounterAvailable || !tracked.some((id) => HABITS[id].reelApps)) return null;
+  return (
+    <Section icon="film" title={t('reels.settingsTitle')}>
+      <AppText variant="muted">{enabled ? t('reels.settingsOn') : t('reels.settingsOff')}</AppText>
+      {enabled ? (
+        <Button variant="soft" icon="settings-outline" label={t('reels.settingsManage')} onPress={openReelSettings} />
+      ) : (
+        <Button variant="soft" icon="film-outline" label={t('reels.turnOn')} onPress={() => navigation.navigate('ReelCounterSetup')} />
+      )}
+    </Section>
   );
 }
 

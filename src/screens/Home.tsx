@@ -9,6 +9,7 @@ import { actions } from '../lib/actions';
 import { premiumHasValueFor, usePremium } from '../lib/premium';
 import { remote } from '../lib/remoteConfig';
 import { readPaywallOffered, useActiveHabit, useHabitState, useTracked } from '../lib/storage';
+import { reelCounterAvailable } from '../lib/reels';
 import { screenTimeAvailable } from '../lib/screenTime';
 import { milestoneProgress, useNow } from '../lib/streak';
 import { fonts, useColors } from '../theme';
@@ -18,6 +19,7 @@ import { Card } from '../components/Card';
 import { HabitSwitcher } from '../components/HabitSwitcher';
 import { IconButton } from '../components/IconButton';
 import { Screen } from '../components/Screen';
+import { ReelsTodayCard } from '../components/ReelsTodayCard';
 import { ScreenTimeCard } from '../components/ScreenTimeCard';
 import { StreakRing } from '../components/StreakRing';
 
@@ -120,6 +122,12 @@ export function HomeScreen() {
           <Button icon="play" label={t('home.startStreak')} onPress={() => void actions.startStreak(habit.id)} />
         )}
       </Animated.View>
+
+      {habit.reelApps && reelCounterAvailable && (
+        <Animated.View key={`reels-${habit.id}`} entering={FadeInDown.delay(350).duration(600)} style={s.screenTime}>
+          <ReelsTodayCard apps={habit.reelApps} />
+        </Animated.View>
+      )}
 
       {habit.screenTime && screenTimeAvailable && (
         <Animated.View key={`screen-time-${habit.id}`} entering={FadeInDown.delay(400).duration(600)} style={s.screenTime}>

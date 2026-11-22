@@ -8,7 +8,8 @@ import { useNavigationContainerRef } from '@react-navigation/native';
 import { backupInBackground } from './src/lib/backup';
 import { routeNotificationTaps, setupNotifications, syncNotifications } from './src/lib/notifications';
 import { initPremium } from './src/lib/premium';
-import { initRemoteConfig } from './src/lib/remoteConfig';
+import { applyReelRules } from './src/lib/reels';
+import { initRemoteConfig, remote } from './src/lib/remoteConfig';
 import { readThemePref } from './src/lib/storage';
 import { trackScreen } from './src/lib/telemetry';
 import { updateStreakWidget } from './src/widget';
@@ -43,7 +44,10 @@ export default function App() {
   };
 
   // Purchases connect only when the UI starts (not in the background widget task).
-  useEffect(() => initPremium(), []);
+  useEffect(() => {
+    initPremium();
+    applyReelRules(remote.reelRules()); // fixes for changed Instagram/YouTube screens, without an app update
+  }, []);
 
   // Root view colour shows during screen transitions; keep it in step with the theme.
   useEffect(() => {

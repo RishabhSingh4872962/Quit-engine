@@ -28,6 +28,10 @@ export const reels: HabitConfig = {
   ],
   urgeExercises: ['breathing', 'timer'],
   milestones: [1, 3, 7, 14, 30, 60, 90],
+  reelApps: [
+    { id: 'com.instagram.android', name: 'Instagram Reels' },
+    { id: 'com.google.android.youtube', name: 'YouTube Shorts' },
+  ],
   // Short-video apps popular in India. Users can switch any of them off (e.g. YouTube for study).
   screenTime: {
     apps: [

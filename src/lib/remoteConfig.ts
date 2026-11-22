@@ -8,7 +8,8 @@ import { reportError } from './telemetry';
 const DEFAULTS = {
   cloud_backup_enabled: true, // kill switch for the backup feature
   breathing_rounds: 4, // rounds in the urge breathing exercise
-  paywall_after_onboarding: true, // offer Premium once after onboarding (only if it has value for the user)
+  paywall_after_onboarding: true,
+  reel_rules: '', // JSON detection rules for the reel counter; '' = built-in (see modules/reel-guard) // offer Premium once after onboarding (only if it has value for the user)
 };
 
 export function initRemoteConfig() {
@@ -26,6 +27,7 @@ const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, M
 
 export const remote = {
   cloudBackupEnabled: () => getValue(getRemoteConfig(), 'cloud_backup_enabled').asBoolean(),
+  reelRules: () => getValue(getRemoteConfig(), 'reel_rules').asString(),
   paywallAfterOnboarding: () => getValue(getRemoteConfig(), 'paywall_after_onboarding').asBoolean(),
   breathingRounds: () => clamp(getValue(getRemoteConfig(), 'breathing_rounds').asNumber() || 4, 1, 10),
 };

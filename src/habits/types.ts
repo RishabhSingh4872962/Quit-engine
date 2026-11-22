@@ -26,4 +26,9 @@ export interface HabitConfig {
    * on the phone from Usage access. Never uploaded.
    */
   screenTime?: { apps: { id: string; name: string }[] };
+  /**
+   * Android only: apps whose reels/shorts are counted (package id + display name). Detection
+   * rules live in the native reel-guard module and can be updated from Remote Config.
+   */
+  reelApps?: { id: string; name: string }[];
 }

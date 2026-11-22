@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Package list is set at runtime from the detection rules (ReelGuardService.applyRules). -->
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+  android:accessibilityEventTypes="typeViewScrolled|typeWindowStateChanged|typeWindowContentChanged|typeWindowsChanged"
+  android:accessibilityFeedbackType="feedbackGeneric"
+  android:accessibilityFlags="flagReportViewIds|flagRetrieveInteractiveWindows"
+  android:canRetrieveWindowContent="true"
+  android:description="@string/reel_guard_description"
+  android:isAccessibilityTool="false"
+  android:notificationTimeout="150" />
