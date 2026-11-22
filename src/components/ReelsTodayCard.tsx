@@ -43,6 +43,7 @@ export function ReelsTodayCard({ apps }: { apps: App[] }) {
             <AppText variant="caption">
               {total.count > 0 ? t('reels.time', { time: formatDuration(total.ms, t) }) : t('reels.none')}
             </AppText>
+            {total.count === 0 && <AppText variant="caption" style={s.tip}>{t('reels.restartTip')}</AppText>}
           </View>
           {used.map((a) => {
             const app = today?.apps[a.id];
@@ -68,4 +69,5 @@ const s = StyleSheet.create({
   count: { fontFamily: fonts.bold, fontSize: 34, lineHeight: 44, includeFontPadding: false },
   appRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   appName: { fontSize: 16, fontWeight: '600' },
+  tip: { marginTop: 6 },
 });

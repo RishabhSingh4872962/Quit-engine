@@ -64,7 +64,7 @@ class ReelGuardService : AccessibilityService() {
   fun applyRules() {
     rules = ReelStore.rules(this).associateBy { it.pkg }
     serviceInfo = serviceInfo?.apply { packageNames = rules.keys.toTypedArray() }
-    if (debug) Log.d(TAG, "watching ${rules.keys}")
+    if (debug) dlog("watching ${rules.keys}")
   }
 
   override fun onAccessibilityEvent(event: AccessibilityEvent) {
@@ -75,7 +75,7 @@ class ReelGuardService : AccessibilityService() {
     }
     val pkg = event.packageName?.toString() ?: return
     if (debug && event.eventType != AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) {
-      Log.d(TAG, "event ${AccessibilityEvent.eventTypeToString(event.eventType)} $pkg src=${event.source?.viewIdResourceName}")
+      dlog("event ${AccessibilityEvent.eventTypeToString(event.eventType)} $pkg src=${event.source?.viewIdResourceName}")
     }
     val rule = rules[pkg] ?: return
     when (event.eventType) {
@@ -93,7 +93,7 @@ class ReelGuardService : AccessibilityService() {
 
   private fun onScrolled(event: AccessibilityEvent, pkg: String, rule: ReelRule) {
     val id = event.source?.viewIdResourceName?.substringAfter(":id/")
-    if (debug) Log.d(TAG, "scroll $pkg id=$id from=${event.fromIndex} to=${event.toIndex}")
+    if (debug) dlog("scroll $pkg id=$id from=${event.fromIndex} to=${event.toIndex}")
     if (id == null || id !in rule.pagerIds) return
     if (active != pkg) enter(pkg)
     if (rule.pageIds.isNotEmpty()) return // counted by page changes instead (checkScreen)
@@ -150,7 +150,7 @@ class ReelGuardService : AccessibilityService() {
       else -> {
         lastPage = id
         ReelStore.addReel(this, pkg)
-        if (debug) Log.d(TAG, "next reel $pkg")
+        if (debug) dlog("next reel $pkg")
       }
     }
   }
@@ -165,7 +165,7 @@ class ReelGuardService : AccessibilityService() {
     lastTick = SystemClock.elapsedRealtime()
     ReelStore.addReel(this, pkg) // the reel that is showing now
     schedule()
-    if (debug) Log.d(TAG, "enter $pkg")
+    if (debug) dlog("enter $pkg")
   }
 
   /** Exactly one pending tick while a reels player is open. */
@@ -179,7 +179,7 @@ class ReelGuardService : AccessibilityService() {
     handler.removeCallbacks(ticker)
     ReelStore.addTime(this, pkg, SystemClock.elapsedRealtime() - lastTick, notify = true)
     active = null
-    if (debug) Log.d(TAG, "exit $pkg")
+    if (debug) dlog("exit $pkg")
   }
 
   /** Debug builds: lists view IDs on screen, to find the right ones when an app changes. */
@@ -191,7 +191,23 @@ class ReelGuardService : AccessibilityService() {
       for (i in 0 until node.childCount) walk(node.getChild(i), depth + 1)
     }
     walk(rootInActiveWindow, 0)
-    Log.d(TAG, "screen $pkg ids=$ids")
+    dlog("screen $pkg ids=$ids")
+  }
+
+  /**
+   * Debug builds only: logcat plus a small file in app storage (some phones, e.g. vivo, hide app
+   * logs). Read with: adb shell run-as com.quitengine.app cat files/reel_guard_debug.log
+   * Contains view IDs and event types only, never screen text.
+   */
+  private fun dlog(message: String) {
+    Log.i(TAG, message)
+    try {
+      val file = java.io.File(filesDir, "reel_guard_debug.log")
+      if (file.length() > 200_000) file.delete()
+      file.appendText("${System.currentTimeMillis()} $message\n")
+    } catch (e: Exception) {
+      Log.w(TAG, "debug log failed", e)
+    }
   }
 
   override fun onInterrupt() {}
