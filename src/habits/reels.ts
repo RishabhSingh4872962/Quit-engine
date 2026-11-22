@@ -28,4 +28,18 @@ export const reels: HabitConfig = {
   ],
   urgeExercises: ['breathing', 'timer'],
   milestones: [1, 3, 7, 14, 30, 60, 90],
+  // Short-video apps popular in India. Users can switch any of them off (e.g. YouTube for study).
+  screenTime: {
+    apps: [
+      { id: 'com.instagram.android', name: 'Instagram' },
+      { id: 'com.google.android.youtube', name: 'YouTube' },
+      { id: 'com.facebook.katana', name: 'Facebook' },
+      { id: 'com.snapchat.android', name: 'Snapchat' },
+      { id: 'in.mohalla.video', name: 'Moj' },
+      { id: 'com.eterno.shortvideos', name: 'Josh' },
+      { id: 'in.mohalla.sharechat', name: 'ShareChat' },
+      { id: 'com.instagram.lite', name: 'Instagram Lite' },
+      { id: 'com.facebook.lite', name: 'Facebook Lite' },
+    ],
+  },
 };

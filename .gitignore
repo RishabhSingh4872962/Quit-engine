@@ -39,6 +39,9 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+# Gradle output of local native modules (modules/*)
+modules/*/android/build/
+modules/*/android/.gradle/
 
 # Firebase app config (regenerate: npx firebase-tools apps:sdkconfig android --project quit-engine-app)
 google-services.json

@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { useLang } from '../i18n';
 import { actions } from '../lib/actions';
 import { useActiveHabit, useHabitState } from '../lib/storage';
+import { screenTimeAvailable } from '../lib/screenTime';
 import { milestoneProgress, useNow } from '../lib/streak';
 import { fonts, useColors } from '../theme';
 import { AppText } from '../components/AppText';
@@ -15,6 +16,7 @@ import { Card } from '../components/Card';
 import { HabitSwitcher } from '../components/HabitSwitcher';
 import { IconButton } from '../components/IconButton';
 import { Screen } from '../components/Screen';
+import { ScreenTimeCard } from '../components/ScreenTimeCard';
 import { StreakRing } from '../components/StreakRing';
 
 export function HomeScreen() {
@@ -106,6 +108,12 @@ export function HomeScreen() {
           <Button icon="play" label={t('home.startStreak')} onPress={() => void actions.startStreak(habit.id)} />
         )}
       </Animated.View>
+
+      {habit.screenTime && screenTimeAvailable && (
+        <Animated.View key={`screen-time-${habit.id}`} entering={FadeInDown.delay(400).duration(600)} style={s.screenTime}>
+          <ScreenTimeCard apps={habit.screenTime.apps} />
+        </Animated.View>
+      )}
     </Screen>
   );
 }
@@ -138,4 +146,5 @@ const s = StyleSheet.create({
   statIcon: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
   statValue: { fontFamily: fonts.bold, fontSize: 22, lineHeight: 30, includeFontPadding: false },
   actions: { gap: 4 },
+  screenTime: { marginTop: 24 },
 });

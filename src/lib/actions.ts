@@ -3,11 +3,13 @@ import { requestPermission, syncNotifications } from './notifications';
 import {
   CheckinPref,
   readActive,
+  readScreenTimeOff,
   readState,
   readTracked,
   writeActive,
   writeCheckin,
   writeMilestoneAlerts,
+  writeScreenTimeOff,
   writeState,
   writeTracked,
 } from './storage';
@@ -78,6 +80,12 @@ export const actions = {
   markCelebrated(id: HabitId, milestone: number) {
     writeState(id, { celebrated: milestone });
     track('milestone_reached', { days: milestone });
+  },
+
+  /** Count (or stop counting) an app in Reels screen time. No analytics: it would hint at the habit. */
+  setScreenTimeApp(packageId: string, counted: boolean) {
+    const off = readScreenTimeOff().filter((p) => p !== packageId);
+    writeScreenTimeOff(counted ? off : [...off, packageId]);
   },
 
   async setCheckin(patch: Partial<CheckinPref>) {

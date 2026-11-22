@@ -21,4 +21,9 @@ export interface HabitConfig {
   urgeExercises: ('breathing' | 'timer')[];
   /** Streak milestones in days. */
   milestones: number[];
+  /**
+   * Android only: shows daily time spent in these apps (package id + display name), read
+   * on the phone from Usage access. Never uploaded.
+   */
+  screenTime?: { apps: { id: string; name: string }[] };
 }

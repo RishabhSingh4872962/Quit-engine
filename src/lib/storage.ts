@@ -107,6 +107,27 @@ export function useThemePref(): ThemePref {
   return toThemePref(v);
 }
 
+// ---------- Screen time: apps the user chose not to count ----------
+
+const SCREEN_TIME_OFF_KEY = 'prefs.screenTimeOff';
+
+const parseList = (raw: string | undefined): string[] => {
+  try {
+    const list: unknown = raw ? JSON.parse(raw) : [];
+    return Array.isArray(list) ? list.filter((x): x is string => typeof x === 'string') : [];
+  } catch {
+    return [];
+  }
+};
+
+export const readScreenTimeOff = () => parseList(storage.getString(SCREEN_TIME_OFF_KEY));
+export const writeScreenTimeOff = (ids: string[]) => storage.set(SCREEN_TIME_OFF_KEY, JSON.stringify(ids));
+
+export function useScreenTimeOff(): string[] {
+  const [raw] = useMMKVString(SCREEN_TIME_OFF_KEY, storage);
+  return useMemo(() => parseList(raw), [raw]);
+}
+
 // ---------- Notification preferences ----------
 
 export interface CheckinPref {
