@@ -8,6 +8,18 @@ import { useTranslation } from 'react-i18next';
 import { HABIT_LIST, HABITS } from '../habits';
 import { LANGS, setLanguage, useLang } from '../i18n';
 import { actions } from '../lib/actions';
+import {
+  backupNow,
+  deleteBackupAndAccount,
+  readCloudBackup,
+  restoreBackup,
+  signInWithGoogle,
+  signOut,
+  useAuthUser,
+  useLastBackupAt,
+} from '../lib/backup';
+import { remote } from '../lib/remoteConfig';
+import { reportError } from '../lib/telemetry';
 import { hasPermission, requestPermission, syncNotifications } from '../lib/notifications';
 import { ThemePref, useCheckin, useMilestoneAlerts, useThemePref, useTracked } from '../lib/storage';
 import { makePalette, radius, setThemePref, useColors } from '../theme';
@@ -22,6 +34,7 @@ export function SettingsScreen() {
   const lang = useLang();
   const theme = useThemePref();
   const c = useColors();
+  const user = useAuthUser();
 
   const themes: { value: ThemePref; label: string }[] = [
     { value: 'system', label: t('settings.system') },
@@ -45,10 +58,12 @@ export function SettingsScreen() {
 
       <NotificationSettings />
 
+      {remote.cloudBackupEnabled() && <BackupSettings />}
+
       <View style={s.footer}>
         <View style={s.privacy}>
           <Ionicons name="lock-closed" size={14} color={c.textMuted} />
-          <AppText variant="caption">{t('settings.privacy')}</AppText>
+          <AppText variant="caption">{user ? t('backup.privacyOn') : t('settings.privacy')}</AppText>
         </View>
         <AppText variant="caption">{t('settings.version', { version: Constants.expoConfig?.version ?? '' })}</AppText>
       </View>
@@ -95,6 +110,78 @@ function HabitSettings() {
       })}
       {tracked.length < HABIT_LIST.length && (
         <Button variant="soft" icon="add" label={t('settings.addHabit')} onPress={() => navigation.navigate('AddHabit')} />
+      )}
+    </Section>
+  );
+}
+
+function BackupSettings() {
+  const { t } = useTranslation();
+  const lang = useLang();
+  const c = useColors();
+  const user = useAuthUser();
+  const lastAt = useLastBackupAt();
+  const [busy, setBusy] = useState(false);
+
+  const fmt = new Intl.DateTimeFormat(lang === 'hi' ? 'hi-IN' : 'en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+
+  /** Runs one backup action at a time; on failure, reports it and shows a friendly message. */
+  const run = async (what: string, fn: () => Promise<void>) => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await fn();
+    } catch (e) {
+      reportError(e, what);
+      Alert.alert(t('backup.errorTitle'), t('backup.errorBody'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const enable = () =>
+    run('backup sign-in', async () => {
+      if (!(await signInWithGoogle())) return; // cancelled
+      const cloud = await readCloudBackup();
+      if (!cloud) return backupNow();
+      // A backup already exists (e.g. a new phone): let the user choose which side wins.
+      Alert.alert(t('backup.foundTitle'), t('backup.foundBody', { date: fmt.format(cloud.updatedAt) }), [
+        { text: t('backup.keepPhone'), onPress: () => void run('backup overwrite', backupNow) },
+        { text: t('backup.restore'), onPress: () => restoreBackup(cloud) },
+      ]);
+    });
+
+  const confirmDelete = () =>
+    Alert.alert(t('backup.deleteTitle'), t('backup.deleteBody'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      { text: t('backup.deleteConfirm'), style: 'destructive', onPress: () => void run('delete account', deleteBackupAndAccount) },
+    ]);
+
+  return (
+    <Section icon="cloud-upload-outline" title={t('backup.title')}>
+      {!user ? (
+        <>
+          <AppText variant="caption">{t('backup.intro')}</AppText>
+          <Button variant="soft" icon="logo-google" label={t('backup.signIn')} onPress={() => void enable()} disabled={busy} />
+        </>
+      ) : (
+        <>
+          <View>
+            <AppText style={s.rowTitle}>{t('backup.signedInAs', { email: user.email ?? '' })}</AppText>
+            <AppText variant="caption">
+              {lastAt ? t('backup.lastBackup', { time: fmt.format(lastAt) }) : t('backup.never')}
+            </AppText>
+          </View>
+          <Button variant="soft" icon="cloud-upload-outline" label={t('backup.backupNow')} onPress={() => void run('backup now', backupNow)} disabled={busy} />
+          <View style={s.backupLinks}>
+            <Pressable onPress={() => void run('sign out', signOut)} disabled={busy} hitSlop={8} accessibilityRole="button">
+              <AppText style={s.link} color={c.textMuted}>{t('backup.signOut')}</AppText>
+            </Pressable>
+            <Pressable onPress={confirmDelete} disabled={busy} hitSlop={8} accessibilityRole="button">
+              <AppText style={s.link} color={c.textMuted}>{t('backup.delete')}</AppText>
+            </Pressable>
+          </View>
+        </>
       )}
     </Section>
   );
@@ -235,6 +322,7 @@ const s = StyleSheet.create({
   timePill: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 6, borderRadius: radius.pill },
   banner: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: radius.sm },
   link: { fontSize: 14, fontWeight: '700' },
+  backupLinks: { flexDirection: 'row', justifyContent: 'space-between', gap: 12 },
   footer: { alignItems: 'center', gap: 6, marginTop: 18 },
   privacy: { flexDirection: 'row', alignItems: 'center', gap: 6 },
 });

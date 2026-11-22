@@ -1,0 +1,14 @@
+{
+  "$schema": "./node_modules/@react-native-firebase/app/firebase-schema.json",
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json",
+    "edition": "enterprise",
+    "database": "backup",
+    "location": "asia-south1"
+  },
+  "react-native": {
+    "crashlytics_debug_enabled": false,
+    "google_analytics_adid_collection_enabled": false
+  }
+}

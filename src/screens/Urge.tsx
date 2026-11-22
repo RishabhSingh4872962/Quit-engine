@@ -7,6 +7,7 @@ import { StaticScreenProps, useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { HabitId } from '../habits/types';
 import { actions } from '../lib/actions';
+import { remote } from '../lib/remoteConfig';
 import { radius, useColors } from '../theme';
 import { AppText } from '../components/AppText';
 import { BreathingCircle } from '../components/BreathingCircle';
@@ -19,7 +20,6 @@ const PHASES = [
   { label: 'urge.hold', kind: 'hold', secs: 4 },
   { label: 'urge.breatheOut', kind: 'out', secs: 6 },
 ] as const;
-const ROUNDS = 4;
 
 type Props = StaticScreenProps<{ habitId: HabitId }>;
 
@@ -27,6 +27,7 @@ export function UrgeScreen({ route }: Props) {
   const { t } = useTranslation();
   const c = useColors();
   const navigation = useNavigation();
+  const [ROUNDS] = useState(remote.breathingRounds); // tunable from Remote Config
   const [phase, setPhase] = useState(0);
   const [left, setLeft] = useState<number>(PHASES[0].secs);
   const [round, setRound] = useState(0);

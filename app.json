@@ -18,7 +18,11 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.quitengine.app"
+      "package": "com.quitengine.app",
+      "googleServicesFile": "./google-services.json",
+      "blockedPermissions": [
+        "com.google.android.gms.permission.AD_ID"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -43,6 +47,22 @@
           "icon": "./assets/android-icon-monochrome.png",
           "color": "#6C5CE7",
           "enableRemoteNotifications": false
+        }
+      ],
+      "@react-native-firebase/app",
+      "@react-native-firebase/analytics",
+      "@react-native-firebase/crashlytics",
+      "@react-native-firebase/auth",
+      "@react-native-google-signin/google-signin",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "dynamic"
+          },
+          "android": {
+            "kotlinVersion": "2.3.21"
+          }
         }
       ]
     ]

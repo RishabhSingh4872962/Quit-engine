@@ -5,6 +5,7 @@ import i18n, { milestoneLabel } from '../i18n';
 import { HABITS, isHabitId } from '../habits';
 import { readCheckin, readMilestoneAlerts, readState, readTracked, writeActive } from './storage';
 import { DAY_MS } from './streak';
+import { reportError } from './telemetry';
 
 const CHANNEL = 'reminders';
 
@@ -62,7 +63,7 @@ function friendlyTime(ms: number) {
  */
 let queue = Promise.resolve();
 export function syncNotifications() {
-  queue = queue.then(rebuild).catch((e) => console.warn('syncNotifications failed', e));
+  queue = queue.then(rebuild).catch((e) => reportError(e, 'syncNotifications'));
   return queue;
 }
 

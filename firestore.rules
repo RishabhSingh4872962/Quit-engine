@@ -1,0 +1,118 @@
+rules_version = '2';
+
+// ===============================================================
+// Assumed Data Model (opt-in cloud backup, written by src/lib/backup.ts)
+// ===============================================================
+//
+// Collection: users
+// Document ID: the Firebase Auth uid of the owner
+// Fields:
+//   - version: int (required, == 1) - backup schema version
+//   - tracked: list<string> (required, 1–5 unique items, each a known habit id) - habits the user tracks
+//   - active: string (required, a known habit id that is in `tracked`) - habit shown on Home
+//   - updatedAt: timestamp (required, == server time of the write) - time of the last backup
+//   No email, name or other PII is stored here; identity lives only in Firebase Auth.
+//
+// Subcollection: users/{uid}/habits
+// Document ID: a known habit id (reels | nicotine | noContact | nailBiting | skinPicking)
+// Fields:
+//   - quizAnswers: map (required, <= 10 keys, only known quiz question ids, values int 0–9)
+//   - streakStart: int | null (required, epoch ms, at most 1 day ahead of server time)
+//   - urgesResisted: int (required, 0–1,000,000)
+//   - bestStreakDays: int (required, 0–36,500)
+//   - celebrated: int (required, 0–36,500) - highest milestone celebrated in the current streak
+//   - updatedAt: timestamp (required, == server time of the write)
+//   Slip/relapse timestamps are deliberately NOT backed up (data minimisation).
+//
+// Only the owner can read, write or delete their documents. Everything else is denied.
+// ===============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- Helpers ----------
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Keep in sync with HabitId in src/habits/types.ts.
+    function habitIds() {
+      return ['reels', 'nicotine', 'noContact', 'nailBiting', 'skinPicking'];
+    }
+
+    function isHabitId(v) {
+      return v is string && v in habitIds();
+    }
+
+    function isIntInRange(v, lo, hi) {
+      return v is int && v >= lo && v <= hi;
+    }
+
+    function isOptionalAnswer(q, key) {
+      return !(key in q) || isIntInRange(q[key], 0, 9);
+    }
+
+    // ---------- Domain validators (used on BOTH create and update) ----------
+
+    function isValidBackupRoot(data) {
+      let fields = ['version', 'tracked', 'active', 'updatedAt'];
+      return data.keys().hasOnly(fields) &&
+             data.keys().hasAll(fields) &&
+             data.version == 1 &&
+             data.tracked is list &&
+             data.tracked.size() >= 1 && data.tracked.size() <= 5 &&
+             data.tracked.hasOnly(habitIds()) &&
+             data.tracked.toSet().size() == data.tracked.size() &&
+             isHabitId(data.active) &&
+             data.active in data.tracked &&
+             data.updatedAt == request.time;
+    }
+
+    // Quiz question ids across all habits (src/habits/*.ts). Update when a quiz gains a question.
+    function isValidQuizAnswers(q) {
+      return q is map &&
+             q.size() <= 10 &&
+             q.keys().hasOnly(['hours', 'trigger', 'type', 'since', 'hardest', 'when']) &&
+             isOptionalAnswer(q, 'hours') &&
+             isOptionalAnswer(q, 'trigger') &&
+             isOptionalAnswer(q, 'type') &&
+             isOptionalAnswer(q, 'since') &&
+             isOptionalAnswer(q, 'hardest') &&
+             isOptionalAnswer(q, 'when');
+    }
+
+    function isValidHabitBackup(data) {
+      let fields = ['quizAnswers', 'streakStart', 'urgesResisted', 'bestStreakDays', 'celebrated', 'updatedAt'];
+      return data.keys().hasOnly(fields) &&
+             data.keys().hasAll(fields) &&
+             isValidQuizAnswers(data.quizAnswers) &&
+             (data.streakStart == null ||
+               isIntInRange(data.streakStart, 0, request.time.toMillis() + 86400000)) &&
+             isIntInRange(data.urgesResisted, 0, 1000000) &&
+             isIntInRange(data.bestStreakDays, 0, 36500) &&
+             isIntInRange(data.celebrated, 0, 36500) &&
+             data.updatedAt == request.time;
+    }
+
+    // ---------- Rules ----------
+
+    match /users/{userId} {
+      allow read, delete: if isOwner(userId);
+      allow create, update: if isOwner(userId) && isValidBackupRoot(request.resource.data);
+
+      match /habits/{habitId} {
+        allow read, delete: if isOwner(userId);
+        allow create, update: if isOwner(userId) &&
+                                 isHabitId(habitId) &&
+                                 isValidHabitBackup(request.resource.data);
+      }
+    }
+
+    // Any other path: denied (no rule matches).
+  }
+}

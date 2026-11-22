@@ -39,3 +39,11 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Firebase app config (regenerate: npx firebase-tools apps:sdkconfig android --project quit-engine-app)
+google-services.json
+GoogleService-Info.plist
+
+# Firebase CLI
+firebase-debug.log
+.firebase/
