@@ -18,6 +18,7 @@ import {
   useAuthUser,
   useLastBackupAt,
 } from '../lib/backup';
+import { manageSubscription, premiumAvailable, premiumTestMode, usePremium } from '../lib/premium';
 import { remote } from '../lib/remoteConfig';
 import { reportError } from '../lib/telemetry';
 import { hasPermission, requestPermission, syncNotifications } from '../lib/notifications';
@@ -49,6 +50,8 @@ export function SettingsScreen() {
       <AppText variant="title" style={s.title}>{t('settings.title')}</AppText>
 
       <HabitSettings />
+
+      {premiumAvailable && <PremiumSettings />}
 
       <Section icon="language" title={t('settings.language')}>
         <Segmented options={LANGS.map((l) => ({ value: l.id, label: l.label }))} value={lang} onChange={setLanguage} />
@@ -82,6 +85,23 @@ export function SettingsScreen() {
         <AppText variant="caption">{t('settings.version', { version: Constants.expoConfig?.version ?? '' })}</AppText>
       </View>
     </Screen>
+  );
+}
+
+function PremiumSettings() {
+  const { t } = useTranslation();
+  const navigation = useNavigation();
+  const premium = usePremium();
+  return (
+    <Section icon="sparkles" title={t('premium.title')}>
+      <AppText variant="muted">{premium ? t('premium.active') : t('premium.pitch')}</AppText>
+      {premium && premiumTestMode && <AppText variant="caption">{t('premium.testReset')}</AppText>}
+      {premium ? (
+        <Button variant="soft" icon="card-outline" label={t('premium.manage')} onPress={() => void manageSubscription()} />
+      ) : (
+        <Button variant="soft" icon="sparkles" label={t('premium.see')} onPress={() => navigation.navigate('Paywall')} />
+      )}
+    </Section>
   );
 }
 

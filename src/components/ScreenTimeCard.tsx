@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { useLang } from '../i18n';
 import { actions } from '../lib/actions';
+import { usePremium } from '../lib/premium';
 import { DayUsage, openUsageAccessSettings, useScreenTime } from '../lib/screenTime';
 import { useScreenTimeOff } from '../lib/storage';
 import { fonts, radius, useColors } from '../theme';
@@ -25,16 +27,15 @@ function formatDuration(ms: number, t: TFunction) {
   return h > 0 ? t('screenTime.hm', { h, m }) : t('screenTime.m', { m });
 }
 
-/** Today's time in the habit's apps, last week's average and a 7-day chart (Android). */
+/** Today's time in the habit's apps, last week's average and a 7-day chart (Android, Premium). */
 export function ScreenTimeCard({ apps }: { apps: App[] }) {
-  const { t } = useTranslation();
-  const lang = useLang();
-  const c = useColors();
-  const off = useScreenTimeOff();
-  const { access, usage } = useScreenTime(apps.map((a) => a.id));
-  const [showApps, setShowApps] = useState(false);
+  return usePremium() ? <ScreenTimeDetails apps={apps} /> : <LockedScreenTime />;
+}
 
-  const header = (
+function Header() {
+  const { t } = useTranslation();
+  const c = useColors();
+  return (
     <View style={s.header}>
       <View style={[s.icon, { backgroundColor: c.accentSoft }]}>
         <Ionicons name="time" size={18} color={c.accent} />
@@ -42,12 +43,42 @@ export function ScreenTimeCard({ apps }: { apps: App[] }) {
       <AppText variant="heading">{t('screenTime.title')}</AppText>
     </View>
   );
-  const privacy = (
+}
+
+function PrivacyNote() {
+  const { t } = useTranslation();
+  const c = useColors();
+  return (
     <View style={s.privacy}>
       <Ionicons name="lock-closed" size={13} color={c.textMuted} />
       <AppText variant="caption">{t('screenTime.private')}</AppText>
     </View>
   );
+}
+
+/** Free users see what it does and a way to Premium. Usage is not read at all. */
+function LockedScreenTime() {
+  const { t } = useTranslation();
+  const navigation = useNavigation();
+  return (
+    <Card style={s.card}>
+      <Header />
+      <AppText variant="muted">{t('premium.locked')}</AppText>
+      <Button variant="soft" icon="sparkles" label={t('premium.unlock')} onPress={() => navigation.navigate('Paywall')} />
+      <PrivacyNote />
+    </Card>
+  );
+}
+
+function ScreenTimeDetails({ apps }: { apps: App[] }) {
+  const { t } = useTranslation();
+  const lang = useLang();
+  const c = useColors();
+  const off = useScreenTimeOff();
+  const { access, usage } = useScreenTime(apps.map((a) => a.id));
+  const [showApps, setShowApps] = useState(false);
+  const header = <Header />;
+  const privacy = <PrivacyNote />;
 
   if (!access) {
     return (

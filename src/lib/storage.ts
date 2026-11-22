@@ -128,6 +128,12 @@ export function useScreenTimeOff(): string[] {
   return useMemo(() => parseList(raw), [raw]);
 }
 
+// ---------- Premium offer ----------
+
+const PAYWALL_OFFERED_KEY = 'prefs.paywallOffered';
+export const readPaywallOffered = () => storage.getBoolean(PAYWALL_OFFERED_KEY) ?? false;
+export const writePaywallOffered = () => storage.set(PAYWALL_OFFERED_KEY, true);
+
 // ---------- Notification preferences ----------
 
 export interface CheckinPref {

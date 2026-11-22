@@ -6,7 +6,9 @@ import { useIsFocused, useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { useLang } from '../i18n';
 import { actions } from '../lib/actions';
-import { useActiveHabit, useHabitState } from '../lib/storage';
+import { premiumHasValueFor, usePremium } from '../lib/premium';
+import { remote } from '../lib/remoteConfig';
+import { readPaywallOffered, useActiveHabit, useHabitState, useTracked } from '../lib/storage';
 import { screenTimeAvailable } from '../lib/screenTime';
 import { milestoneProgress, useNow } from '../lib/streak';
 import { fonts, useColors } from '../theme';
@@ -41,6 +43,16 @@ export function HomeScreen() {
     actions.markCelebrated(habit.id, toCelebrate);
     navigation.navigate('Celebrate', { habitId: habit.id, days: toCelebrate });
   }, [focused, toCelebrate, habit.id, navigation]);
+
+  // Offer Premium once (after onboarding, or when a habit with Premium features is added), never mid-celebration.
+  const tracked = useTracked();
+  const premium = usePremium();
+  useEffect(() => {
+    if (!focused || premium || toCelebrate !== undefined || readPaywallOffered()) return;
+    if (!premiumHasValueFor(tracked) || !remote.paywallAfterOnboarding()) return;
+    actions.markPaywallOffered();
+    navigation.navigate('Paywall');
+  }, [focused, premium, toCelebrate, tracked, navigation]);
 
   const status = !started
     ? t('home.notStarted')

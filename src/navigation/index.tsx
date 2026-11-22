@@ -11,6 +11,7 @@ import { CelebrateScreen } from '../screens/Celebrate';
 import { HomeScreen } from '../screens/Home';
 import { MilestonesScreen } from '../screens/Milestones';
 import { AddHabitScreen, OnboardingScreen } from '../screens/Onboarding';
+import { PaywallScreen } from '../screens/Paywall';
 import { SettingsScreen } from '../screens/Settings';
 import { ShareScreen } from '../screens/Share';
 import { UrgeScreen } from '../screens/Urge';
@@ -59,6 +60,7 @@ const RootStack = createNativeStackNavigator({
         Celebrate: { screen: CelebrateScreen, options: { presentation: 'transparentModal', animation: 'fade' } },
         AddHabit: { screen: AddHabitScreen, options: { presentation: 'modal', animation: 'slide_from_bottom' } },
         Share: { screen: ShareScreen, options: { presentation: 'modal', animation: 'slide_from_bottom' } },
+        Paywall: { screen: PaywallScreen, options: { presentation: 'modal', animation: 'slide_from_bottom' } },
       },
     },
   },

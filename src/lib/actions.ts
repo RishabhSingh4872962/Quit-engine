@@ -9,6 +9,7 @@ import {
   writeActive,
   writeCheckin,
   writeMilestoneAlerts,
+  writePaywallOffered,
   writeScreenTimeOff,
   writeState,
   writeTracked,
@@ -80,6 +81,11 @@ export const actions = {
   markCelebrated(id: HabitId, milestone: number) {
     writeState(id, { celebrated: milestone });
     track('milestone_reached', { days: milestone });
+  },
+
+  /** The after-onboarding Premium offer is shown at most once. */
+  markPaywallOffered() {
+    writePaywallOffered();
   },
 
   /** Count (or stop counting) an app in Reels screen time. No analytics: it would hint at the habit. */

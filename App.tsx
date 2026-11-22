@@ -7,6 +7,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useNavigationContainerRef } from '@react-navigation/native';
 import { backupInBackground } from './src/lib/backup';
 import { routeNotificationTaps, setupNotifications, syncNotifications } from './src/lib/notifications';
+import { initPremium } from './src/lib/premium';
 import { initRemoteConfig } from './src/lib/remoteConfig';
 import { readThemePref } from './src/lib/storage';
 import { trackScreen } from './src/lib/telemetry';
@@ -40,6 +41,9 @@ export default function App() {
       trackScreen(name);
     }
   };
+
+  // Purchases connect only when the UI starts (not in the background widget task).
+  useEffect(() => initPremium(), []);
 
   // Root view colour shows during screen transitions; keep it in step with the theme.
   useEffect(() => {
