@@ -46,7 +46,13 @@ Focus: Reels addiction (reference: Regain). Reels plan, in order:
 - Phase 3 done: "Your reels" history (7/30 days, per app, by hour, late night, time won back vs quiz), live counter bubble, weekly summary notification (quitengine://reels)
 - Phase 3 open: more apps. Facebook strips view-ID names ("(name removed)"), so ID rules can't detect Reels; Snapchat obfuscates content IDs, only tab buttons are named (ngs_spotlight_icon_container) -> needs a selected-tab + swipe approach. Moj/Josh/ShareChat need a phone with those apps to calibrate. When calibrating, don't use uiautomator dump right after launching the target app (it stops that app's accessibility events until restart).
 - Phase 4 done (Premium, src/lib/blocking.ts + ReelBlocking screen): block reels per app (Back + note; DMs/feed/search keep working), reel-free hours (bedtime, study), per-app daily limits, exam mode (until a date), strict mode (rules can't be loosened in the app while a reel-free time/exam runs; Android settings and uninstall always still work). Rules only sent to the service while Premium is active. YouTube study mode (Off / Study time / Always): only listed channels' videos play, Shorts blocked; reads the channel name from YouTube's "Subscribe to <channel>." label (English YouTube UI; other languages never block), with its own consent dialog. Matching ignores case, spaces and "@".
-- Phase 5: focus timer, accountability partner/group, website blocking, more languages
+- Phase 5 (3–4 weeks from 22 Nov 2026, one week at a time):
+  - Week 1, focus + media: focus timer; audio player (lofi, guided audio like urge surfing and a sleep wind-down) with background playback and lock-screen controls; short calm videos. Catalog from Remote Config/Firestore, files in Firebase Storage. Only royalty-free/licensed tracks.
+  - Week 2, focus rooms: Firebase anonymous auth (or the backup Google account) + nickname (never the Google name); room list, join, live presence (who's focusing, timer), preset cheers only (no free text, so little moderation).
+  - Week 3, leaderboard: opt-in, per room, habit-neutral numbers only (focus minutes, days on track); nickname word filter + report; update privacy policy, Data Safety and the Play foreground-service (media playback) declaration.
+  - Week 4: live voice/video in rooms if time is left (100ms or LiveKit), else polish + launch.
+  - Rule for all of it: no server data may name or hint at the habit (room names, stats, presence, events).
+  - Later: accountability partner, website blocking, more languages.
 Store/launch:
 1. Set up RevenueCat + Play Console products (subscriptions `premium` monthly/yearly), add the key, test on a Play testing track
 2. Play Store launch: prep done (icon + splash, eas.json, policy pages, form answers in docs/play-store). Open: fill contact placeholders + deploy hosting, Expo account + `eas init`, Play Console app, closed test (12 testers / 14 days), Firebase SHA-1s of the Play signing key
