@@ -23,6 +23,7 @@ import {
   openReelSettings,
   reelCounterAvailable,
   reelLimitState,
+  useReelBubble,
   useReelCounter,
   useReelLimit,
 } from '../lib/reels';
@@ -105,6 +106,7 @@ function ReelCounterSettings() {
   const tracked = useTracked();
   const { enabled } = useReelCounter(1);
   const limit = useReelLimit();
+  const bubble = useReelBubble();
   const [pausesOff, setPausesOff] = useState(false);
   useFocusEffect(
     useCallback(() => {
@@ -128,6 +130,12 @@ function ReelCounterSettings() {
             }}
           />
           <AppText variant="caption">{t('reels.limitSub')}</AppText>
+          <ToggleRow
+            title={t('reels.bubbleTitle')}
+            sub={t('reels.bubbleSub')}
+            value={bubble}
+            onChange={(on) => actions.setReelBubble(on)}
+          />
           {limit > 0 && pausesOff && (
             <View style={s.pausesOff}>
               <AppText variant="caption" style={s.flex}>{t('reels.pausesOff')}</AppText>

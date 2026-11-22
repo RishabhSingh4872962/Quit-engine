@@ -4,6 +4,7 @@ import type { EventSubscription } from 'expo';
 export interface ReelDay {
   day: string; // YYYY-MM-DD, local time
   apps: Record<string, { count: number; ms: number }>; // by package id
+  hours: number[]; // reels per hour of the day (0–23), all apps together
 }
 
 interface ReelGuardModule {
@@ -19,6 +20,8 @@ interface ReelGuardModule {
   /** "5 more": the next pause comes at limit + extra (today only). */
   addExtraToday(n: number): void;
   setPausesOffToday(): void;
+  /** Live counter bubble while watching reels; text with a {count} placeholder. */
+  setBubble(on: boolean, text: string): void;
   /** Forgets today's "5 more", "no more pauses" and earlier pauses. */
   resetToday(): void;
   /** Opens an installed app by package; false if it can't be opened. */

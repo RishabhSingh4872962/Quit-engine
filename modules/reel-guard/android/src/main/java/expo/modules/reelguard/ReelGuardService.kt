@@ -55,6 +55,7 @@ class ReelGuardService : AccessibilityService() {
   private var lastPage: Int? = null // identity of the reel page on screen (rules with page IDs)
   private var enteredAt = 0L
   private var inPip = false
+  private var bubble: TextView? = null // live counter while watching reels (optional)
   private var misses = 0
   private val debug by lazy { (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0 }
 
@@ -150,6 +151,7 @@ class ReelGuardService : AccessibilityService() {
       if (active != pipPkg) enter(pipPkg)
       if (!inPip && debug) dlog("pip $pipPkg")
       inPip = true
+      refreshBubble()
     } else if (active != null && ++misses >= 2) {
       exit() // two misses in a row, so a brief redraw doesn't end the session
     }
@@ -205,6 +207,7 @@ class ReelGuardService : AccessibilityService() {
     lastTick = SystemClock.elapsedRealtime()
     counted(pkg) // the reel that is showing now
     schedule()
+    refreshBubble()
     if (debug) dlog("enter $pkg")
   }
 
@@ -220,6 +223,7 @@ class ReelGuardService : AccessibilityService() {
     ReelStore.addTime(this, pkg, SystemClock.elapsedRealtime() - lastTick, notify = true)
     active = null
     inPip = false
+    refreshBubble()
     refreshWidget()
     if (debug) dlog("exit $pkg")
   }
@@ -230,6 +234,7 @@ class ReelGuardService : AccessibilityService() {
    */
   private fun counted(pkg: String) {
     val total = ReelStore.addReel(this, pkg)
+    refreshBubble()
     val limit = ReelStore.limit(this)
     if (limit <= 0) return
     val allowed = limit + ReelStore.extraToday(this) // "5 more" moves this
@@ -247,6 +252,7 @@ class ReelGuardService : AccessibilityService() {
    * window over the Pause screen (YouTube and Instagram do that when sent to the background).
    */
   private fun openPause(pkg: String) {
+    hideBubble()
     performGlobalAction(GLOBAL_ACTION_BACK)
     handler.postDelayed({ startPause(pkg) }, 350)
   }
@@ -277,6 +283,48 @@ class ReelGuardService : AccessibilityService() {
       val dismissed = root.performAction(AccessibilityNodeInfo.ACTION_DISMISS)
       if (debug) dlog("pip close ${root.packageName} dismissed=$dismissed actions=${root.actionList.map { it.id }}")
     }
+  }
+
+  /** Shows, updates or hides the live counter: visible only while a reels player is on screen. */
+  fun refreshBubble() {
+    if (active == null || inPip || !ReelStore.bubbleOn(this)) return hideBubble()
+    val text = ReelStore.bubbleText(this, ReelStore.todayTotal(this))
+    bubble?.let { it.text = text; return }
+    try {
+      val wm = getSystemService(WINDOW_SERVICE) as WindowManager
+      fun dp(v: Float) = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, v, resources.displayMetrics).toInt()
+      val view = TextView(this).apply {
+        this.text = text
+        setTextColor(0xFFFFFFFF.toInt())
+        setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
+        setPadding(dp(12f), dp(6f), dp(12f), dp(6f))
+        background = GradientDrawable().apply {
+          cornerRadius = dp(16f).toFloat()
+          setColor(0xCC1D1B29.toInt()) // dark, slightly see-through: readable over any video
+        }
+      }
+      val params = WindowManager.LayoutParams(
+        WindowManager.LayoutParams.WRAP_CONTENT,
+        WindowManager.LayoutParams.WRAP_CONTENT,
+        WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
+        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+        PixelFormat.TRANSLUCENT,
+      ).apply {
+        gravity = Gravity.TOP or Gravity.END
+        x = dp(12f)
+        y = dp(110f)
+      }
+      wm.addView(view, params)
+      bubble = view
+    } catch (e: Exception) {
+      if (debug) dlog("bubble failed $e")
+    }
+  }
+
+  private fun hideBubble() {
+    val view = bubble ?: return
+    bubble = null
+    runCatching { (getSystemService(WINDOW_SERVICE) as WindowManager).removeView(view) }
   }
 
   /** A small note at the top of the screen for a few seconds. Not touchable, so it never blocks the app. */
@@ -360,6 +408,7 @@ class ReelGuardService : AccessibilityService() {
 
   override fun onDestroy() {
     exit()
+    hideBubble()
     instance = null
     super.onDestroy()
   }

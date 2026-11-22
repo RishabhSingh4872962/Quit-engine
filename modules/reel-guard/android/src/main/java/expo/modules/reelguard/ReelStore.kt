@@ -73,10 +73,12 @@ object ReelStore {
 
   /** Adds one reel and returns today's total across all apps. */
   fun addReel(ctx: Context, pkg: String): Int {
-    val today = day(System.currentTimeMillis())
+    val now = System.currentTimeMillis()
+    val today = day(now)
     val key = "$today|$pkg|n"
+    val hourKey = "$today|$pkg|h" + Calendar.getInstance().apply { timeInMillis = now }.get(Calendar.HOUR_OF_DAY)
     val p = prefs(ctx)
-    p.edit().putInt(key, p.getInt(key, 0) + 1).apply()
+    p.edit().putInt(key, p.getInt(key, 0) + 1).putInt(hourKey, p.getInt(hourKey, 0) + 1).apply()
     listener?.invoke()
     return p.all.entries.sumOf { (k, v) -> if (k.startsWith("$today|") && k.endsWith("|n")) v as Int else 0 }
   }
@@ -87,6 +89,18 @@ object ReelStore {
 
   fun setLimit(ctx: Context, limit: Int, nudge: String) =
     prefs(ctx).edit().putInt("limit", limit.coerceAtLeast(0)).putString("nudge", nudge).apply()
+
+  /** Live counter bubble while watching reels; text has {count}. */
+  fun setBubble(ctx: Context, on: Boolean, text: String) =
+    prefs(ctx).edit().putBoolean("bubble", on).putString("bubbleText", text).apply()
+  fun bubbleOn(ctx: Context) = prefs(ctx).getBoolean("bubble", false)
+  fun bubbleText(ctx: Context, count: Int) =
+    (prefs(ctx).getString("bubbleText", null) ?: "{count}").replace("{count}", count.toString())
+
+  fun todayTotal(ctx: Context): Int {
+    val today = day(System.currentTimeMillis())
+    return prefs(ctx).all.entries.sumOf { (k, v) -> if (k.startsWith("$today|") && k.endsWith("|n")) v as Int else 0 }
+  }
 
   fun limit(ctx: Context) = prefs(ctx).getInt("limit", 0)
   fun nudgeText(ctx: Context, count: Int, limit: Int) =
@@ -117,7 +131,7 @@ object ReelStore {
     if (notify) listener?.invoke()
   }
 
-  /** Last `days` days, oldest first: [{ day: "2026-11-22", apps: { pkg: { count, ms } } }]. */
+  /** Last `days` days, oldest first: [{ day, apps: { pkg: { count, ms } }, hours: [24 counts] }]. */
   fun stats(ctx: Context, days: Int): List<Map<String, Any>> {
     val all = prefs(ctx).all
     val cal = Calendar.getInstance()
@@ -126,9 +140,14 @@ object ReelStore {
       val d = day(cal.timeInMillis)
       cal.add(Calendar.DAY_OF_YEAR, 1)
       val apps = HashMap<String, Map<String, Number>>()
+      val hours = IntArray(24)
       for ((key, value) in all) {
         val parts = key.split('|')
         if (parts.size != 3 || parts[0] != d) continue
+        if (parts[2].startsWith("h")) { // reels per hour of the day (all apps together)
+          parts[2].drop(1).toIntOrNull()?.takeIf { it in 0..23 }?.let { hours[it] += value as Int }
+          continue
+        }
         val app = apps[parts[1]] ?: mapOf("count" to 0, "ms" to 0.0)
         apps[parts[1]] = when (parts[2]) {
           "n" -> app + ("count" to (value as Int))
@@ -136,7 +155,7 @@ object ReelStore {
           else -> app
         }
       }
-      mapOf("day" to d, "apps" to apps)
+      mapOf("day" to d, "apps" to apps, "hours" to hours.toList())
     }
   }
 

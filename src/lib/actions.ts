@@ -27,6 +27,7 @@ import {
   reelCounterAvailable,
   resetReelPausesToday,
   syncReelLimit,
+  writeReelBubble,
   writeReelConsent,
   writeReelLimit,
 } from './reels';
@@ -116,6 +117,12 @@ export const actions = {
     syncReelLimit();
     resetReelPausesToday(); // a new limit means fresh rules for today
     markReelBase(); // reels already watched today don't count against the new limit
+  },
+
+  /** Live counter bubble while watching reels. */
+  setReelBubble(on: boolean) {
+    writeReelBubble(on);
+    syncReelLimit();
   },
 
   /** Undo "No more pauses today". */

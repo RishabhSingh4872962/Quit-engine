@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { AppState, Platform } from 'react-native';
-import { useMMKVNumber } from 'react-native-mmkv';
+import { useMMKVBoolean, useMMKVNumber } from 'react-native-mmkv';
 import ReelGuard from '../../modules/reel-guard';
 import type { ReelDay } from '../../modules/reel-guard';
 import i18n from '../i18n';
@@ -66,12 +66,24 @@ export function useReelLimit(): number {
   return v ?? 0;
 }
 
-/** Sends the limit and the nudge text (in the app's language) to the native service. */
+// ---------- Live counter bubble ----------
+
+const BUBBLE_KEY = 'reels.bubble';
+export const readReelBubble = () => storage.getBoolean(BUBBLE_KEY) ?? false;
+export const writeReelBubble = (on: boolean) => storage.set(BUBBLE_KEY, on);
+
+export function useReelBubble(): boolean {
+  const [v] = useMMKVBoolean(BUBBLE_KEY, storage);
+  return v ?? false;
+}
+
+/** Sends the limit, bubble setting and their texts (in the app's language) to the native service. */
 export function syncReelLimit() {
   try {
     ReelGuard?.setLimit(readReelLimit(), i18n.t('reels.nudge'));
+    ReelGuard?.setBubble(readReelBubble(), i18n.t('reels.bubble'));
   } catch (e) {
-    reportError(e, 'reel limit');
+    reportError(e, 'reel settings');
   }
 }
 

@@ -28,6 +28,7 @@ export const reels: HabitConfig = {
   ],
   urgeExercises: ['breathing', 'timer'],
   milestones: [1, 3, 7, 14, 30, 60, 90],
+  reelBaseline: { quizId: 'hours', minutes: [90, 210, 300] }, // answers 1–2 h, 3–4 h, 5+ h
   reelApps: [
     { id: 'com.instagram.android', name: 'Instagram Reels' },
     { id: 'com.google.android.youtube', name: 'YouTube Shorts' },

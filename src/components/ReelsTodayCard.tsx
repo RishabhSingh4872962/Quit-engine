@@ -80,6 +80,7 @@ export function ReelsTodayCard({ apps }: { apps: App[] }) {
               </View>
             );
           })}
+          <Button variant="ghost" icon="bar-chart-outline" label={t('reels.history')} onPress={() => navigation.navigate('ReelStats')} />
         </>
       )}
     </Card>

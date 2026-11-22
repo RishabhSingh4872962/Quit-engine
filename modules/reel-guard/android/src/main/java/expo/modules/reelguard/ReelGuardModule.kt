@@ -72,6 +72,12 @@ class ReelGuardModule : Module() {
     // "No more pauses today".
     Function("setPausesOffToday") { ReelStore.setPausesOffToday(context) }
 
+    // Live counter bubble while watching reels ({count} in the text).
+    Function("setBubble") { on: Boolean, text: String ->
+      ReelStore.setBubble(context, on, text)
+      ReelGuardService.instance?.refreshBubble()
+    }
+
     // Pauses back on: forget today's "5 more", "no more pauses" and earlier pauses.
     Function("resetToday") { ReelStore.resetToday(context) }
 

@@ -51,7 +51,7 @@ export default function App() {
   useEffect(() => {
     initPremium();
     applyReelRules(remote.reelRules()); // fixes for changed Instagram/YouTube screens, without an app update
-    syncReelLimit();
+    syncReelLimit(); // limit, bubble and their texts
     actions.checkReelLimit(); // a day over the reel limit ends the reel-free streak
     const sub = AppState.addEventListener('change', (s) => s === 'active' && actions.checkReelLimit());
     const onLang = () => syncReelLimit(); // nudge text follows the app language

@@ -14,6 +14,7 @@ import { AddHabitScreen, OnboardingScreen } from '../screens/Onboarding';
 import { PauseScreen } from '../screens/Pause';
 import { PaywallScreen } from '../screens/Paywall';
 import { ReelCounterSetupScreen } from '../screens/ReelCounterSetup';
+import { ReelStatsScreen } from '../screens/ReelStats';
 import { SettingsScreen } from '../screens/Settings';
 import { ShareScreen } from '../screens/Share';
 import { UrgeScreen } from '../screens/Urge';
@@ -64,6 +65,8 @@ const RootStack = createNativeStackNavigator({
         Share: { screen: ShareScreen, options: { presentation: 'modal', animation: 'slide_from_bottom' } },
         Paywall: { screen: PaywallScreen, options: { presentation: 'modal', animation: 'slide_from_bottom' } },
         ReelCounterSetup: { screen: ReelCounterSetupScreen, options: { presentation: 'modal', animation: 'slide_from_bottom' } },
+        // Reels history; also opened by the weekly summary notification: quitengine://reels
+        ReelStats: { screen: ReelStatsScreen, linking: 'reels', options: { presentation: 'modal', animation: 'slide_from_bottom' } },
         // Opened by the reel counter at the daily limit: quitengine://pause?app=<package>
         Pause: { screen: PauseScreen, linking: 'pause', options: { presentation: 'fullScreenModal', animation: 'fade' } },
       },

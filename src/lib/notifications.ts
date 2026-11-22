@@ -1,8 +1,9 @@
 import * as Notifications from 'expo-notifications';
 import { AndroidImportance, IosAuthorizationStatus } from 'expo-notifications';
-import { Platform } from 'react-native';
+import { Linking, Platform } from 'react-native';
 import i18n, { milestoneLabel } from '../i18n';
 import { HABITS, isHabitId } from '../habits';
+import { isReelCounterOn } from './reels';
 import { readCheckin, readMilestoneAlerts, readState, readTracked, writeActive } from './storage';
 import { DAY_MS } from './streak';
 import { reportError } from './telemetry';
@@ -71,11 +72,31 @@ async function rebuild() {
   await Notifications.cancelAllScheduledNotificationsAsync();
   if (!(await hasPermission())) return;
 
+  const t = i18n.getFixedT(i18n.language);
+
+  // Weekly reels summary (Sunday evening), neutral text; opens the history screen.
+  if (isReelCounterOn() && readTracked().some((id) => HABITS[id].reelApps)) {
+    await Notifications.scheduleNotificationAsync({
+      identifier: 'weekly-summary',
+      content: {
+        title: t('notifications.weeklyTitle'),
+        body: t('notifications.weeklyBody'),
+        data: { url: 'quitengine://reels' },
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
+        weekday: 1, // Sunday
+        hour: 19,
+        minute: 0,
+        channelId: CHANNEL,
+      },
+    });
+  }
+
   const started = readTracked()
     .map((id) => ({ id, start: readState(id).streakStart }))
     .filter((h): h is { id: typeof h.id; start: number } => h.start !== null);
   if (!started.length) return;
-  const t = i18n.getFixedT(i18n.language);
 
   if (readMilestoneAlerts()) {
     for (const { id, start } of started) {
@@ -116,8 +137,10 @@ i18n.on('languageChanged', () => void syncNotifications());
 /** Tapping a milestone notification switches the app to that habit (also when it cold-starts the app). */
 export function routeNotificationTaps() {
   const open = (response: Notifications.NotificationResponse | null) => {
-    const id = response?.notification.request.content.data?.habitId;
+    const data = response?.notification.request.content.data;
+    const id = data?.habitId;
     if (isHabitId(id) && readTracked().includes(id)) writeActive(id);
+    if (typeof data?.url === 'string' && data.url.startsWith('quitengine://')) void Linking.openURL(data.url);
   };
   Notifications.addNotificationResponseReceivedListener(open);
   void Notifications.getLastNotificationResponseAsync().then((r) => {

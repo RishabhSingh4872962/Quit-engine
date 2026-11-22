@@ -31,4 +31,9 @@ export interface HabitConfig {
    * rules live in the native reel-guard module and can be updated from Remote Config.
    */
   reelApps?: { id: string; name: string }[];
+  /**
+   * For "time won back": which quiz question gives the old daily scrolling time, and the
+   * minutes each answer stands for (e.g. "3–4 hours" -> 210).
+   */
+  reelBaseline?: { quizId: string; minutes: number[] };
 }
