@@ -3,7 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, ZoomIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { StaticScreenProps, useNavigation } from '@react-navigation/native';
+import { StackActions, StaticScreenProps, useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { HABITS } from '../habits';
 import { HabitId } from '../habits/types';
@@ -41,6 +41,13 @@ export function CelebrateScreen({ route }: Props) {
         <AppText variant="title" center style={s.label} color={c.accentText}>{milestoneLabel(route.params.days, t)}</AppText>
         <AppText variant="muted" center style={s.body}>{t('celebrate.body')}</AppText>
         <Button label={t('celebrate.keepGoing')} onPress={navigation.goBack} style={s.button} />
+        <Button
+          variant="ghost"
+          icon="share-social-outline"
+          label={t('share.button')}
+          onPress={() => navigation.dispatch(StackActions.replace('Share', { habitId: habit.id }))}
+          style={s.share}
+        />
       </Animated.View>
     </Animated.View>
   );
@@ -54,4 +61,5 @@ const s = StyleSheet.create({
   label: { fontSize: 36, lineHeight: 46, marginTop: 4 },
   body: { marginTop: 6, marginBottom: 24 },
   button: { alignSelf: 'stretch' },
+  share: { alignSelf: 'stretch', marginTop: 4 },
 });

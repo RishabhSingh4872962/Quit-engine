@@ -13,6 +13,7 @@ import { AppText } from '../components/AppText';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { HabitSwitcher } from '../components/HabitSwitcher';
+import { IconButton } from '../components/IconButton';
 import { Screen } from '../components/Screen';
 import { StreakRing } from '../components/StreakRing';
 
@@ -56,8 +57,18 @@ export function HomeScreen() {
       <HabitSwitcher />
 
       <Animated.View key={habit.id} entering={FadeIn.duration(400)} style={s.header}>
-        <AppText variant="title">{habit.name[lang]}</AppText>
-        <AppText variant="muted">{habit.tagline[lang]}</AppText>
+        <View style={s.headerText}>
+          <AppText variant="title">{habit.name[lang]}</AppText>
+          <AppText variant="muted">{habit.tagline[lang]}</AppText>
+        </View>
+        {started && days > 0 && (
+          <IconButton
+            icon="share-social-outline"
+            label={t('share.title')}
+            onPress={() => navigation.navigate('Share', { habitId: habit.id })}
+            filled
+          />
+        )}
       </Animated.View>
 
       <Animated.View entering={FadeInDown.delay(100).duration(600)} style={s.ring}>
@@ -115,7 +126,8 @@ function Stat({ icon, value, label }: {
 }
 
 const s = StyleSheet.create({
-  header: { marginTop: 18 },
+  header: { marginTop: 18, flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  headerText: { flex: 1 },
   ring: { alignItems: 'center', marginTop: 24, marginBottom: 24 },
   daysLabel: { marginTop: -4 },
   status: { marginTop: 18 },

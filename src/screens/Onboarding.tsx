@@ -15,6 +15,7 @@ import { AppText } from '../components/AppText';
 import { Button } from '../components/Button';
 import { OptionCard } from '../components/OptionCard';
 import { Screen } from '../components/Screen';
+import { IconButton } from '../components/IconButton';
 
 type Step = { kind: 'welcome' } | { kind: 'pick' } | { kind: 'quiz'; index: number };
 type Answers = Partial<Record<HabitId, Record<string, number>>>;
@@ -235,23 +236,6 @@ function Question({ habit, q, index, total, selected, onPick, onBack }: {
   );
 }
 
-function IconButton({ icon, label, onPress, filled }: {
-  icon: React.ComponentProps<typeof Ionicons>['name']; label: string; onPress: () => void; filled?: boolean;
-}) {
-  const c = useColors();
-  return (
-    <Pressable
-      onPress={onPress}
-      hitSlop={12}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      style={filled ? [s.iconBtn, { backgroundColor: c.surfaceAlt }] : undefined}
-    >
-      <Ionicons name={icon} size={filled ? 22 : 26} color={c.text} />
-    </Pressable>
-  );
-}
-
 const s = StyleSheet.create({
   flex: { flex: 1 },
   between: { justifyContent: 'space-between' },
@@ -260,7 +244,6 @@ const s = StyleSheet.create({
   sectionLabel: { marginBottom: 12 },
   privacy: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 14 },
   topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 16, minHeight: 40 },
-  iconBtn: { width: 40, height: 40, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
   pickList: { paddingTop: 24, paddingBottom: 8 },
   pickSub: { marginTop: 4, marginBottom: 20 },
   continue: { marginTop: 12 },

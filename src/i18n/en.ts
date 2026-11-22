@@ -116,6 +116,14 @@ export const en = {
     errorBody: 'Please check your internet connection and try again.',
     privacyOn: 'Your progress is backed up to your Google account (stored in India).',
   },
+  share: {
+    title: 'Share your streak',
+    showHabit: 'Show the habit name',
+    showHabitSub: 'Off by default, so you decide who knows.',
+    button: 'Share',
+    andCounting: 'and counting',
+    error: "Couldn't create the image. Please try again.",
+  },
   settings: {
     title: 'Settings',
     language: 'Language',

@@ -13,6 +13,7 @@ type Events = {
   slip_logged: undefined;
   urge_exercise_done: undefined;
   milestone_reached: { days: number };
+  streak_shared: undefined;
   backup_enabled: undefined;
   backup_restored: undefined;
   account_deleted: undefined;

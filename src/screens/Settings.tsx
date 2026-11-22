@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { Alert, AppState, Linking, Pressable, StyleSheet, Switch, View } from 'react-native';
+import { Alert, AppState, Linking, Pressable, StyleSheet, View } from 'react-native';
 import Constants from 'expo-constants';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -28,6 +28,7 @@ import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { Screen } from '../components/Screen';
 import { Segmented } from '../components/Segmented';
+import { ToggleRow } from '../components/ToggleRow';
 
 export function SettingsScreen() {
   const { t } = useTranslation();
@@ -268,28 +269,6 @@ function NotificationSettings() {
         />
       )}
     </Section>
-  );
-}
-
-function ToggleRow({ title, sub, value, onChange }: {
-  title: string; sub: string; value: boolean; onChange: (on: boolean) => void;
-}) {
-  const c = useColors();
-  return (
-    <View style={s.row}>
-      <View style={s.flex}>
-        <AppText style={s.rowTitle}>{title}</AppText>
-        <AppText variant="caption">{sub}</AppText>
-      </View>
-      <Switch
-        value={value}
-        onValueChange={onChange}
-        trackColor={{ false: c.surfaceAlt, true: c.accent }}
-        thumbColor="#FFFFFF"
-        ios_backgroundColor={c.surfaceAlt}
-        accessibilityLabel={title}
-      />
-    </View>
   );
 }
 

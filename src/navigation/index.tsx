@@ -12,6 +12,7 @@ import { HomeScreen } from '../screens/Home';
 import { MilestonesScreen } from '../screens/Milestones';
 import { AddHabitScreen, OnboardingScreen } from '../screens/Onboarding';
 import { SettingsScreen } from '../screens/Settings';
+import { ShareScreen } from '../screens/Share';
 import { UrgeScreen } from '../screens/Urge';
 
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
@@ -57,6 +58,7 @@ const RootStack = createNativeStackNavigator({
         Urge: { screen: UrgeScreen, options: { presentation: 'fullScreenModal', animation: 'fade_from_bottom' } },
         Celebrate: { screen: CelebrateScreen, options: { presentation: 'transparentModal', animation: 'fade' } },
         AddHabit: { screen: AddHabitScreen, options: { presentation: 'modal', animation: 'slide_from_bottom' } },
+        Share: { screen: ShareScreen, options: { presentation: 'modal', animation: 'slide_from_bottom' } },
       },
     },
   },

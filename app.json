@@ -64,7 +64,8 @@
             "kotlinVersion": "2.3.21"
           }
         }
-      ]
+      ],
+      "expo-sharing"
     ]
   }
 }
