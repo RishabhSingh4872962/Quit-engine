@@ -14,6 +14,7 @@ export interface HabitState {
   relapses: number[]; // epoch ms
   urgesResisted: number;
   bestStreakDays: number; // longest finished streak; the current one is compared live
+  pastDaysFree: number; // whole days from earlier streaks; a slip adds to this, never resets it
   celebrated: number; // highest milestone (days) already celebrated in the current streak
 }
 
@@ -23,6 +24,7 @@ export const EMPTY: HabitState = {
   relapses: [],
   urgesResisted: 0,
   bestStreakDays: 0,
+  pastDaysFree: 0,
   celebrated: 0,
 };
 

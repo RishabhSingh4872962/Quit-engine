@@ -20,6 +20,7 @@ rules_version = '2';
 //   - streakStart: int | null (required, epoch ms, at most 1 day ahead of server time)
 //   - urgesResisted: int (required, 0–1,000,000)
 //   - bestStreakDays: int (required, 0–36,500)
+//   - pastDaysFree: int (required, 0–36,500) - days from earlier streaks (a slip adds to it)
 //   - celebrated: int (required, 0–36,500) - highest milestone celebrated in the current streak
 //   - updatedAt: timestamp (required, == server time of the write)
 //   Slip/relapse timestamps are deliberately NOT backed up (data minimisation).
@@ -87,7 +88,7 @@ service cloud.firestore {
     }
 
     function isValidHabitBackup(data) {
-      let fields = ['quizAnswers', 'streakStart', 'urgesResisted', 'bestStreakDays', 'celebrated', 'updatedAt'];
+      let fields = ['quizAnswers', 'streakStart', 'urgesResisted', 'bestStreakDays', 'pastDaysFree', 'celebrated', 'updatedAt'];
       return data.keys().hasOnly(fields) &&
              data.keys().hasAll(fields) &&
              isValidQuizAnswers(data.quizAnswers) &&
@@ -95,6 +96,7 @@ service cloud.firestore {
                isIntInRange(data.streakStart, 0, request.time.toMillis() + 86400000)) &&
              isIntInRange(data.urgesResisted, 0, 1000000) &&
              isIntInRange(data.bestStreakDays, 0, 36500) &&
+             isIntInRange(data.pastDaysFree, 0, 36500) &&
              isIntInRange(data.celebrated, 0, 36500) &&
              data.updatedAt == request.time;
     }

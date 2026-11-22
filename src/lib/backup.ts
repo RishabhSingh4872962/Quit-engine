@@ -100,6 +100,7 @@ export async function backupNow() {
       streakStart: s.streakStart,
       urgesResisted: s.urgesResisted,
       bestStreakDays: s.bestStreakDays,
+      pastDaysFree: s.pastDaysFree,
       celebrated: s.celebrated,
       updatedAt: serverTimestamp(),
     });
@@ -156,6 +157,7 @@ export function restoreBackup(backup: CloudBackup) {
       relapses: [], // never backed up
       urgesResisted: asInt(h.urgesResisted),
       bestStreakDays: asInt(h.bestStreakDays),
+      pastDaysFree: asInt(h.pastDaysFree),
       celebrated: asInt(h.celebrated),
     });
   }

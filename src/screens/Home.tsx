@@ -29,6 +29,7 @@ export function HomeScreen() {
   const started = state.streakStart !== null;
   const { days, next, progress } = milestoneProgress(state.streakStart, habit.milestones, now);
   const best = Math.max(state.bestStreakDays, days);
+  const totalFree = state.pastDaysFree + days; // all streaks together; a slip never takes these away
 
   // Celebrate the highest milestone reached since the last celebration (also covers days away from the app).
   const toCelebrate = [...habit.milestones].reverse().find((m) => started && m <= days && m > state.celebrated);
@@ -45,7 +46,7 @@ export function HomeScreen() {
       : t('home.allMilestones');
 
   const confirmSlip = () =>
-    Alert.alert(t('home.slipTitle'), t('home.slipBody'), [
+    Alert.alert(t('home.slipTitle'), days > 0 ? t('home.slipBodyDays', { count: days }) : t('home.slipBody'), [
       { text: t('common.cancel'), style: 'cancel' },
       { text: t('home.slipConfirm'), onPress: () => actions.relapse(habit.id) },
     ]);
@@ -65,6 +66,14 @@ export function HomeScreen() {
           <AppText variant="muted" style={s.daysLabel}>{t('common.days', { count: days })}</AppText>
         </StreakRing>
         <AppText variant="muted" center style={s.status}>{status}</AppText>
+        {state.pastDaysFree > 0 && (
+          <Animated.View entering={FadeIn.duration(400)} style={[s.total, { backgroundColor: c.accentSoft }]}>
+            <Ionicons name="leaf" size={14} color={c.accentText} />
+            <AppText variant="caption" color={c.accentText} style={s.totalText}>
+              {t('home.totalFree', { count: totalFree })}
+            </AppText>
+          </Animated.View>
+        )}
       </Animated.View>
 
       <Animated.View entering={FadeInDown.delay(200).duration(600)} style={s.stats}>
@@ -110,6 +119,8 @@ const s = StyleSheet.create({
   ring: { alignItems: 'center', marginTop: 24, marginBottom: 24 },
   daysLabel: { marginTop: -4 },
   status: { marginTop: 18 },
+  total: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10, paddingHorizontal: 12, paddingVertical: 5, borderRadius: 999 },
+  totalText: { fontWeight: '600' },
   stats: { flexDirection: 'row', gap: 12, marginBottom: 24 },
   stat: { flex: 1, gap: 4 },
   statIcon: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },

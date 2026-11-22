@@ -52,10 +52,12 @@ export const actions = {
   relapse(id: HabitId) {
     const s = readState(id);
     const now = Date.now();
+    const days = streakDays(s.streakStart, now);
     writeState(id, {
       relapses: [...s.relapses, now],
       streakStart: now,
-      bestStreakDays: Math.max(s.bestStreakDays, streakDays(s.streakStart, now)),
+      bestStreakDays: Math.max(s.bestStreakDays, days),
+      pastDaysFree: s.pastDaysFree + days, // the days still count
       celebrated: 0,
     });
     track('slip_logged');
