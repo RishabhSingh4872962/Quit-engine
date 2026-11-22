@@ -101,6 +101,10 @@ object ReelStore {
   fun pausesOffToday(ctx: Context) = prefs(ctx).getBoolean(todayKey("off"), false)
   fun setPausesOffToday(ctx: Context) = prefs(ctx).edit().putBoolean(todayKey("off"), true).apply()
 
+  /** Undo today's "5 more", "no more pauses" and pause history (new limit, or pauses back on). */
+  fun resetToday(ctx: Context) =
+    prefs(ctx).edit().remove(todayKey("extra")).remove(todayKey("off")).remove(todayKey("pausedAt")).apply()
+
   /** Today's reel total when the last pause was shown (0 = none yet). */
   fun pausedAt(ctx: Context) = prefs(ctx).getInt(todayKey("pausedAt"), 0)
   fun setPausedAt(ctx: Context, total: Int) = prefs(ctx).edit().putInt(todayKey("pausedAt"), total).apply()

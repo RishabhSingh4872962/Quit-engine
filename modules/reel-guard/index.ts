@@ -19,6 +19,8 @@ interface ReelGuardModule {
   /** "5 more": the next pause comes at limit + extra (today only). */
   addExtraToday(n: number): void;
   setPausesOffToday(): void;
+  /** Forgets today's "5 more", "no more pauses" and earlier pauses. */
+  resetToday(): void;
   /** Opens an installed app by package; false if it can't be opened. */
   openApp(pkg: string): boolean;
   /** Detection rules as JSON (from Remote Config); null restores the built-in ones. */

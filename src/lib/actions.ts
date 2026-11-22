@@ -25,6 +25,7 @@ import {
   readReelDays,
   readReelLimit,
   reelCounterAvailable,
+  resetReelPausesToday,
   syncReelLimit,
   writeReelConsent,
   writeReelLimit,
@@ -113,7 +114,13 @@ export const actions = {
   setReelLimit(limit: number) {
     writeReelLimit(limit);
     syncReelLimit();
+    resetReelPausesToday(); // a new limit means fresh rules for today
     markReelBase(); // reels already watched today don't count against the new limit
+  },
+
+  /** Undo "No more pauses today". */
+  resumeReelPauses() {
+    resetReelPausesToday();
   },
 
   /**

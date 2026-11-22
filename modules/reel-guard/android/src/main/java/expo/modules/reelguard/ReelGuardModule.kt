@@ -72,6 +72,9 @@ class ReelGuardModule : Module() {
     // "No more pauses today".
     Function("setPausesOffToday") { ReelStore.setPausesOffToday(context) }
 
+    // Pauses back on: forget today's "5 more", "no more pauses" and earlier pauses.
+    Function("resetToday") { ReelStore.resetToday(context) }
+
     // Back to the app the pause interrupted. Starting an activity needs no package visibility.
     Function("openApp") { pkg: String ->
       try {

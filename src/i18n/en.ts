@@ -160,6 +160,8 @@ export const en = {
     limitOff: 'Off',
     limitSub: 'A gentle note at half and 80%, and a pause when you reach it. Going over it restarts your reel-free streak; your total days still count.',
     setLimit: 'Set a daily limit',
+    pausesOff: 'Pauses are off for the rest of today.',
+    pausesOn: 'Turn pauses back on',
     settingsTitle: 'Reel counter',
     settingsOn: 'On. Counting reels in Instagram and YouTube.',
     settingsOff: 'Off. Reels are not being counted.',

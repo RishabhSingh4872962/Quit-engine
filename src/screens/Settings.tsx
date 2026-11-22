@@ -18,7 +18,14 @@ import {
   useAuthUser,
   useLastBackupAt,
 } from '../lib/backup';
-import { LIMIT_OPTIONS, openReelSettings, reelCounterAvailable, useReelCounter, useReelLimit } from '../lib/reels';
+import {
+  LIMIT_OPTIONS,
+  openReelSettings,
+  reelCounterAvailable,
+  reelLimitState,
+  useReelCounter,
+  useReelLimit,
+} from '../lib/reels';
 import { manageSubscription, premiumAvailable, premiumTestMode, usePremium } from '../lib/premium';
 import { remote } from '../lib/remoteConfig';
 import { reportError } from '../lib/telemetry';
@@ -98,6 +105,12 @@ function ReelCounterSettings() {
   const tracked = useTracked();
   const { enabled } = useReelCounter(1);
   const limit = useReelLimit();
+  const [pausesOff, setPausesOff] = useState(false);
+  useFocusEffect(
+    useCallback(() => {
+      setPausesOff(reelLimitState()?.pausesOffToday ?? false); // may have changed on the Pause screen
+    }, []),
+  );
   if (!reelCounterAvailable || !tracked.some((id) => HABITS[id].reelApps)) return null;
   const options = LIMIT_OPTIONS.map((n) => ({ value: String(n), label: n ? String(n) : t('reels.limitOff') }));
   return (
@@ -106,8 +119,28 @@ function ReelCounterSettings() {
       {enabled && (
         <View style={s.limitBlock}>
           <AppText style={s.rowTitle}>{t('reels.limitTitle')}</AppText>
-          <Segmented options={options} value={String(limit)} onChange={(v) => actions.setReelLimit(Number(v))} />
+          <Segmented
+            options={options}
+            value={String(limit)}
+            onChange={(v) => {
+              actions.setReelLimit(Number(v));
+              setPausesOff(false);
+            }}
+          />
           <AppText variant="caption">{t('reels.limitSub')}</AppText>
+          {limit > 0 && pausesOff && (
+            <View style={s.pausesOff}>
+              <AppText variant="caption" style={s.flex}>{t('reels.pausesOff')}</AppText>
+              <Button
+                variant="ghost"
+                label={t('reels.pausesOn')}
+                onPress={() => {
+                  actions.resumeReelPauses();
+                  setPausesOff(false);
+                }}
+              />
+            </View>
+          )}
         </View>
       )}
       {enabled ? (
@@ -363,6 +396,7 @@ const s = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   rowTitle: { fontSize: 16, fontWeight: '600' },
   limitBlock: { gap: 10, marginTop: 4 },
+  pausesOff: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   timePill: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 6, borderRadius: radius.pill },
   banner: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: radius.sm },
   link: { fontSize: 14, fontWeight: '700' },
