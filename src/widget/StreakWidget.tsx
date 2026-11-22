@@ -16,9 +16,10 @@ const leaf = (color: string) =>
  * Home-screen widget: the streak number and "days", nothing that names the habit
  * (it sits on a home screen other people may see). Tapping it opens the app.
  */
-export function StreakWidget({ days, unit, colors, size }: {
+export function StreakWidget({ days, unit, sub, colors, size }: {
   days: number;
   unit: string;
+  sub?: string; // optional second line, e.g. "23 today" (reels watched)
   colors: Palette;
   size: number; // the widget's smaller side, in dp
 }) {
@@ -43,6 +44,7 @@ export function StreakWidget({ days, unit, colors, size }: {
         style={{ fontSize: numberSize, fontFamily: 'Baloo2_800ExtraBold', color: colors.accentText as Hex }}
       />
       <TextWidget text={unit} style={{ fontSize: 14, color: colors.textMuted as Hex }} />
+      {sub ? <TextWidget text={sub} style={{ fontSize: 12, color: colors.accentText as Hex, marginTop: 4 }} /> : null}
     </FlexWidget>
   );
 }

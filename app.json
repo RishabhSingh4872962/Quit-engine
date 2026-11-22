@@ -92,6 +92,7 @@
           "jvmArgs": "-Xmx4096m -XX:MaxMetaspaceSize=1024m"
         }
       ]
-    ]
+    ],
+    "scheme": "quitengine"
   }
 }

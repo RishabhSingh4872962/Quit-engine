@@ -18,7 +18,7 @@ import {
   useAuthUser,
   useLastBackupAt,
 } from '../lib/backup';
-import { reelCounterAvailable, openReelSettings, useReelCounter } from '../lib/reels';
+import { LIMIT_OPTIONS, openReelSettings, reelCounterAvailable, useReelCounter, useReelLimit } from '../lib/reels';
 import { manageSubscription, premiumAvailable, premiumTestMode, usePremium } from '../lib/premium';
 import { remote } from '../lib/remoteConfig';
 import { reportError } from '../lib/telemetry';
@@ -97,10 +97,19 @@ function ReelCounterSettings() {
   const navigation = useNavigation();
   const tracked = useTracked();
   const { enabled } = useReelCounter(1);
+  const limit = useReelLimit();
   if (!reelCounterAvailable || !tracked.some((id) => HABITS[id].reelApps)) return null;
+  const options = LIMIT_OPTIONS.map((n) => ({ value: String(n), label: n ? String(n) : t('reels.limitOff') }));
   return (
     <Section icon="film" title={t('reels.settingsTitle')}>
       <AppText variant="muted">{enabled ? t('reels.settingsOn') : t('reels.settingsOff')}</AppText>
+      {enabled && (
+        <View style={s.limitBlock}>
+          <AppText style={s.rowTitle}>{t('reels.limitTitle')}</AppText>
+          <Segmented options={options} value={String(limit)} onChange={(v) => actions.setReelLimit(Number(v))} />
+          <AppText variant="caption">{t('reels.limitSub')}</AppText>
+        </View>
+      )}
       {enabled ? (
         <Button variant="soft" icon="settings-outline" label={t('reels.settingsManage')} onPress={openReelSettings} />
       ) : (
@@ -353,6 +362,7 @@ const s = StyleSheet.create({
   habitIcon: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   rowTitle: { fontSize: 16, fontWeight: '600' },
+  limitBlock: { gap: 10, marginTop: 4 },
   timePill: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 6, borderRadius: radius.pill },
   banner: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: radius.sm },
   link: { fontSize: 14, fontWeight: '700' },

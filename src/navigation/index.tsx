@@ -11,6 +11,7 @@ import { CelebrateScreen } from '../screens/Celebrate';
 import { HomeScreen } from '../screens/Home';
 import { MilestonesScreen } from '../screens/Milestones';
 import { AddHabitScreen, OnboardingScreen } from '../screens/Onboarding';
+import { PauseScreen } from '../screens/Pause';
 import { PaywallScreen } from '../screens/Paywall';
 import { ReelCounterSetupScreen } from '../screens/ReelCounterSetup';
 import { SettingsScreen } from '../screens/Settings';
@@ -63,6 +64,8 @@ const RootStack = createNativeStackNavigator({
         Share: { screen: ShareScreen, options: { presentation: 'modal', animation: 'slide_from_bottom' } },
         Paywall: { screen: PaywallScreen, options: { presentation: 'modal', animation: 'slide_from_bottom' } },
         ReelCounterSetup: { screen: ReelCounterSetupScreen, options: { presentation: 'modal', animation: 'slide_from_bottom' } },
+        // Opened by the reel counter at the daily limit: quitengine://pause?app=<package>
+        Pause: { screen: PauseScreen, linking: 'pause', options: { presentation: 'fullScreenModal', animation: 'fade' } },
       },
     },
   },

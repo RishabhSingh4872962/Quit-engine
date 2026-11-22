@@ -1,6 +1,7 @@
 import { HabitId } from '../habits/types';
 import { requestPermission, syncNotifications } from './notifications';
 import {
+  storage,
   CheckinPref,
   readActive,
   readScreenTimeOff,
@@ -15,9 +16,32 @@ import {
   writeTracked,
 } from './storage';
 import { streakDays } from './streak';
-import { openReelSettings, writeReelConsent } from './reels';
+import { HABITS } from '../habits';
+import {
+  dayTotals,
+  endOfDay,
+  localDay,
+  openReelSettings,
+  readReelDays,
+  readReelLimit,
+  reelCounterAvailable,
+  syncReelLimit,
+  writeReelConsent,
+  writeReelLimit,
+} from './reels';
 import { track } from './telemetry';
 import { updateStreakWidget } from '../widget';
+
+const BASE_DAY_KEY = 'reels.baseDay';
+const BASE_COUNT_KEY = 'reels.baseCount';
+
+/** Remembers today's reel count, so the streak check only counts reels watched after now (today). */
+function markReelBase() {
+  const today = readReelDays(1).at(-1);
+  const apps = Object.values(HABITS).flatMap((h) => h.reelApps?.map((a) => a.id) ?? []);
+  storage.set(BASE_DAY_KEY, localDay(Date.now()));
+  storage.set(BASE_COUNT_KEY, dayTotals(today, apps).count);
+}
 
 /** Every change to habit progress goes through here, so side effects (notifications, sync) have one home. */
 export const actions = {
@@ -51,6 +75,7 @@ export const actions = {
 
   async startStreak(id: HabitId) {
     writeState(id, { streakStart: Date.now(), celebrated: 0 });
+    if (HABITS[id].reelApps) markReelBase(); // reels already watched today don't count against the new streak
     track('streak_started');
     updateStreakWidget();
     // Ask at a meaningful moment rather than on first launch.
@@ -58,9 +83,9 @@ export const actions = {
     await syncNotifications();
   },
 
-  relapse(id: HabitId) {
+  /** A slip, now or (for automatic reel-limit slips found later) at the end of an earlier day. */
+  relapse(id: HabitId, now = Date.now()) {
     const s = readState(id);
-    const now = Date.now();
     const days = streakDays(s.streakStart, now);
     writeState(id, {
       relapses: [...s.relapses, now],
@@ -82,6 +107,41 @@ export const actions = {
   markCelebrated(id: HabitId, milestone: number) {
     writeState(id, { celebrated: milestone });
     track('milestone_reached', { days: milestone });
+  },
+
+  /** Daily reel limit (0 = off). The native service nudges and pauses based on it. */
+  setReelLimit(limit: number) {
+    writeReelLimit(limit);
+    syncReelLimit();
+    markReelBase(); // reels already watched today don't count against the new limit
+  },
+
+  /**
+   * Automatic reel-free streak: a day over the daily limit ends the streak of each tracked habit
+   * that counts reels. Checked when the app opens; recorded once per day. On the day the streak
+   * starts or the limit changes, only reels after that moment count (see markReelBase).
+   */
+  checkReelLimit() {
+    const limit = readReelLimit();
+    if (!limit || !reelCounterAvailable) return;
+    const days = readReelDays(60);
+    const today = localDay(Date.now());
+    for (const id of readTracked()) {
+      const apps = HABITS[id].reelApps?.map((a) => a.id);
+      const s = readState(id);
+      if (!apps || s.streakStart === null) continue;
+      const startDay = localDay(s.streakStart);
+      const lastSlip = storage.getString(`reels.slipDay.${id}`) ?? '';
+      for (let i = days.length - 1; i >= 0; i--) {
+        const d = days[i];
+        if (d.day < startDay || d.day <= lastSlip) break;
+        const before = d.day === storage.getString(BASE_DAY_KEY) ? storage.getNumber(BASE_COUNT_KEY) ?? 0 : 0;
+        if (dayTotals(d, apps).count - before <= limit) continue;
+        storage.set(`reels.slipDay.${id}`, d.day);
+        this.relapse(id, d.day === today ? Date.now() : endOfDay(d.day));
+        break;
+      }
+    }
   },
 
   /** Agreed on the reel-counter disclosure: remember consent, then open Accessibility settings. */

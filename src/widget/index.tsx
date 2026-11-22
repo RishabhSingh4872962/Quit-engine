@@ -4,6 +4,7 @@ import { requestPinWidget, requestWidgetUpdate } from 'react-native-android-widg
 import type { WidgetInfo, WidgetTaskHandlerProps } from 'react-native-android-widget';
 import { BRAND_ACCENT, HABITS } from '../habits';
 import i18n from '../i18n';
+import { dayTotals, isReelCounterOn, readReelDays } from '../lib/reels';
 import { readActive, readState } from '../lib/storage';
 import { streakDays } from '../lib/streak';
 import { reportError } from '../lib/telemetry';
@@ -21,7 +22,12 @@ function renderStreakWidget({ width, height }: WidgetInfo) {
   const id = readActive();
   const days = id ? streakDays(readState(id).streakStart, Date.now()) : 0;
   const accent = id ? HABITS[id].accent : BRAND_ACCENT;
-  const props = { days, unit: i18n.t('common.days', { count: days }), size: Math.min(width, height) };
+  // Reels watched today, when this habit counts reels (no habit name, just a number).
+  const reelApps = id ? HABITS[id].reelApps : undefined;
+  const sub = reelApps && isReelCounterOn()
+    ? i18n.t('widget.reelsToday', { count: dayTotals(readReelDays(1).at(-1), reelApps.map((a) => a.id)).count })
+    : undefined;
+  const props = { days, unit: i18n.t('common.days', { count: days }), sub, size: Math.min(width, height) };
   return {
     light: <StreakWidget {...props} colors={makePalette(accent, 'light')} />,
     dark: <StreakWidget {...props} colors={makePalette(accent, 'dark')} />,

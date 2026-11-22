@@ -55,6 +55,36 @@ class ReelGuardModule : Module() {
     // [{ day: "YYYY-MM-DD", apps: { package: { count, ms } } }], oldest first.
     Function("getStats") { days: Int -> ReelStore.stats(context, days.coerceIn(1, 60)) }
 
+    // Daily limit (0 = off) and the nudge text with {count} and {limit}, already in the app's language.
+    Function("setLimit") { limit: Int, nudge: String -> ReelStore.setLimit(context, limit, nudge) }
+
+    Function("getLimitState") {
+      mapOf(
+        "limit" to ReelStore.limit(context),
+        "extraToday" to ReelStore.extraToday(context),
+        "pausesOffToday" to ReelStore.pausesOffToday(context),
+      )
+    }
+
+    // "5 more": the next pause comes at limit + extra (today only).
+    Function("addExtraToday") { n: Int -> ReelStore.addExtraToday(context, n) }
+
+    // "No more pauses today".
+    Function("setPausesOffToday") { ReelStore.setPausesOffToday(context) }
+
+    // Back to the app the pause interrupted. Starting an activity needs no package visibility.
+    Function("openApp") { pkg: String ->
+      try {
+        context.startActivity(
+          Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER).setPackage(pkg)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+        )
+        true
+      } catch (e: RuntimeException) {
+        false
+      }
+    }
+
     // New detection rules (JSON array) from Remote Config; null/invalid = built-in defaults.
     Function("setRules") { json: String? ->
       ReelStore.saveRules(context, json)

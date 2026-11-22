@@ -14,6 +14,7 @@ data class ReelRule(
   val screenIds: List<String>, // any of these on screen = the reels player is open
   val pagerIds: List<String>, // the vertical pager whose scroll means "next reel"
   val pageIds: List<String> = emptyList(), // one reel's page: a different page view on screen = next reel
+  val pip: Boolean = false, // the app's picture-in-picture window only ever plays reels (Instagram)
 )
 
 /**
@@ -32,7 +33,8 @@ object ReelStore {
   private const val DEFAULT_RULES = """[
     {"package":"com.instagram.android",
      "screen":["clips_viewer_view_pager","clips_viewer_root","root_clips_layout","clips_video_container"],
-     "pager":["clips_viewer_view_pager","clips_viewer_root","root_clips_layout"]},
+     "pager":["clips_viewer_view_pager","clips_viewer_root","root_clips_layout"],
+     "pip":true},
     {"package":"com.google.android.youtube",
      "screen":["reel_recycler","reel_watch_player","reel_player_page_container"],
      "pager":["reel_recycler"],
@@ -60,6 +62,7 @@ object ReelStore {
         o.getJSONArray("screen").strings(),
         o.getJSONArray("pager").strings(),
         o.optJSONArray("page")?.strings().orEmpty(),
+        o.optBoolean("pip", false),
       )
     }
   } catch (e: Exception) {
@@ -68,12 +71,39 @@ object ReelStore {
 
   private fun JSONArray.strings() = (0 until length()).map { getString(it) }
 
-  fun addReel(ctx: Context, pkg: String) {
-    val key = "${day(System.currentTimeMillis())}|$pkg|n"
+  /** Adds one reel and returns today's total across all apps. */
+  fun addReel(ctx: Context, pkg: String): Int {
+    val today = day(System.currentTimeMillis())
+    val key = "$today|$pkg|n"
     val p = prefs(ctx)
     p.edit().putInt(key, p.getInt(key, 0) + 1).apply()
     listener?.invoke()
+    return p.all.entries.sumOf { (k, v) -> if (k.startsWith("$today|") && k.endsWith("|n")) v as Int else 0 }
   }
+
+  // ---- Daily limit (set from JS). Per-day keys start with "x|" so stats() ignores them. ----
+
+  private fun todayKey(name: String) = "x|${day(System.currentTimeMillis())}|$name"
+
+  fun setLimit(ctx: Context, limit: Int, nudge: String) =
+    prefs(ctx).edit().putInt("limit", limit.coerceAtLeast(0)).putString("nudge", nudge).apply()
+
+  fun limit(ctx: Context) = prefs(ctx).getInt("limit", 0)
+  fun nudgeText(ctx: Context, count: Int, limit: Int) =
+    (prefs(ctx).getString("nudge", null) ?: "{count} / {limit}")
+      .replace("{count}", count.toString()).replace("{limit}", limit.toString())
+
+  /** "5 more" today: the pause comes back at limit + extra. */
+  fun extraToday(ctx: Context) = prefs(ctx).getInt(todayKey("extra"), 0)
+  fun addExtraToday(ctx: Context, n: Int) = prefs(ctx).edit().putInt(todayKey("extra"), extraToday(ctx) + n).apply()
+
+  /** "No more pauses today". */
+  fun pausesOffToday(ctx: Context) = prefs(ctx).getBoolean(todayKey("off"), false)
+  fun setPausesOffToday(ctx: Context) = prefs(ctx).edit().putBoolean(todayKey("off"), true).apply()
+
+  /** Today's reel total when the last pause was shown (0 = none yet). */
+  fun pausedAt(ctx: Context) = prefs(ctx).getInt(todayKey("pausedAt"), 0)
+  fun setPausedAt(ctx: Context, total: Int) = prefs(ctx).edit().putInt(todayKey("pausedAt"), total).apply()
 
   fun addTime(ctx: Context, pkg: String, ms: Long, notify: Boolean) {
     if (ms <= 0) return
@@ -112,7 +142,7 @@ object ReelStore {
     cal.add(Calendar.DAY_OF_YEAR, -KEEP_DAYS)
     val oldest = day(cal.timeInMillis)
     val p = prefs(ctx)
-    val stale = p.all.keys.filter { it.contains('|') && it.substringBefore('|') < oldest }
+    val stale = p.all.keys.filter { it.contains('|') && it.removePrefix("x|").substringBefore('|') < oldest }
     if (stale.isNotEmpty()) p.edit().apply { stale.forEach { remove(it) } }.apply()
   }
 }

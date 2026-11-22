@@ -4,8 +4,8 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { formatDuration } from '../lib/format';
-import { dayTotals, useReelCounter } from '../lib/reels';
-import { fonts, useColors } from '../theme';
+import { dayTotals, useReelCounter, useReelLimit } from '../lib/reels';
+import { fonts, radius, useColors } from '../theme';
 import { AppText } from './AppText';
 import { Button } from './Button';
 import { Card } from './Card';
@@ -18,6 +18,7 @@ export function ReelsTodayCard({ apps }: { apps: App[] }) {
   const c = useColors();
   const navigation = useNavigation();
   const { enabled, stats } = useReelCounter(1);
+  const limit = useReelLimit();
   const today = stats[stats.length - 1];
   const total = dayTotals(today, apps.map((a) => a.id));
   const used = apps.filter((a) => (today?.apps[a.id]?.count ?? 0) > 0);
@@ -45,6 +46,29 @@ export function ReelsTodayCard({ apps }: { apps: App[] }) {
             </AppText>
             {total.count === 0 && <AppText variant="caption" style={s.tip}>{t('reels.restartTip')}</AppText>}
           </View>
+          {limit > 0 ? (
+            <View style={s.limit}>
+              <View style={[s.track, { backgroundColor: c.surfaceAlt }]}>
+                <View
+                  style={[
+                    s.fill,
+                    {
+                      width: `${Math.min(100, (total.count / limit) * 100)}%`,
+                      backgroundColor: total.count > limit ? c.textMuted : c.accent,
+                    },
+                  ]}
+                />
+              </View>
+              <AppText variant="caption">{t('reels.progress', { count: total.count, limit })}</AppText>
+            </View>
+          ) : (
+            <Button
+              variant="soft"
+              icon="speedometer-outline"
+              label={t('reels.setLimit')}
+              onPress={() => navigation.navigate('Main', { screen: 'Settings' })}
+            />
+          )}
           {used.map((a) => {
             const app = today?.apps[a.id];
             return (
@@ -70,4 +94,7 @@ const s = StyleSheet.create({
   appRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   appName: { fontSize: 16, fontWeight: '600' },
   tip: { marginTop: 6 },
+  limit: { gap: 6 },
+  track: { height: 8, borderRadius: radius.pill, overflow: 'hidden' },
+  fill: { height: '100%', borderRadius: radius.pill },
 });

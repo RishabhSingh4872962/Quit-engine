@@ -1,4 +1,4 @@
-import './src/i18n'; // initialise translations before anything renders
+import i18n from './src/i18n'; // initialise translations before anything renders
 import React, { useEffect, useMemo, useRef } from 'react';
 import { AppState } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -8,13 +8,17 @@ import { useNavigationContainerRef } from '@react-navigation/native';
 import { backupInBackground } from './src/lib/backup';
 import { routeNotificationTaps, setupNotifications, syncNotifications } from './src/lib/notifications';
 import { initPremium } from './src/lib/premium';
-import { applyReelRules } from './src/lib/reels';
+import { actions } from './src/lib/actions';
+import { applyReelRules, syncReelLimit } from './src/lib/reels';
 import { initRemoteConfig, remote } from './src/lib/remoteConfig';
 import { readThemePref } from './src/lib/storage';
 import { trackScreen } from './src/lib/telemetry';
 import { updateStreakWidget } from './src/widget';
 import { Navigation, navTheme } from './src/navigation';
 import { applyThemePref, useColors } from './src/theme';
+
+// Links into the app: the reel counter opens quitengine://pause at the daily limit.
+const linking = { prefixes: ['quitengine://'] };
 
 applyThemePref(readThemePref());
 initRemoteConfig();
@@ -47,6 +51,15 @@ export default function App() {
   useEffect(() => {
     initPremium();
     applyReelRules(remote.reelRules()); // fixes for changed Instagram/YouTube screens, without an app update
+    syncReelLimit();
+    actions.checkReelLimit(); // a day over the reel limit ends the reel-free streak
+    const sub = AppState.addEventListener('change', (s) => s === 'active' && actions.checkReelLimit());
+    const onLang = () => syncReelLimit(); // nudge text follows the app language
+    i18n.on('languageChanged', onLang);
+    return () => {
+      sub.remove();
+      i18n.off('languageChanged', onLang);
+    };
   }, []);
 
   // Root view colour shows during screen transitions; keep it in step with the theme.
@@ -57,7 +70,7 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <StatusBar style={c.scheme === 'dark' ? 'light' : 'dark'} />
-      <Navigation theme={theme} ref={navRef} onReady={onNavChange} onStateChange={onNavChange} />
+      <Navigation theme={theme} linking={linking} ref={navRef} onReady={onNavChange} onStateChange={onNavChange} />
     </SafeAreaProvider>
   );
 }
