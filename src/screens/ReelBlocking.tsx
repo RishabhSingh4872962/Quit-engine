@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { HABIT_LIST } from '../habits';
 import { useLang } from '../i18n';
 import { actions } from '../lib/actions';
-import { activeBlockUntil, APP_LIMIT_OPTIONS, strictLocked, TimeWindow, useBlock } from '../lib/blocking';
+import { activeBlockUntil, APP_LIMIT_OPTIONS, BlockPrefs, strictLocked, TimeWindow, useBlock } from '../lib/blocking';
 import { useNow } from '../lib/streak';
 import { radius, useColors } from '../theme';
 import { AppText } from '../components/AppText';
@@ -32,6 +32,7 @@ export function ReelBlockingScreen() {
   const prefs = useBlock();
   const now = useNow(30_000);
   const [picking, setPicking] = useState<Picking>(null);
+  const [channel, setChannel] = useState('');
   const locale = lang === 'hi' ? 'hi-IN' : 'en-IN';
   const apps = HABIT_LIST.find((h) => h.reelApps)?.reelApps ?? [];
 
@@ -41,6 +42,22 @@ export function ReelBlockingScreen() {
     new Date(2000, 0, 1, Math.floor(min / 60), min % 60).toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit' });
   const dateLabel = (ms: number) => new Date(ms).toLocaleDateString(locale, { day: 'numeric', month: 'short' });
   const setWindow = (key: WindowKey, patch: Partial<TimeWindow>) => actions.setReelBlock({ [key]: { ...prefs[key], ...patch } });
+
+  // YouTube study mode reads channel names, so it needs its own explicit consent (Play policy).
+  const setStudyMode = (mode: BlockPrefs['studyMode']) => {
+    if (mode === 'off' || prefs.studyConsentAt) return actions.setReelBlock({ studyMode: mode });
+    Alert.alert(t('blocking.studyConsentTitle'), t('blocking.studyConsentBody'), [
+      { text: t('reels.notNow'), style: 'cancel' },
+      { text: t('blocking.studyConsentAgree'), onPress: () => actions.setReelBlock({ studyMode: mode, studyConsentAt: Date.now() }) },
+    ]);
+  };
+  const addChannel = () => {
+    const name = channel.trim();
+    if (name && !prefs.studyChannels.some((c) => c.toLowerCase() === name.toLowerCase())) {
+      actions.setReelBlock({ studyChannels: [...prefs.studyChannels, name] });
+    }
+    setChannel('');
+  };
 
   const windowRow = (key: WindowKey) => {
     const w = prefs[key];
@@ -109,6 +126,58 @@ export function ReelBlockingScreen() {
           <AppText variant="label">{t('blocking.windowsTitle')}</AppText>
           {windowRow('bedtime')}
           {windowRow('study')}
+        </Card>
+
+        <Card style={s.card}>
+          <AppText variant="label">{t('blocking.studyTitle')}</AppText>
+          <AppText variant="caption">{t('blocking.studySub')}</AppText>
+          <Segmented
+            options={[
+              { value: 'off' as const, label: t('reels.limitOff') },
+              { value: 'study' as const, label: t('blocking.studyDuring') },
+              { value: 'always' as const, label: t('blocking.studyAlways') },
+            ]}
+            value={prefs.studyMode}
+            onChange={setStudyMode}
+          />
+          {prefs.studyMode !== 'off' && (
+            <>
+              <View style={s.addRow}>
+                <TextInput
+                  value={channel}
+                  onChangeText={setChannel}
+                  onSubmitEditing={addChannel}
+                  placeholder={t('blocking.studyPlaceholder')}
+                  placeholderTextColor={c.textMuted}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  returnKeyType="done"
+                  style={[s.input, { color: c.text, backgroundColor: c.surfaceAlt }]}
+                />
+                <Pressable onPress={addChannel} style={[s.addBtn, { backgroundColor: c.accent }]} accessibilityRole="button" accessibilityLabel={t('blocking.studyAdd')}>
+                  <Ionicons name="add" size={22} color={c.onAccent} />
+                </Pressable>
+              </View>
+              <View style={s.chips}>
+                {prefs.studyChannels.map((name) => (
+                  <Pressable
+                    key={name}
+                    onPress={() => actions.setReelBlock({ studyChannels: prefs.studyChannels.filter((n) => n !== name) })}
+                    style={[s.chip, { backgroundColor: c.accentSoft }]}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('blocking.studyRemove', { name })}
+                  >
+                    <AppText style={s.chipText} color={c.accentText}>{name}</AppText>
+                    <Ionicons name="close" size={14} color={c.accentText} />
+                  </Pressable>
+                ))}
+              </View>
+              {prefs.studyChannels.length === 0 && <AppText variant="caption">{t('blocking.studyNone')}</AppText>}
+              {prefs.studyMode === 'study' && !prefs.study.on && (
+                <AppText variant="caption">{t('blocking.studyNeedWindow')}</AppText>
+              )}
+            </>
+          )}
         </Card>
 
         <Card style={s.card}>
@@ -185,4 +254,10 @@ const s = StyleSheet.create({
   pill: { flex: 1, paddingVertical: 8, paddingHorizontal: 14, borderRadius: radius.md, gap: 2 },
   pillValue: { fontSize: 17, fontWeight: '700' },
   appName: { fontSize: 16, fontWeight: '600' },
+  addRow: { flexDirection: 'row', gap: 10 },
+  input: { flex: 1, borderRadius: radius.md, paddingHorizontal: 14, paddingVertical: 10, fontSize: 16 },
+  addBtn: { width: 46, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center' },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 6, borderRadius: radius.pill },
+  chipText: { fontWeight: '600' },
 });

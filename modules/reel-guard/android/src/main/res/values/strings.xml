@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
   <string name="reel_guard_label">Quit Engine</string>
-  <string name="reel_guard_description">Counts the reels and shorts you watch in Instagram and YouTube, and how long you spend on them. It only checks which screen is open. It does not read your messages, posts or what is in a reel, and nothing leaves your phone.</string>
+  <string name="reel_guard_description">Counts the reels and shorts you watch in Instagram and YouTube, and how long you spend on them. It only checks which screen is open. It does not read your messages, posts or what is in a reel. If you turn on YouTube study mode, it also reads the channel name of the YouTube video you open, to compare it with your list. Nothing leaves your phone.</string>
 </resources>

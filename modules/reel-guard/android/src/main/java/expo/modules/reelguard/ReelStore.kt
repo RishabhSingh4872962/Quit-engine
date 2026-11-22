@@ -20,6 +20,20 @@ data class BlockConfig(
   val windows: List<Pair<Int, Int>>,
   val until: Long,
   val text: String, // note shown when reels are blocked, in the app's language
+  val study: StudyConfig?,
+)
+
+/**
+ * YouTube study mode: only videos from these channels play; Shorts are blocked. Active always or
+ * during a time window. Reads the channel name of the open video (user consented in the app).
+ */
+data class StudyConfig(
+  val channels: List<String>, // lower-case names or @handles
+  val always: Boolean,
+  val window: Pair<Int, Int>?,
+  val text: String,
+  val watchIds: List<String>, // any of these on screen = a video page is open
+  val prefixes: List<String>, // Subscribe button labels: "Subscribe to <channel>." (YouTube in English)
 )
 
 /** How to recognise the reels screen of one app, by Android view IDs (the part after ":id/"). */
@@ -44,6 +58,14 @@ object ReelStore {
   @Volatile var listener: (() -> Unit)? = null
 
   // Instagram changes its IDs often; these can be replaced from Remote Config (setRules).
+  // YouTube video page, and where its channel name is exposed: the channel row has no view ID, but
+  // the Subscribe button is labelled "Subscribe to <channel>." Both can be overridden in the config.
+  val STUDY_WATCH_IDS = listOf("watch_player", "video_metadata_layout")
+  val STUDY_PREFIXES = listOf("Subscribe to ", "Unsubscribe from ")
+
+  /** Compare channel names loosely: lower case, no spaces, no "@" ("@RickAstley" ~ "Rick Astley"). */
+  fun channelKey(name: String) = name.lowercase().replace("@", "").filterNot { it.isWhitespace() }
+
   private const val DEFAULT_RULES = """[
     {"package":"com.instagram.android",
      "screen":["clips_viewer_view_pager","clips_viewer_root","root_clips_layout","clips_video_container"],
@@ -132,6 +154,16 @@ object ReelStore {
         }.orEmpty(),
         until = o.optLong("until", 0),
         text = o.optString("text", ""),
+        study = o.optJSONObject("study")?.let { s ->
+          StudyConfig(
+            channels = s.optJSONArray("channels")?.strings().orEmpty().map(::channelKey).filter { it.isNotEmpty() },
+            always = s.optBoolean("always", false),
+            window = s.optJSONArray("window")?.takeIf { it.length() == 2 }?.let { it.getInt(0) to it.getInt(1) },
+            text = s.optString("text", ""),
+            watchIds = s.optJSONArray("watchIds")?.strings() ?: STUDY_WATCH_IDS,
+            prefixes = s.optJSONArray("prefixes")?.strings() ?: STUDY_PREFIXES,
+          )
+        }?.takeIf { it.channels.isNotEmpty() },
       )
     }
   } catch (e: Exception) {

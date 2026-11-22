@@ -11,7 +11,8 @@ export function Screen({ children, scroll, edges = ['top'], style }: {
   return (
     <SafeAreaView edges={edges} style={[s.flex, { backgroundColor: c.bg }]}>
       {scroll ? (
-        <ScrollView contentContainerStyle={[s.pad, style]} showsVerticalScrollIndicator={false}>
+        // "handled": a tap on a button while the keyboard is open presses the button (not just closes the keyboard)
+        <ScrollView contentContainerStyle={[s.pad, style]} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           {children}
         </ScrollView>
       ) : (

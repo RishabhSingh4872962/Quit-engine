@@ -49,6 +49,7 @@ export function ReelCounterSetupScreen() {
         <AppText variant="label">{t('reels.readsTitle')}</AppText>
         {row('eye-outline', t('reels.reads1'), c.accent)}
         {row('swap-vertical', t('reels.reads2'), c.accent)}
+        {row('school-outline', t('reels.reads3'), c.accent)}
       </Card>
 
       <Card style={s.card}>

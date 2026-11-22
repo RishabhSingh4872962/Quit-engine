@@ -24,6 +24,9 @@ export interface BlockPrefs {
   study: TimeWindow;
   examUntil: number; // block all reels until this time (epoch ms); 0 = off
   strict: boolean; // while a reel-free time or exam mode runs, rules can't be loosened in the app
+  studyMode: 'off' | 'study' | 'always'; // YouTube study mode: during Study time, or always
+  studyChannels: string[]; // allowed YouTube channels (names or @handles)
+  studyConsentAt: number; // when the user agreed to channel names being read (0 = not yet)
 }
 
 export const DEFAULT_BLOCK: BlockPrefs = {
@@ -33,6 +36,9 @@ export const DEFAULT_BLOCK: BlockPrefs = {
   study: { on: false, start: 9 * 60, end: 13 * 60 },
   examUntil: 0,
   strict: false,
+  studyMode: 'off',
+  studyChannels: [],
+  studyConsentAt: 0,
 };
 
 export const APP_LIMIT_OPTIONS = [0, 5, 10, 20, 30] as const;
@@ -81,10 +87,23 @@ export function syncReelBlock() {
   try {
     const p = readBlock();
     const windows = [p.bedtime, p.study].filter((w) => w.on && w.start !== w.end).map((w) => [w.start, w.end]);
-    const anything = p.apps.length || Object.values(p.appLimits).some((n) => n > 0) || windows.length || p.examUntil > Date.now();
+    // Study mode needs consent and at least one channel; "during study time" needs the Study window.
+    const studyOn = p.studyMode !== 'off' && p.studyConsentAt > 0 && p.studyChannels.length > 0
+      && (p.studyMode === 'always' || (p.study.on && p.study.start !== p.study.end));
+    const study = studyOn
+      ? {
+          channels: p.studyChannels,
+          always: p.studyMode === 'always',
+          window: p.studyMode === 'study' ? [p.study.start, p.study.end] : null,
+          text: i18n.t('blocking.studyNote'),
+        }
+      : undefined;
+    // Study time still blocks reels everywhere; study mode adds the channel check on YouTube videos.
+    const anything = p.apps.length || Object.values(p.appLimits).some((n) => n > 0) || windows.length
+      || p.examUntil > Date.now() || study;
     ReelGuard?.setBlock(
       readPremium() && anything
-        ? JSON.stringify({ apps: p.apps, appLimits: p.appLimits, windows, until: p.examUntil, text: i18n.t('blocking.note') })
+        ? JSON.stringify({ apps: p.apps, appLimits: p.appLimits, windows, until: p.examUntil, text: i18n.t('blocking.note'), study })
         : null,
     );
   } catch (e) {
