@@ -3,10 +3,24 @@ package expo.modules.reelguard
 import android.content.Context
 import android.content.SharedPreferences
 import org.json.JSONArray
+import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+
+/**
+ * Blocking rules set by the user (Premium), evaluated natively when a reels player opens:
+ * apps whose reels are always blocked, per-app daily limits, reel-free time windows
+ * (minutes from midnight; end < start = overnight) and "block everything until".
+ */
+data class BlockConfig(
+  val apps: Set<String>,
+  val appLimits: Map<String, Int>,
+  val windows: List<Pair<Int, Int>>,
+  val until: Long,
+  val text: String, // note shown when reels are blocked, in the app's language
+)
 
 /** How to recognise the reels screen of one app, by Android view IDs (the part after ":id/"). */
 data class ReelRule(
@@ -89,6 +103,43 @@ object ReelStore {
 
   fun setLimit(ctx: Context, limit: Int, nudge: String) =
     prefs(ctx).edit().putInt("limit", limit.coerceAtLeast(0)).putString("nudge", nudge).apply()
+
+  fun setBlock(ctx: Context, json: String?) {
+    prefs(ctx).edit().apply { if (json.isNullOrBlank()) remove("block") else putString("block", json) }.apply()
+    blockLoaded = false
+  }
+
+  @Volatile private var blockLoaded = false
+  @Volatile private var blockCached: BlockConfig? = null
+
+  /** Parsed once and kept until the rules change (checked several times a second while scrolling). */
+  fun blockConfig(ctx: Context): BlockConfig? {
+    if (!blockLoaded) {
+      blockCached = parseBlock(ctx)
+      blockLoaded = true
+    }
+    return blockCached
+  }
+
+  private fun parseBlock(ctx: Context): BlockConfig? = try {
+    prefs(ctx).getString("block", null)?.let { JSONObject(it) }?.let { o ->
+      val limits = o.optJSONObject("appLimits")
+      BlockConfig(
+        apps = o.optJSONArray("apps")?.strings()?.toSet().orEmpty(),
+        appLimits = limits?.keys()?.asSequence()?.associateWith { limits.getInt(it) }.orEmpty(),
+        windows = o.optJSONArray("windows")?.let { arr ->
+          (0 until arr.length()).map { arr.getJSONArray(it).let { w -> w.getInt(0) to w.getInt(1) } }
+        }.orEmpty(),
+        until = o.optLong("until", 0),
+        text = o.optString("text", ""),
+      )
+    }
+  } catch (e: Exception) {
+    null
+  }
+
+  fun todayCount(ctx: Context, pkg: String) =
+    prefs(ctx).getInt("${day(System.currentTimeMillis())}|$pkg|n", 0)
 
   /** Live counter bubble while watching reels; text has {count}. */
   fun setBubble(ctx: Context, on: Boolean, text: String) =

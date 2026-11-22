@@ -64,6 +64,8 @@ export function initPremium() {
 export const premiumHasValueFor = (tracked: HabitId[]) =>
   premiumAvailable && screenTimeAvailable && tracked.some((id) => HABITS[id].screenTime);
 
+export const readPremium = () => storage.getBoolean(PREMIUM_KEY) ?? false;
+
 /** Re-renders when Premium starts or ends. */
 export function usePremium(): boolean {
   const [active] = useMMKVBoolean(PREMIUM_KEY, storage);

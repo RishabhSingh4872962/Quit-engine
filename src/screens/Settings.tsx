@@ -27,6 +27,8 @@ import {
   useReelCounter,
   useReelLimit,
 } from '../lib/reels';
+import { useBlock } from '../lib/blocking';
+import { useNow } from '../lib/streak';
 import { manageSubscription, premiumAvailable, premiumTestMode, usePremium } from '../lib/premium';
 import { remote } from '../lib/remoteConfig';
 import { reportError } from '../lib/telemetry';
@@ -64,6 +66,8 @@ export function SettingsScreen() {
 
       <ReelCounterSettings />
 
+      <BlockingSettings />
+
       <Section icon="language" title={t('settings.language')}>
         <Segmented options={LANGS.map((l) => ({ value: l.id, label: l.label }))} value={lang} onChange={setLanguage} />
       </Section>
@@ -96,6 +100,37 @@ export function SettingsScreen() {
         <AppText variant="caption">{t('settings.version', { version: Constants.expoConfig?.version ?? '' })}</AppText>
       </View>
     </Screen>
+  );
+}
+
+/** Entry to reel blocking (Premium); free users see what it does and the way to Premium. */
+function BlockingSettings() {
+  const { t } = useTranslation();
+  const navigation = useNavigation();
+  const tracked = useTracked();
+  const premium = usePremium();
+  const { enabled } = useReelCounter(1);
+  const block = useBlock();
+  const now = useNow();
+  if (!reelCounterAvailable || !premiumAvailable || !tracked.some((id) => HABITS[id].reelApps)) return null;
+  const setUp = block.apps.length > 0 || block.bedtime.on || block.study.on || block.examUntil > now
+    || Object.values(block.appLimits).some((n) => n > 0);
+  return (
+    <Section icon="hand-left" title={t('blocking.title')}>
+      <AppText variant="muted">
+        {!premium ? t('blocking.pitch') : setUp ? t('blocking.summaryOn') : t('blocking.summaryOff')}
+      </AppText>
+      {premium ? (
+        <Button
+          variant="soft"
+          icon="options-outline"
+          label={t('blocking.setUp')}
+          onPress={() => (enabled ? navigation.navigate('ReelBlocking') : navigation.navigate('ReelCounterSetup'))}
+        />
+      ) : (
+        <Button variant="soft" icon="sparkles" label={t('premium.unlock')} onPress={() => navigation.navigate('Paywall')} />
+      )}
+    </Section>
   );
 }
 

@@ -9,6 +9,7 @@ import { backupInBackground } from './src/lib/backup';
 import { routeNotificationTaps, setupNotifications, syncNotifications } from './src/lib/notifications';
 import { initPremium } from './src/lib/premium';
 import { actions } from './src/lib/actions';
+import { syncReelBlock } from './src/lib/blocking';
 import { applyReelRules, syncReelLimit } from './src/lib/reels';
 import { initRemoteConfig, remote } from './src/lib/remoteConfig';
 import { readThemePref } from './src/lib/storage';
@@ -52,9 +53,17 @@ export default function App() {
     initPremium();
     applyReelRules(remote.reelRules()); // fixes for changed Instagram/YouTube screens, without an app update
     syncReelLimit(); // limit, bubble and their texts
+    syncReelBlock(); // blocking rules (also turns them off if Premium ended)
     actions.checkReelLimit(); // a day over the reel limit ends the reel-free streak
-    const sub = AppState.addEventListener('change', (s) => s === 'active' && actions.checkReelLimit());
-    const onLang = () => syncReelLimit(); // nudge text follows the app language
+    const sub = AppState.addEventListener('change', (s) => {
+      if (s !== 'active') return;
+      actions.checkReelLimit();
+      syncReelBlock();
+    });
+    const onLang = () => {
+      syncReelLimit(); // texts shown by the service follow the app language
+      syncReelBlock();
+    };
     i18n.on('languageChanged', onLang);
     return () => {
       sub.remove();

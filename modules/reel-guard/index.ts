@@ -20,6 +20,11 @@ interface ReelGuardModule {
   /** "5 more": the next pause comes at limit + extra (today only). */
   addExtraToday(n: number): void;
   setPausesOffToday(): void;
+  /**
+   * Blocking rules (JSON): { apps: string[], appLimits: {pkg: n}, windows: [[startMin, endMin]],
+   * until: epochMs, text } where text is the note shown when reels are blocked. null = off.
+   */
+  setBlock(json: string | null): void;
   /** Live counter bubble while watching reels; text with a {count} placeholder. */
   setBubble(on: boolean, text: string): void;
   /** Forgets today's "5 more", "no more pauses" and earlier pauses. */

@@ -22,6 +22,7 @@ import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import android.view.accessibility.AccessibilityWindowInfo
 import android.widget.TextView
+import java.util.Calendar
 
 /**
  * Counts reels: notices when a configured app's reels player is on screen (by view ID), counts
@@ -56,6 +57,8 @@ class ReelGuardService : AccessibilityService() {
   private var enteredAt = 0L
   private var inPip = false
   private var bubble: TextView? = null // live counter while watching reels (optional)
+  private var lastBlockAt = 0L
+  private var blockTries = 0
   private var misses = 0
   private val debug by lazy { (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0 }
 
@@ -66,7 +69,9 @@ class ReelGuardService : AccessibilityService() {
       ReelStore.addTime(this@ReelGuardService, pkg, now - lastTick, notify = false)
       lastTick = now
       val power = getSystemService(POWER_SERVICE) as PowerManager
-      if (!power.isInteractive) exit() else checkScreen()
+      if (!power.isInteractive) exit()
+      else if (isBlocked(pkg)) block(pkg) // e.g. a reel-free time started while scrolling
+      else checkScreen()
       if (active != null) schedule()
     }
   }
@@ -144,9 +149,11 @@ class ReelGuardService : AccessibilityService() {
     if (open) {
       misses = 0
       inPip = false
+      if (active != pkg && isBlocked(pkg)) return block(pkg)
       if (active != pkg) enter(pkg)
       if (rule.pageIds.isNotEmpty()) trackPage(root, pkg, rule)
     } else if (pipPkg != null) {
+      if (isBlocked(pipPkg)) return block(pipPkg)
       misses = 0 // still watching, in the floating window: time keeps counting
       if (active != pipPkg) enter(pipPkg)
       if (!inPip && debug) dlog("pip $pipPkg")
@@ -233,6 +240,7 @@ class ReelGuardService : AccessibilityService() {
    * the Pause screen when the limit is reached. Fixed rules, set by the user ("if X, do Y").
    */
   private fun counted(pkg: String) {
+    if (isBlocked(pkg)) return block(pkg) // e.g. this app's daily limit was just reached
     val total = ReelStore.addReel(this, pkg)
     refreshBubble()
     val limit = ReelStore.limit(this)
@@ -283,6 +291,36 @@ class ReelGuardService : AccessibilityService() {
       val dismissed = root.performAction(AccessibilityNodeInfo.ACTION_DISMISS)
       if (debug) dlog("pip close ${root.packageName} dismissed=$dismissed actions=${root.actionList.map { it.id }}")
     }
+  }
+
+  /** Blocking rules (Premium): always for this app, exam mode, a reel-free time now, or its daily limit used up. */
+  private fun isBlocked(pkg: String): Boolean {
+    val cfg = ReelStore.blockConfig(this) ?: return false
+    if (pkg in cfg.apps || System.currentTimeMillis() < cfg.until) return true
+    val cal = Calendar.getInstance()
+    val minute = cal.get(Calendar.HOUR_OF_DAY) * 60 + cal.get(Calendar.MINUTE)
+    if (cfg.windows.any { (start, end) -> if (start <= end) minute in start until end else minute >= start || minute < end }) {
+      return true
+    }
+    val limit = cfg.appLimits[pkg] ?: 0
+    return limit > 0 && ReelStore.todayCount(this, pkg) >= limit
+  }
+
+  /**
+   * Leaves the reels player (Back), closes a floating reel and shows the note. Nothing is counted.
+   * A fixed rule the user set; at most 3 Backs in 10 s, so it never fights the user.
+   */
+  private fun block(pkg: String) {
+    val now = SystemClock.elapsedRealtime()
+    if (now - lastBlockAt < 1_500) return
+    blockTries = if (now - lastBlockAt < 10_000) blockTries + 1 else 1
+    lastBlockAt = now
+    if (active != null) exit()
+    hideBubble()
+    if (blockTries <= 3) performGlobalAction(GLOBAL_ACTION_BACK)
+    ReelStore.blockConfig(this)?.text?.takeIf { it.isNotEmpty() }?.let(::showNudge)
+    handler.postDelayed({ closeReelsPip() }, 700)
+    if (debug) dlog("block $pkg try=$blockTries")
   }
 
   /** Shows, updates or hides the live counter: visible only while a reels player is on screen. */

@@ -72,6 +72,9 @@ class ReelGuardModule : Module() {
     // "No more pauses today".
     Function("setPausesOffToday") { ReelStore.setPausesOffToday(context) }
 
+    // Blocking rules (Premium) as JSON; null or "" turns blocking off.
+    Function("setBlock") { json: String? -> ReelStore.setBlock(context, json) }
+
     // Live counter bubble while watching reels ({count} in the text).
     Function("setBubble") { on: Boolean, text: String ->
       ReelStore.setBubble(context, on, text)

@@ -17,6 +17,7 @@ import {
 } from './storage';
 import { streakDays } from './streak';
 import { HABITS } from '../habits';
+import { BlockPrefs, syncReelBlock, writeBlock } from './blocking';
 import {
   dayTotals,
   endOfDay,
@@ -117,6 +118,12 @@ export const actions = {
     syncReelLimit();
     resetReelPausesToday(); // a new limit means fresh rules for today
     markReelBase(); // reels already watched today don't count against the new limit
+  },
+
+  /** Reel blocking rules (Premium). The Blocking screen enforces Strict mode before calling this. */
+  setReelBlock(patch: Partial<BlockPrefs>) {
+    writeBlock(patch);
+    syncReelBlock();
   },
 
   /** Live counter bubble while watching reels. */
