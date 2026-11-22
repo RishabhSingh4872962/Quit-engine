@@ -2,8 +2,9 @@ import { HabitConfig } from './types';
 
 export const nicotine: HabitConfig = {
   id: 'nicotine',
-  name: { en: 'Quit Nicotine', hi: 'नशा छोड़ो' },
+  name: { en: 'Nicotine', hi: 'निकोटीन' },
   tagline: { en: 'One craving at a time.', hi: 'एक बार में एक तलब।' },
+  icon: 'flame-outline',
   accent: '#00B894',
   quiz: [
     {

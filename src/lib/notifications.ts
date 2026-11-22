@@ -2,8 +2,8 @@ import * as Notifications from 'expo-notifications';
 import { AndroidImportance, IosAuthorizationStatus } from 'expo-notifications';
 import { Platform } from 'react-native';
 import i18n, { milestoneLabel } from '../i18n';
-import { ACTIVE_HABIT } from '../habits';
-import { readCheckin, readMilestoneAlerts, readState } from './storage';
+import { HABITS, isHabitId } from '../habits';
+import { readCheckin, readMilestoneAlerts, readState, readTracked, writeActive } from './storage';
 import { DAY_MS } from './streak';
 
 const CHANNEL = 'reminders';
@@ -70,22 +70,27 @@ async function rebuild() {
   await Notifications.cancelAllScheduledNotificationsAsync();
   if (!(await hasPermission())) return;
 
-  const { streakStart } = readState();
-  if (streakStart === null) return;
+  const started = readTracked()
+    .map((id) => ({ id, start: readState(id).streakStart }))
+    .filter((h): h is { id: typeof h.id; start: number } => h.start !== null);
+  if (!started.length) return;
   const t = i18n.getFixedT(i18n.language);
 
   if (readMilestoneAlerts()) {
-    for (const m of ACTIVE_HABIT.milestones) {
-      const at = friendlyTime(streakStart + m * DAY_MS);
-      if (at.getTime() <= Date.now()) continue;
-      await Notifications.scheduleNotificationAsync({
-        identifier: `milestone-${m}`,
-        content: {
-          title: t('notifications.milestoneTitle', { label: milestoneLabel(m, t) }),
-          body: t('notifications.milestoneBody'),
-        },
-        trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: at, channelId: CHANNEL },
-      });
+    for (const { id, start } of started) {
+      for (const m of HABITS[id].milestones) {
+        const at = friendlyTime(start + m * DAY_MS);
+        if (at.getTime() <= Date.now()) continue;
+        await Notifications.scheduleNotificationAsync({
+          identifier: `milestone-${id}-${m}`,
+          content: {
+            title: t('notifications.milestoneTitle', { label: milestoneLabel(m, t) }),
+            body: t('notifications.milestoneBody'),
+            data: { habitId: id }, // tapping opens this habit
+          },
+          trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: at, channelId: CHANNEL },
+        });
+      }
     }
   }
 
@@ -106,3 +111,17 @@ async function rebuild() {
 
 // Re-word scheduled notifications whenever the language changes.
 i18n.on('languageChanged', () => void syncNotifications());
+
+/** Tapping a milestone notification switches the app to that habit (also when it cold-starts the app). */
+export function routeNotificationTaps() {
+  const open = (response: Notifications.NotificationResponse | null) => {
+    const id = response?.notification.request.content.data?.habitId;
+    if (isHabitId(id) && readTracked().includes(id)) writeActive(id);
+  };
+  Notifications.addNotificationResponseReceivedListener(open);
+  void Notifications.getLastNotificationResponseAsync().then((r) => {
+    open(r);
+    // Forget it, so later launches don't jump back to this habit.
+    if (r) void Notifications.clearLastNotificationResponseAsync();
+  });
+}

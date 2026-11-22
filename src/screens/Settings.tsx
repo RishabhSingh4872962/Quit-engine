@@ -1,16 +1,18 @@
 import React, { useCallback, useState } from 'react';
-import { AppState, Linking, Pressable, StyleSheet, Switch, View } from 'react-native';
+import { Alert, AppState, Linking, Pressable, StyleSheet, Switch, View } from 'react-native';
 import Constants from 'expo-constants';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
+import { HABIT_LIST, HABITS } from '../habits';
 import { LANGS, setLanguage, useLang } from '../i18n';
 import { actions } from '../lib/actions';
 import { hasPermission, requestPermission, syncNotifications } from '../lib/notifications';
-import { ThemePref, useCheckin, useMilestoneAlerts, useThemePref } from '../lib/storage';
-import { radius, setThemePref, useColors } from '../theme';
+import { ThemePref, useCheckin, useMilestoneAlerts, useThemePref, useTracked } from '../lib/storage';
+import { makePalette, radius, setThemePref, useColors } from '../theme';
 import { AppText } from '../components/AppText';
+import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { Screen } from '../components/Screen';
 import { Segmented } from '../components/Segmented';
@@ -31,6 +33,8 @@ export function SettingsScreen() {
     <Screen scroll>
       <AppText variant="title" style={s.title}>{t('settings.title')}</AppText>
 
+      <HabitSettings />
+
       <Section icon="language" title={t('settings.language')}>
         <Segmented options={LANGS.map((l) => ({ value: l.id, label: l.label }))} value={lang} onChange={setLanguage} />
       </Section>
@@ -49,6 +53,50 @@ export function SettingsScreen() {
         <AppText variant="caption">{t('settings.version', { version: Constants.expoConfig?.version ?? '' })}</AppText>
       </View>
     </Screen>
+  );
+}
+
+function HabitSettings() {
+  const { t } = useTranslation();
+  const lang = useLang();
+  const c = useColors();
+  const navigation = useNavigation();
+  const tracked = useTracked();
+
+  const confirmRemove = (name: string, remove: () => void) =>
+    Alert.alert(t('settings.removeTitle', { name }), t('settings.removeBody'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      { text: t('settings.remove'), style: 'destructive', onPress: remove },
+    ]);
+
+  return (
+    <Section icon="apps" title={t('settings.habits')}>
+      {tracked.map((id) => {
+        const habit = HABITS[id];
+        const h = makePalette(habit.accent, c.scheme);
+        return (
+          <View key={id} style={s.row}>
+            <View style={[s.habitIcon, { backgroundColor: h.accentSoft }]}>
+              <Ionicons name={habit.icon} size={18} color={h.accent} />
+            </View>
+            <AppText style={[s.rowTitle, s.flex]}>{habit.name[lang]}</AppText>
+            {tracked.length > 1 && (
+              <Pressable
+                hitSlop={10}
+                accessibilityRole="button"
+                accessibilityLabel={t('settings.removeTitle', { name: habit.name[lang] })}
+                onPress={() => confirmRemove(habit.name[lang], () => actions.removeHabit(id))}
+              >
+                <Ionicons name="close-circle-outline" size={22} color={c.textMuted} />
+              </Pressable>
+            )}
+          </View>
+        );
+      })}
+      {tracked.length < HABIT_LIST.length && (
+        <Button variant="soft" icon="add" label={t('settings.addHabit')} onPress={() => navigation.navigate('AddHabit')} />
+      )}
+    </Section>
   );
 }
 
@@ -181,6 +229,7 @@ const s = StyleSheet.create({
   section: { marginBottom: 14, gap: 14 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   icon: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
+  habitIcon: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   rowTitle: { fontSize: 16, fontWeight: '600' },
   timePill: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 6, borderRadius: radius.pill },

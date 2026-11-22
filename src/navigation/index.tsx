@@ -5,13 +5,12 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
-import { ACTIVE_HABIT } from '../habits';
-import { useHabitState } from '../lib/storage';
+import { useTracked } from '../lib/storage';
 import { Palette } from '../theme';
 import { CelebrateScreen } from '../screens/Celebrate';
 import { HomeScreen } from '../screens/Home';
 import { MilestonesScreen } from '../screens/Milestones';
-import { OnboardingScreen } from '../screens/Onboarding';
+import { AddHabitScreen, OnboardingScreen } from '../screens/Onboarding';
 import { SettingsScreen } from '../screens/Settings';
 import { UrgeScreen } from '../screens/Urge';
 
@@ -40,10 +39,8 @@ const Tabs = createBottomTabNavigator({
   },
 });
 
-function useOnboarded() {
-  const { quizAnswers } = useHabitState();
-  return ACTIVE_HABIT.quiz.every((q) => q.id in quizAnswers);
-}
+/** Onboarding is done once at least one habit is being tracked. */
+const useOnboarded = () => useTracked().length > 0;
 const useNeedsOnboarding = () => !useOnboarded();
 
 const RootStack = createNativeStackNavigator({
@@ -59,6 +56,7 @@ const RootStack = createNativeStackNavigator({
         Main: Tabs,
         Urge: { screen: UrgeScreen, options: { presentation: 'fullScreenModal', animation: 'fade_from_bottom' } },
         Celebrate: { screen: CelebrateScreen, options: { presentation: 'transparentModal', animation: 'fade' } },
+        AddHabit: { screen: AddHabitScreen, options: { presentation: 'modal', animation: 'slide_from_bottom' } },
       },
     },
   },

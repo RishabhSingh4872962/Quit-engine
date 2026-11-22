@@ -4,15 +4,15 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
-import { ACTIVE_HABIT as habit } from '../habits';
 import { useLang } from '../i18n';
 import { actions } from '../lib/actions';
-import { useHabitState } from '../lib/storage';
+import { useActiveHabit, useHabitState } from '../lib/storage';
 import { milestoneProgress, useNow } from '../lib/streak';
 import { fonts, useColors } from '../theme';
 import { AppText } from '../components/AppText';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
+import { HabitSwitcher } from '../components/HabitSwitcher';
 import { Screen } from '../components/Screen';
 import { StreakRing } from '../components/StreakRing';
 
@@ -21,21 +21,22 @@ export function HomeScreen() {
   const lang = useLang();
   const c = useColors();
   const navigation = useNavigation();
-  const state = useHabitState();
+  const habit = useActiveHabit();
+  const state = useHabitState(habit.id);
   const now = useNow();
+  const focused = useIsFocused();
 
   const started = state.streakStart !== null;
   const { days, next, progress } = milestoneProgress(state.streakStart, habit.milestones, now);
   const best = Math.max(state.bestStreakDays, days);
-  const focused = useIsFocused();
 
   // Celebrate the highest milestone reached since the last celebration (also covers days away from the app).
   const toCelebrate = [...habit.milestones].reverse().find((m) => started && m <= days && m > state.celebrated);
   useEffect(() => {
     if (!focused || toCelebrate === undefined) return;
-    actions.markCelebrated(toCelebrate);
-    navigation.navigate('Celebrate', { days: toCelebrate });
-  }, [focused, toCelebrate, navigation]);
+    actions.markCelebrated(habit.id, toCelebrate);
+    navigation.navigate('Celebrate', { habitId: habit.id, days: toCelebrate });
+  }, [focused, toCelebrate, habit.id, navigation]);
 
   const status = !started
     ? t('home.notStarted')
@@ -46,12 +47,14 @@ export function HomeScreen() {
   const confirmSlip = () =>
     Alert.alert(t('home.slipTitle'), t('home.slipBody'), [
       { text: t('common.cancel'), style: 'cancel' },
-      { text: t('home.slipConfirm'), onPress: actions.relapse },
+      { text: t('home.slipConfirm'), onPress: () => actions.relapse(habit.id) },
     ]);
 
   return (
     <Screen scroll>
-      <Animated.View entering={FadeIn.duration(500)}>
+      <HabitSwitcher />
+
+      <Animated.View key={habit.id} entering={FadeIn.duration(400)} style={s.header}>
         <AppText variant="title">{habit.name[lang]}</AppText>
         <AppText variant="muted">{habit.tagline[lang]}</AppText>
       </Animated.View>
@@ -72,11 +75,15 @@ export function HomeScreen() {
       <Animated.View entering={FadeInDown.delay(300).duration(600)} style={s.actions}>
         {started ? (
           <>
-            <Button icon="leaf" label={t('home.urgeButton')} onPress={() => navigation.navigate('Urge')} />
+            <Button
+              icon="leaf"
+              label={habit.urgeButton?.[lang] ?? t('home.urgeButton')}
+              onPress={() => navigation.navigate('Urge', { habitId: habit.id })}
+            />
             <Button variant="ghost" label={t('home.slipped')} onPress={confirmSlip} />
           </>
         ) : (
-          <Button icon="play" label={t('home.startStreak')} onPress={() => void actions.startStreak()} />
+          <Button icon="play" label={t('home.startStreak')} onPress={() => void actions.startStreak(habit.id)} />
         )}
       </Animated.View>
     </Screen>
@@ -99,7 +106,8 @@ function Stat({ icon, value, label }: {
 }
 
 const s = StyleSheet.create({
-  ring: { alignItems: 'center', marginTop: 28, marginBottom: 24 },
+  header: { marginTop: 18 },
+  ring: { alignItems: 'center', marginTop: 24, marginBottom: 24 },
   daysLabel: { marginTop: -4 },
   status: { marginTop: 18 },
   stats: { flexDirection: 'row', gap: 12, marginBottom: 24 },

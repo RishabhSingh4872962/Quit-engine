@@ -4,6 +4,10 @@ import type { en } from './en';
 type Shape<T> = { [K in keyof T]: T[K] extends string ? string : Shape<T[K]> };
 
 export const hi: Shape<typeof en> = {
+  app: {
+    name: 'Quit Engine',
+    tagline: 'एक-एक दिन, आदत से आज़ादी।',
+  },
   common: {
     days_one: 'दिन',
     days_other: 'दिन',
@@ -13,6 +17,13 @@ export const hi: Shape<typeof en> = {
     home: 'होम',
     milestones: 'लक्ष्य',
     settings: 'सेटिंग्स',
+  },
+  setup: {
+    pickTitle: 'आप किस पर काम करना चाहते हैं?',
+    pickSub: 'एक या ज़्यादा चुनें। बाद में और जोड़ सकते हैं।',
+    addTitle: 'नई आदत जोड़ें',
+    continue: 'आगे बढ़ें',
+    close: 'बंद करें',
   },
   onboarding: {
     chooseLanguage: 'अपनी भाषा चुनें',
@@ -34,6 +45,7 @@ export const hi: Shape<typeof en> = {
     slipConfirm: 'नई शुरुआत करें',
     urgesResisted: 'बार तलब पर जीत',
     bestStreak: 'सबसे लंबी स्ट्रीक',
+    addHabit: 'नई आदत जोड़ें',
   },
   urge: {
     breatheIn: 'साँस अंदर',
@@ -86,6 +98,11 @@ export const hi: Shape<typeof en> = {
     system: 'सिस्टम',
     light: 'लाइट',
     dark: 'डार्क',
+    habits: 'आपकी आदतें',
+    addHabit: 'नई आदत जोड़ें',
+    removeTitle: '{{name}} को ट्रैक करना बंद करें?',
+    removeBody: 'आपकी प्रगति सेव रहेगी, दोबारा जोड़ने पर वापस मिल जाएगी।',
+    remove: 'ट्रैक करना बंद करें',
     notifications: 'नोटिफ़िकेशन',
     milestoneAlerts: 'लक्ष्य की सूचना',
     milestoneAlertsSub: 'जब आप नया लक्ष्य पूरा करें',

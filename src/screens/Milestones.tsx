@@ -3,9 +3,8 @@ import { StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
-import { ACTIVE_HABIT as habit } from '../habits';
 import { milestoneLabel, useLang } from '../i18n';
-import { useHabitState } from '../lib/storage';
+import { useActiveHabit, useHabitState } from '../lib/storage';
 import { DAY_MS, milestoneProgress, useNow } from '../lib/streak';
 import { radius, useColors } from '../theme';
 import { AppText } from '../components/AppText';
@@ -18,7 +17,8 @@ export function MilestonesScreen() {
   const { t } = useTranslation();
   const lang = useLang();
   const c = useColors();
-  const { streakStart } = useHabitState();
+  const habit = useActiveHabit();
+  const { streakStart } = useHabitState(habit.id);
   const now = useNow();
   const { days, next, prev, progress } = milestoneProgress(streakStart, habit.milestones, now);
   const started = streakStart !== null;
@@ -31,7 +31,7 @@ export function MilestonesScreen() {
     <Screen scroll>
       <AppText variant="title">{t('milestones.title')}</AppText>
       <AppText variant="muted" style={s.summary}>
-        {t('milestones.summary', { reached, total: habit.milestones.length })}
+        {habit.name[lang]} · {t('milestones.summary', { reached, total: habit.milestones.length })}
       </AppText>
 
       {habit.milestones.map((m, i) => {

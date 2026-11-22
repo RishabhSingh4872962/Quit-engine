@@ -3,7 +3,7 @@ import React, { useEffect, useMemo } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import * as SystemUI from 'expo-system-ui';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { setupNotifications, syncNotifications } from './src/lib/notifications';
+import { routeNotificationTaps, setupNotifications, syncNotifications } from './src/lib/notifications';
 import { readThemePref } from './src/lib/storage';
 import { Navigation, navTheme } from './src/navigation';
 import { applyThemePref, useColors } from './src/theme';
@@ -11,6 +11,7 @@ import { applyThemePref, useColors } from './src/theme';
 applyThemePref(readThemePref());
 // Create the Android channel, then refresh schedules (permission may have changed in system settings).
 void setupNotifications().then(syncNotifications);
+routeNotificationTaps();
 
 export default function App() {
   const c = useColors();

@@ -10,12 +10,13 @@ const SPRING = { damping: 15, stiffness: 300 };
 
 type Variant = 'primary' | 'soft' | 'ghost';
 
-export function Button({ label, onPress, variant = 'primary', icon, style }: {
+export function Button({ label, onPress, variant = 'primary', icon, style, disabled }: {
   label: string;
   onPress: () => void;
   variant?: Variant;
   icon?: React.ComponentProps<typeof Ionicons>['name'];
   style?: ViewStyle;
+  disabled?: boolean;
 }) {
   const c = useColors();
   const scale = useSharedValue(1);
@@ -27,13 +28,15 @@ export function Button({ label, onPress, variant = 'primary', icon, style }: {
   return (
     <APressable
       accessibilityRole="button"
+      accessibilityState={{ disabled }}
+      disabled={disabled}
       onPressIn={() => { scale.set(withSpring(0.96, SPRING)); }}
       onPressOut={() => { scale.set(withSpring(1, SPRING)); }}
       onPress={() => {
         void Haptics.selectionAsync();
         onPress();
       }}
-      style={[s.base, { backgroundColor: bg }, variant === 'ghost' && s.ghost, pressStyle, style]}
+      style={[s.base, { backgroundColor: bg }, variant === 'ghost' && s.ghost, disabled && s.disabled, pressStyle, style]}
     >
       {icon && <Ionicons name={icon} size={20} color={fg} />}
       <Text style={[s.label, { color: fg }, variant === 'ghost' && s.ghostLabel]}>{label}</Text>
@@ -52,6 +55,7 @@ const s = StyleSheet.create({
     gap: 10,
   },
   ghost: { minHeight: 44 },
+  disabled: { opacity: 0.45 },
   label: { fontSize: 17, fontWeight: '700' },
   ghostLabel: { fontSize: 15, fontWeight: '600' },
 });

@@ -2,8 +2,9 @@ import { HabitConfig } from './types';
 
 export const reels: HabitConfig = {
   id: 'reels',
-  name: { en: 'Reels Quitter', hi: 'रील्स छोड़ो' },
+  name: { en: 'Reels', hi: 'रील्स' },
   tagline: { en: 'Take your time back.', hi: 'अपना समय वापस लो।' },
+  icon: 'phone-portrait-outline',
   accent: '#6C5CE7',
   quiz: [
     {

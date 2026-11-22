@@ -3,8 +3,9 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, ZoomIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useNavigation } from '@react-navigation/native';
+import { StaticScreenProps, useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
+import { HabitId } from '../habits/types';
 import { actions } from '../lib/actions';
 import { radius, useColors } from '../theme';
 import { AppText } from '../components/AppText';
@@ -20,7 +21,9 @@ const PHASES = [
 ] as const;
 const ROUNDS = 4;
 
-export function UrgeScreen() {
+type Props = StaticScreenProps<{ habitId: HabitId }>;
+
+export function UrgeScreen({ route }: Props) {
   const { t } = useTranslation();
   const c = useColors();
   const navigation = useNavigation();
@@ -94,7 +97,7 @@ export function UrgeScreen() {
 
       {finished ? (
         <Animated.View entering={FadeIn.delay(400)} style={s.buttons}>
-          <Button label={t('urge.yes')} onPress={() => { actions.resistUrge(); navigation.goBack(); }} />
+          <Button label={t('urge.yes')} onPress={() => { actions.resistUrge(route.params.habitId); navigation.goBack(); }} />
           <Button variant="soft" label={t('urge.again')} onPress={restart} />
         </Animated.View>
       ) : (

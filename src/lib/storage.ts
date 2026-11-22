@@ -1,12 +1,12 @@
 import { useMemo } from 'react';
 import { createMMKV, useMMKVBoolean, useMMKVObject, useMMKVString } from 'react-native-mmkv';
-import { ACTIVE_HABIT } from '../habits';
-import { Lang } from '../habits/types';
+import { HABIT_LIST, HABITS, isHabitId } from '../habits';
+import { HabitConfig, HabitId, Lang } from '../habits/types';
 
 /** All app data lives on-device in MMKV (synchronous, so no loading states). */
 export const storage = createMMKV({ id: 'quit-engine' });
 
-// ---------- Habit progress ----------
+// ---------- Progress, one record per habit ----------
 
 export interface HabitState {
   quizAnswers: Record<string, number>;
@@ -26,21 +26,62 @@ export const EMPTY: HabitState = {
   celebrated: 0,
 };
 
-const STATE_KEY = `habit.${ACTIVE_HABIT.id}`;
+const stateKey = (id: HabitId) => `habit.${id}`;
 
-export function readState(): HabitState {
-  const raw = storage.getString(STATE_KEY);
+export function readState(id: HabitId): HabitState {
+  const raw = storage.getString(stateKey(id));
   return raw ? { ...EMPTY, ...JSON.parse(raw) } : EMPTY;
 }
 
-export function writeState(patch: Partial<HabitState>) {
-  storage.set(STATE_KEY, JSON.stringify({ ...readState(), ...patch }));
+export function writeState(id: HabitId, patch: Partial<HabitState>) {
+  storage.set(stateKey(id), JSON.stringify({ ...readState(id), ...patch }));
 }
 
-/** Re-renders whenever the habit state is written. */
-export function useHabitState(): HabitState {
-  const [value] = useMMKVObject<HabitState>(STATE_KEY, storage);
+/** Re-renders whenever this habit's state is written. */
+export function useHabitState(id: HabitId): HabitState {
+  const [value] = useMMKVObject<HabitState>(stateKey(id), storage);
   return useMemo(() => ({ ...EMPTY, ...value }), [value]);
+}
+
+// ---------- Which habits the user tracks, and which one is on screen ----------
+
+const TRACKED_KEY = 'prefs.habits';
+const ACTIVE_KEY = 'prefs.activeHabit';
+
+const parseTracked = (raw: string | undefined): HabitId[] => {
+  try {
+    const list: unknown = raw ? JSON.parse(raw) : [];
+    return Array.isArray(list) ? list.filter(isHabitId) : [];
+  } catch {
+    return [];
+  }
+};
+
+const pickActive = (value: string | undefined, tracked: HabitId[]) =>
+  isHabitId(value) && tracked.includes(value) ? value : tracked[0];
+
+export const readTracked = () => parseTracked(storage.getString(TRACKED_KEY));
+export const writeTracked = (ids: HabitId[]) => storage.set(TRACKED_KEY, JSON.stringify(ids));
+export const readActive = (): HabitId | undefined => pickActive(storage.getString(ACTIVE_KEY), readTracked());
+export const writeActive = (id: HabitId) => storage.set(ACTIVE_KEY, id);
+
+/** Tracked habits in the order the user added them. */
+export function useTracked(): HabitId[] {
+  const [raw] = useMMKVString(TRACKED_KEY, storage);
+  return useMemo(() => parseTracked(raw), [raw]);
+}
+
+/** Selected habit id, or undefined before onboarding. */
+export function useActiveHabitId(): HabitId | undefined {
+  const [value] = useMMKVString(ACTIVE_KEY, storage);
+  const tracked = useTracked();
+  return pickActive(value, tracked);
+}
+
+/** Selected habit's config. Screens after onboarding always have one; the fallback only guards types. */
+export function useActiveHabit(): HabitConfig {
+  const id = useActiveHabitId();
+  return id ? HABITS[id] : HABIT_LIST[0];
 }
 
 // ---------- Preferences ----------

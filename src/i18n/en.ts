@@ -3,6 +3,10 @@
  * Tone: gentle and non-shaming; no medical or treatment claims.
  */
 export const en = {
+  app: {
+    name: 'Quit Engine',
+    tagline: 'Break a habit, one day at a time.',
+  },
   common: {
     days_one: 'day',
     days_other: 'days',
@@ -12,6 +16,13 @@ export const en = {
     home: 'Home',
     milestones: 'Milestones',
     settings: 'Settings',
+  },
+  setup: {
+    pickTitle: 'What do you want to work on?',
+    pickSub: 'Pick one or more. You can add others later.',
+    addTitle: 'Add a habit',
+    continue: 'Continue',
+    close: 'Close',
   },
   onboarding: {
     chooseLanguage: 'Choose your language',
@@ -33,6 +44,7 @@ export const en = {
     slipConfirm: 'Start fresh',
     urgesResisted: 'urges resisted',
     bestStreak: 'best streak',
+    addHabit: 'Add a habit',
   },
   urge: {
     breatheIn: 'Breathe in',
@@ -85,6 +97,11 @@ export const en = {
     system: 'System',
     light: 'Light',
     dark: 'Dark',
+    habits: 'Your habits',
+    addHabit: 'Add a habit',
+    removeTitle: 'Stop tracking {{name}}?',
+    removeBody: 'Your progress is kept, so adding it back later restores it.',
+    remove: 'Stop tracking',
     notifications: 'Notifications',
     milestoneAlerts: 'Milestone alerts',
     milestoneAlertsSub: 'When you reach a new milestone',

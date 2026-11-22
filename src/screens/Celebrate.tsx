@@ -5,20 +5,24 @@ import * as Haptics from 'expo-haptics';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { StaticScreenProps, useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
-import { milestoneLabel } from '../i18n';
+import { HABITS } from '../habits';
+import { HabitId } from '../habits/types';
+import { milestoneLabel, useLang } from '../i18n';
 import { mix } from '../lib/color';
 import { radius, useColors } from '../theme';
 import { AppText } from '../components/AppText';
 import { Burst } from '../components/Burst';
 import { Button } from '../components/Button';
 
-type Props = StaticScreenProps<{ days: number }>;
+type Props = StaticScreenProps<{ habitId: HabitId; days: number }>;
 
 /** Shown over Home the first time a milestone is reached. */
 export function CelebrateScreen({ route }: Props) {
   const { t } = useTranslation();
+  const lang = useLang();
   const c = useColors();
   const navigation = useNavigation();
+  const habit = HABITS[route.params.habitId];
 
   useEffect(() => {
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -33,7 +37,7 @@ export function CelebrateScreen({ route }: Props) {
             <Ionicons name="trophy" size={52} color={c.onAccent} />
           </View>
         </View>
-        <AppText variant="label" center>{t('celebrate.reached')}</AppText>
+        <AppText variant="label" center>{habit.name[lang]} · {t('celebrate.reached')}</AppText>
         <AppText variant="title" center style={s.label} color={c.accentText}>{milestoneLabel(route.params.days, t)}</AppText>
         <AppText variant="muted" center style={s.body}>{t('celebrate.body')}</AppText>
         <Button label={t('celebrate.keepGoing')} onPress={navigation.goBack} style={s.button} />

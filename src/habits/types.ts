@@ -1,12 +1,22 @@
+import type { ComponentProps } from 'react';
+import type Ionicons from '@expo/vector-icons/Ionicons';
+
 export type Lang = 'en' | 'hi';
 
+export type HabitId = 'reels' | 'nicotine' | 'noContact' | 'nailBiting' | 'skinPicking';
+
 export interface HabitConfig {
-  id: string;
+  id: HabitId;
+  /** Short name, shown in the habit switcher and as the Home title. */
   name: Record<Lang, string>;
   tagline: Record<Lang, string>;
+  icon: ComponentProps<typeof Ionicons>['name'];
+  /** Tints the whole UI while this habit is selected. */
   accent: string;
   /** Onboarding quiz: each question has options; answers are stored for personalization. */
   quiz: { id: string; q: Record<Lang, string>; options: Record<Lang, string>[] }[];
+  /** Replaces the generic "I'm having an urge" button, e.g. "I want to text them". */
+  urgeButton?: Record<Lang, string>;
   /** Exercises offered by the urge button. */
   urgeExercises: ('breathing' | 'timer')[];
   /** Streak milestones in days. */

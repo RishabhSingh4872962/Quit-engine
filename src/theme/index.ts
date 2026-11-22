@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 import { Appearance, Platform, useColorScheme } from 'react-native';
-import { ACTIVE_HABIT } from '../habits';
+import { BRAND_ACCENT, HABITS } from '../habits';
 import { mix } from '../lib/color';
-import { storage, THEME_KEY, ThemePref } from '../lib/storage';
+import { storage, THEME_KEY, ThemePref, useActiveHabitId } from '../lib/storage';
 
 export interface Palette {
   scheme: 'light' | 'dark';
@@ -18,7 +18,7 @@ export interface Palette {
   onAccent: string; // text on accent
 }
 
-/** Calm & soft palette, derived from the habit's accent so every habit app gets its own tint. */
+/** Calm & soft palette, derived from a habit's accent so each habit gets its own tint. */
 export function makePalette(accent: string, scheme: 'light' | 'dark'): Palette {
   if (scheme === 'dark') {
     const base = '#15141B';
@@ -51,9 +51,12 @@ export function makePalette(accent: string, scheme: 'light' | 'dark'): Palette {
   };
 }
 
+/** Palette tinted by the selected habit (brand colour before onboarding). */
 export function useColors(): Palette {
   const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
-  return useMemo(() => makePalette(ACTIVE_HABIT.accent, scheme), [scheme]);
+  const id = useActiveHabitId();
+  const accent = id ? HABITS[id].accent : BRAND_ACCENT;
+  return useMemo(() => makePalette(accent, scheme), [accent, scheme]);
 }
 
 /**
