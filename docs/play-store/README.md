@@ -85,6 +85,11 @@ offering their tracks as standalone music). Put the credit in `by`. Example:
 ```
 
 ## 7. Testing and release
+- Release check (mobile-release-check skill, 26 Nov 2026): Android auto-backup is off (`allowBackup: false`),
+  so MMKV habit data never goes to Google Drive. Expected findings: "release signed with the debug key" and
+  "password in the Gradle file" are in the generated `android/` folder (EAS signs store builds with its upload
+  key + Play App Signing); "versionCode is 1" (EAS raises it); R8 minification is off on purpose for v1 (turning
+  it on needs keep rules for Firebase, RevenueCat, WebRTC and MMKV and a full release retest).
 - Personal developer accounts: a **closed test with at least 12 testers for 14 days in a row** is required before
   production access.
 - Before each release: `npx tsc --noEmit`, `npx eslint .`, a `preview` APK on a real phone. Check the reel counter,
