@@ -1,0 +1,16 @@
+{
+  "jee": { "name": "JEE Prep", "hi": "JEE की तैयारी", "kind": "study", "tag": "jee", "focus": 50, "brk": 10, "quiet": false, "strict": false, "max": 1000, "owner": "", "slot": "", "at": 1767205800000, "order": 1 },
+  "neet": { "name": "NEET Prep", "hi": "NEET की तैयारी", "kind": "study", "tag": "neet", "focus": 50, "brk": 10, "quiet": false, "strict": false, "max": 1000, "owner": "", "slot": "", "at": 1767205800000, "order": 2 },
+  "upsc": { "name": "UPSC & State PSC", "hi": "UPSC और राज्य PSC", "kind": "study", "tag": "upsc", "focus": 50, "brk": 10, "quiet": false, "strict": false, "max": 1000, "owner": "", "slot": "", "at": 1767205800000, "order": 3 },
+  "boards": { "name": "Board Exams (10th & 12th)", "hi": "बोर्ड परीक्षा (10वीं और 12वीं)", "kind": "study", "tag": "boards", "focus": 25, "brk": 5, "quiet": false, "strict": false, "max": 1000, "owner": "", "slot": "", "at": 1767205800000, "order": 4 },
+  "coding": { "name": "College & Coding", "hi": "कॉलेज और कोडिंग", "kind": "study", "tag": "coding", "focus": 50, "brk": 10, "quiet": false, "strict": false, "max": 1000, "owner": "", "slot": "", "at": 1767205800000, "order": 5 },
+
+  "silent-25": { "name": "Silent Pomodoro", "hi": "साइलेंट पोमोडोरो", "kind": "silent", "tag": "other", "focus": 25, "brk": 5, "quiet": true, "strict": true, "max": 1000, "owner": "", "slot": "", "at": 1767205800000, "order": 1 },
+  "deep-work": { "name": "Deep Work 50/10", "hi": "डीप वर्क 50/10", "kind": "silent", "tag": "work", "focus": 50, "brk": 10, "quiet": true, "strict": true, "max": 1000, "owner": "", "slot": "", "at": 1767205800000, "order": 2 },
+  "library": { "name": "Quiet Library", "hi": "शांत लाइब्रेरी", "kind": "silent", "tag": "reading", "focus": 25, "brk": 0, "quiet": true, "strict": false, "max": 1000, "owner": "", "slot": "", "at": 1767205800000, "order": 3 },
+
+  "night-owls": { "name": "Night Owls", "hi": "रात के पंछी", "kind": "people", "tag": "other", "focus": 50, "brk": 10, "quiet": false, "strict": false, "max": 1000, "owner": "", "slot": "", "at": 1767205800000, "order": 1 },
+  "early-birds": { "name": "Early Birds", "hi": "सुबह के पंछी", "kind": "people", "tag": "other", "focus": 25, "brk": 5, "quiet": false, "strict": false, "max": 1000, "owner": "", "slot": "", "at": 1767205800000, "order": 2 },
+  "working": { "name": "Working Professionals", "hi": "नौकरी करने वाले", "kind": "people", "tag": "work", "focus": 50, "brk": 10, "quiet": false, "strict": false, "max": 1000, "owner": "", "slot": "", "at": 1767205800000, "order": 3 },
+  "hostel": { "name": "Hostel & PG Life", "hi": "हॉस्टल और PG", "kind": "people", "tag": "college", "focus": 25, "brk": 5, "quiet": false, "strict": false, "max": 1000, "owner": "", "slot": "", "at": 1767205800000, "order": 4 }
+}

@@ -28,10 +28,11 @@ Firebase and RevenueCat are service providers acting for us, so nothing below co
 |---|---|---|---|---|---|
 | Personal info → **Name** | Yes | Optional | No | Account management, App functionality | Google sign-in for backup (Firebase Auth display name) |
 | Personal info → **Email address** | Yes | Optional | No | Account management, App functionality | Google sign-in for backup (Firebase Auth) |
-| Personal info → **User IDs** | Yes | Optional | No | Account management, App functionality | Firebase Auth user ID, sent with every backup request |
+| Personal info → **User IDs** | Yes | Optional | No | Account management, App functionality | Firebase Auth user ID: Google account for backup, a random anonymous id for rooms |
 | Health and fitness → **Health info** | Yes | Optional | No | App functionality | Cloud backup: which habits are tracked (nicotine, nail biting, skin picking…), quiz answers, streak numbers |
 | Financial info → **Purchase history** | Yes | Optional (only if the user buys) | No | App functionality, Analytics | RevenueCat (subscription status, renewals, refunds) |
-| App activity → **App interactions** | Yes | Required | No | Analytics | Google Analytics for Firebase: habit-neutral events and shared screen views (see `src/lib/telemetry.ts`) |
+| App activity → **App interactions** | Yes | Required | No | Analytics, App functionality | Google Analytics for Firebase: habit-neutral events and shared screen views (see `src/lib/telemetry.ts`); in rooms (optional): focus status, focus minutes, finished-session posts, high fives |
+| App activity → **Other user-generated content** | Yes | Optional | No | App functionality | Rooms: nicknames and names of rooms people create (shown to other users in rooms) |
 | App info and performance → **Crash logs** | Yes | Required | No | App functionality, Analytics | Firebase Crashlytics (release builds) |
 | App info and performance → **Diagnostics** | Yes | Required | No | App functionality, Analytics | Crashlytics device metadata and app state; Analytics device info |
 | Device or other IDs → **Device or other IDs** | Yes | Required | No | App functionality, Analytics | Firebase installation ID, Analytics app-instance ID, Crashlytics installation UUID, RevenueCat anonymous ID |
@@ -39,6 +40,11 @@ Firebase and RevenueCat are service providers acting for us, so nothing below co
 Not collected: location (no location permission; Firebase only derives a rough country from the connection),
 photos and videos, audio, files, contacts, calendar, messages, web browsing, installed apps list, advertising ID
 (the `AD_ID` permission is removed and `google_analytics_adid_collection_enabled` is `false`).
+
+### Rooms and "shared"
+What people show in rooms (nickname, focus minutes) is seen by other users because they chose to join.
+Play doesn't count user-initiated transfers like this as "sharing", so it stays under "Collected" only.
+Rooms data is stored in the Realtime Database in Singapore (asia-southeast1).
 
 ### Why "Health info"
 The backup contains which habit someone is quitting, which can be health-related (nicotine, skin picking).

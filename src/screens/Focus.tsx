@@ -10,7 +10,7 @@ import { HABITS } from '../habits';
 import { useLang } from '../i18n';
 import { actions } from '../lib/actions';
 import { FOCUS_OPTIONS, focusEnd, readExactAsked, useFocusDone, useFocusPrefs, useFocusSession, useFocusTotals } from '../lib/focus';
-import { formatDuration } from '../lib/format';
+import { clock, formatDuration } from '../lib/format';
 import { allowExactAlarms, exactAlarmsAllowed } from '../lib/notifications';
 import { premiumAvailable, usePremium } from '../lib/premium';
 import { reelCounterAvailable, useReelCounter } from '../lib/reels';
@@ -26,12 +26,6 @@ import { Screen } from '../components/Screen';
 import { Segmented } from '../components/Segmented';
 import { StreakRing } from '../components/StreakRing';
 import { ToggleRow } from '../components/ToggleRow';
-
-/** m:ss, rounded up so the timer never shows 0:00 before the end. */
-const clock = (ms: number) => {
-  const total = Math.max(0, Math.ceil(ms / 1000));
-  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
-};
 
 /**
  * Focus tab: a focus timer (optionally pausing reels, Premium), sounds that keep playing with the

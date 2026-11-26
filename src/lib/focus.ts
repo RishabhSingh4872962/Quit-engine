@@ -66,13 +66,18 @@ export const readExactAsked = () => storage.getBoolean(EXACT_ASKED_KEY) ?? false
 export const writeExactAsked = () => storage.set(EXACT_ASKED_KEY, true);
 
 const DEFAULT_PREFS: FocusPrefs = { minutes: 25, blockReels: false };
-export const readFocusPrefs = () => ({ ...DEFAULT_PREFS, ...parse<Partial<FocusPrefs>>(storage.getString(PREFS_KEY), {}) });
+// Only the offered lengths are valid defaults (older versions could store a room round's length).
+const cleanPrefs = (p: Partial<FocusPrefs>): FocusPrefs => {
+  const merged = { ...DEFAULT_PREFS, ...p };
+  return FOCUS_OPTIONS.includes(merged.minutes) ? merged : { ...merged, minutes: DEFAULT_PREFS.minutes };
+};
+export const readFocusPrefs = () => cleanPrefs(parse<Partial<FocusPrefs>>(storage.getString(PREFS_KEY), {}));
 export const writeFocusPrefs = (patch: Partial<FocusPrefs>) =>
   storage.set(PREFS_KEY, JSON.stringify({ ...readFocusPrefs(), ...patch }));
 
 export function useFocusPrefs(): FocusPrefs {
   const [raw] = useMMKVString(PREFS_KEY, storage);
-  return useMemo(() => ({ ...DEFAULT_PREFS, ...parse<Partial<FocusPrefs>>(raw, {}) }), [raw]);
+  return useMemo(() => cleanPrefs(parse<Partial<FocusPrefs>>(raw, {})), [raw]);
 }
 
 const readLog = () => parse<Record<string, number>>(storage.getString(LOG_KEY), {});
@@ -87,6 +92,8 @@ export function addFocusMinutes(at: number, minutes: number) {
   for (const d of Object.keys(log)) if (d < oldest) delete log[d];
   storage.set(LOG_KEY, JSON.stringify(log));
 }
+
+export const readTodayMinutes = (now = Date.now()) => readLog()[localDay(now)] ?? 0;
 
 /** Minutes focused today and in the last 7 days (today included). */
 export function useFocusTotals(now: number): { today: number; week: number } {

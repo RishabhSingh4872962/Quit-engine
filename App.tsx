@@ -12,6 +12,7 @@ import { actions } from './src/lib/actions';
 import { syncReelBlock } from './src/lib/blocking';
 import { applyReelRules, syncReelLimit } from './src/lib/reels';
 import { initRemoteConfig, remote } from './src/lib/remoteConfig';
+import { resumeRoom } from './src/lib/rooms';
 import { readThemePref } from './src/lib/storage';
 import { trackScreen } from './src/lib/telemetry';
 import { updateStreakWidget } from './src/widget';
@@ -56,6 +57,7 @@ export default function App() {
     syncReelBlock(); // blocking rules (also turns them off if Premium ended)
     actions.checkReelLimit(); // a day over the reel limit ends the reel-free streak
     actions.checkFocus(); // finishes a focus session that ended while the app was closed
+    resumeRoom(); // back into the room I was in (presence)
     const sub = AppState.addEventListener('change', (s) => {
       if (s !== 'active') return;
       actions.checkReelLimit();

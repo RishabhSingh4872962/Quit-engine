@@ -33,7 +33,10 @@ export function track<E extends keyof Events>(name: E, ...params: Events[E] exte
  * Screens shared by every habit. Reel screens (ReelStats, Pause…) would reveal the habit and
  * Paywall would be purchase analytics, so any screen not listed here is never logged.
  */
-const NEUTRAL_SCREENS = new Set(['Onboarding', 'Home', 'Focus', 'Milestones', 'Settings', 'Urge', 'Celebrate', 'AddHabit', 'Share']);
+const NEUTRAL_SCREENS = new Set([
+  'Onboarding', 'Home', 'Focus', 'Rooms', 'Room', 'RoomProfile', 'CreateRoom', 'Milestones', 'Settings', 'Urge', 'Celebrate',
+  'AddHabit', 'Share',
+]);
 
 /** Route names only (Home, Milestones, Urge…), never habit names. */
 export function trackScreen(name: string) {

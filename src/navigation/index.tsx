@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { useTracked } from '../lib/storage';
 import { Palette } from '../theme';
 import { CelebrateScreen } from '../screens/Celebrate';
+import { CreateRoomScreen } from '../screens/CreateRoom';
 import { FocusScreen } from '../screens/Focus';
 import { HomeScreen } from '../screens/Home';
 import { MilestonesScreen } from '../screens/Milestones';
@@ -17,13 +18,16 @@ import { PaywallScreen } from '../screens/Paywall';
 import { ReelCounterSetupScreen } from '../screens/ReelCounterSetup';
 import { ReelBlockingScreen } from '../screens/ReelBlocking';
 import { ReelStatsScreen } from '../screens/ReelStats';
+import { RoomScreen } from '../screens/Room';
+import { RoomProfileScreen } from '../screens/RoomProfile';
+import { RoomsScreen } from '../screens/Rooms';
 import { SettingsScreen } from '../screens/Settings';
 import { ShareScreen } from '../screens/Share';
 import { UrgeScreen } from '../screens/Urge';
 import { VideoScreen } from '../screens/Video';
 
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
-type TabKey = 'home' | 'focus' | 'milestones' | 'settings';
+type TabKey = 'home' | 'focus' | 'rooms' | 'milestones' | 'settings';
 
 /** Label as a component so it re-renders when the language changes. */
 function TabLabel({ tab, color }: { tab: TabKey; color: string }) {
@@ -44,6 +48,7 @@ const Tabs = createBottomTabNavigator({
     Home: { screen: HomeScreen, options: tabOptions('home', 'home-outline', 'home') },
     // Also opened by the "focus complete" notification: quitengine://focus
     Focus: { screen: FocusScreen, linking: 'focus', options: tabOptions('focus', 'timer-outline', 'timer') },
+    Rooms: { screen: RoomsScreen, options: tabOptions('rooms', 'people-outline', 'people') },
     Milestones: { screen: MilestonesScreen, options: tabOptions('milestones', 'trophy-outline', 'trophy') },
     Settings: { screen: SettingsScreen, options: tabOptions('settings', 'settings-outline', 'settings') },
   },
@@ -76,6 +81,9 @@ const RootStack = createNativeStackNavigator({
         // Opened by the reel counter at the daily limit: quitengine://pause?app=<package>
         Pause: { screen: PauseScreen, linking: 'pause', options: { presentation: 'fullScreenModal', animation: 'fade' } },
         Video: { screen: VideoScreen, options: { presentation: 'modal', animation: 'slide_from_bottom' } },
+        Room: { screen: RoomScreen, options: { animation: 'slide_from_right' } },
+        RoomProfile: { screen: RoomProfileScreen, options: { presentation: 'modal', animation: 'slide_from_bottom' } },
+        CreateRoom: { screen: CreateRoomScreen, options: { presentation: 'modal', animation: 'slide_from_bottom' } },
       },
     },
   },

@@ -8,3 +8,9 @@ export function formatDuration(ms: number, t: TFunction) {
   const m = mins % 60;
   return h > 0 ? t('common.hm', { h, m }) : t('common.m', { m });
 }
+
+/** m:ss, rounded up, so a countdown never shows 0:00 before the end. */
+export function clock(ms: number) {
+  const total = Math.max(0, Math.ceil(ms / 1000));
+  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
+}

@@ -44,6 +44,7 @@ Profiles in [`eas.json`](../../eas.json): `development` (dev client APK), `previ
 | Exact alarms | Nothing to declare: the app uses `SCHEDULE_EXACT_ALARM` (the user allows it in Android settings), not the restricted `USE_EXACT_ALARM`. Used only so the "focus session complete" alert rings on time |
 | Foreground service permissions → Media playback | "Focus sounds, music and guided audio that the user starts keep playing with the screen off; the media notification lets them pause or stop it." Add a short video: Focus tab → play Rain → lock the phone → media notification → pause |
 | Health apps declaration | Habit tracking that isn't medical. Pick the closest non-medical option; never "medical device" |
+| Content rating: user interaction | Yes: users interact in rooms (nicknames, high fives, no chat or media). Rooms rules: `https://quit-engine-app.web.app/rules`; reporting and hiding are in the app; moderation steps in [../rooms-moderation.md](../rooms-moderation.md) |
 | Financial features, Government, News | None |
 | Account deletion | `https://quit-engine-app.web.app/delete-account` |
 

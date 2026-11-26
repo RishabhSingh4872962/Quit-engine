@@ -42,6 +42,7 @@ import {
   writeReelConsent,
   writeReelLimit,
 } from './reels';
+import { shareFocus, syncRoomPresence } from './rooms';
 import { track } from './telemetry';
 import { updateStreakWidget } from '../widget';
 
@@ -204,13 +205,18 @@ export const actions = {
     await syncNotifications();
   },
 
-  /** Starts a focus session. With blockReels (Premium) the reel service blocks reels until it ends. */
-  startFocus(minutes: number, blockReels: boolean) {
-    writeFocusPrefs({ minutes, blockReels });
+  /**
+   * Starts a focus session. With blockReels (Premium) the reel service blocks reels until it ends.
+   * `endsAt` lines the end up with a room's round (the start moves back by under a minute).
+   */
+  startFocus(minutes: number, blockReels: boolean, endsAt?: number) {
+    if (!endsAt) writeFocusPrefs({ minutes, blockReels });
+    else writeFocusPrefs({ blockReels });
     writeFocusDone(null);
-    writeSession({ startedAt: Date.now(), minutes, blockReels });
+    writeSession({ startedAt: endsAt ? endsAt - minutes * 60_000 : Date.now(), minutes, blockReels });
     armFocusTimer();
     syncReelBlock();
+    syncRoomPresence(); // "focusing · N min left" in the room I'm in
     void syncNotifications(); // "focus complete" alert at the end
     track('focus_started', { minutes });
   },
@@ -224,6 +230,7 @@ export const actions = {
     addFocusMinutes(now, minutes);
     writeFocusDone(minutes > 0 ? { minutes, complete: false } : null);
     finishFocus();
+    void shareFocus(minutes, false); // minutes count on the room leaderboard (if opted in); no post
   },
 
   /**
@@ -237,6 +244,7 @@ export const actions = {
     addFocusMinutes(focusEnd(s), s.minutes);
     writeFocusDone({ minutes: s.minutes, complete: true });
     finishFocus();
+    void shareFocus(s.minutes, true); // "finished a 50-min session" in the room, + leaderboard
     track('focus_completed', { minutes: s.minutes });
   },
 
@@ -271,5 +279,6 @@ function finishFocus() {
   writeSession(null);
   armFocusTimer();
   syncReelBlock(); // lifts the focus block (other blocking rules stay)
+  syncRoomPresence();
   void syncNotifications(); // drops the pending "focus complete" alert
 }
