@@ -231,10 +231,19 @@ export function useRooms(active: boolean): Room[] | undefined {
   }, [res]);
 }
 
-/** People connected per room (approximate; focusing people who went offline aren't counted). */
+/**
+ * People connected per room: each person keeps one marker `here/<room>/<uid>` that the server removes
+ * when they disconnect, so the number can't drift (focusing people who went offline aren't counted).
+ */
 export function useRoomCounts(active: boolean): Record<string, number> {
-  const res = useDbValue(active ? 'count' : null);
-  return useMemo(() => (res?.value as Record<string, number> | null) ?? {}, [res]);
+  const res = useDbValue(active ? 'here' : null);
+  return useMemo(() => {
+    const out: Record<string, number> = {};
+    for (const [room, people] of Object.entries((res?.value as Raw | null) ?? {})) {
+      out[room] = Object.keys((people as Raw | null) ?? {}).length;
+    }
+    return out;
+  }, [res]);
 }
 
 export function useRoom(id: string, hidden: boolean): Room | null | undefined {
@@ -364,7 +373,7 @@ function presenceState() {
   return ends > Date.now() ? { state: 'focus', ends } : { state: 'idle', ends: 0 };
 }
 
-/** Writes my presence; `connected` (a fresh connection) also counts me in the room's online number. */
+/** Writes my presence; `connected` (a fresh connection) also sets my "here" marker. */
 async function writePresence(connected: boolean) {
   const cur = readCurrentRoom();
   const uid = getAuth().currentUser?.uid;
@@ -373,7 +382,7 @@ async function writePresence(connected: boolean) {
     const profile = toProfile((await get(ref(db(), `profiles/${uid}`))).val());
     if (!profile) return;
     const me = ref(db(), `online/${cur.id}/${uid}`);
-    const count = ref(db(), `count/${cur.id}`);
+    const here = ref(db(), `here/${cur.id}/${uid}`);
     await set(me, {
       nick: profile.nick,
       avatar: profile.avatar,
@@ -389,8 +398,8 @@ async function writePresence(connected: boolean) {
     // while a focus session runs.
     await onDisconnect(me).update({ conn: false });
     if (connected) {
-      await set(count, increment(1));
-      await onDisconnect(count).set(increment(-1));
+      await set(here, true);
+      await onDisconnect(here).remove();
     }
   } catch (e) {
     reportError(e, 'room presence');
@@ -406,7 +415,9 @@ export function resumeRoom() {
     if (snap.val() === true) void writePresence(true);
   });
   presence = { room: cur.id, stop };
-  addFootprint(`online/${cur.id}/${getAuth().currentUser?.uid}`);
+  const uid = getAuth().currentUser?.uid;
+  addFootprint(`online/${cur.id}/${uid}`);
+  addFootprint(`here/${cur.id}/${uid}`);
 }
 
 export async function enterRoom(id: string, hidden: boolean) {
@@ -426,11 +437,11 @@ export async function leaveRoom() {
   if (!cur || !uid) return;
   try {
     const me = ref(db(), `online/${cur.id}/${uid}`);
-    const count = ref(db(), `count/${cur.id}`);
+    const here = ref(db(), `here/${cur.id}/${uid}`);
     await onDisconnect(me).cancel();
-    await onDisconnect(count).cancel();
+    await onDisconnect(here).cancel();
     await set(me, null);
-    await set(count, increment(-1));
+    await set(here, null);
   } catch (e) {
     reportError(e, 'leave room');
   }

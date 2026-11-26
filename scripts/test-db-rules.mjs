@@ -6,7 +6,6 @@ import process from 'node:process';
 const HOST = process.env.FIREBASE_DATABASE_EMULATOR_HOST ?? '127.0.0.1:9000';
 const NS = 'quit-engine-app-default-rtdb';
 const TS = { '.sv': 'timestamp' };
-const INC = (n) => ({ '.sv': { increment: n } });
 
 const b64 = (o) => Buffer.from(JSON.stringify(o)).toString('base64url');
 // The emulator accepts unsigned tokens, so we can act as any user.
@@ -78,13 +77,15 @@ await put('online/jee/fresh', 'owner', { nick: 'fresh', avatar: 'a01', state: 'i
 await expect('bob removes someone who just went offline', false, del('online/jee/fresh', 'bob'));
 await expect('presence without conn', false, put('online/jee/alice', 'alice', { nick: 'alice_2', avatar: 'a01', state: 'idle', since: TS, ends: 0, away: false }));
 
-console.log('\nOnline count');
-await expect('count +1', true, put('count/jee', 'alice', INC(1)));
-await expect('signed-in users read all room counts', true, get('count', 'bob'));
-await expect('signed-out users read room counts', false, get('count', null));
-await expect('count +5', false, put('count/jee', 'alice', INC(5)));
-await expect('count -1', true, put('count/jee', 'alice', INC(-1)));
-await expect('count below zero', false, put('count/jee', 'alice', INC(-1)));
+console.log('\nOnline markers (count = number of markers)');
+await expect('alice marks herself here', true, put('here/jee/alice', 'alice', true));
+await expect('marking twice is harmless', true, put('here/jee/alice', 'alice', true));
+await expect('alice marks bob here', false, put('here/jee/bob', 'alice', true));
+await expect('marker with another value', false, put('here/jee/alice', 'alice', 5));
+await expect('marker in a room that does not exist', false, put('here/nope/alice', 'alice', true));
+await expect('signed-in users read all markers', true, get('here', 'bob'));
+await expect('signed-out users read markers', false, get('here', null));
+await expect('alice removes her marker', true, del('here/jee/alice', 'alice'));
 
 console.log('\nCustom rooms');
 await expect('bob creates a public room in slot 1', true, patch('', 'bob', { 'rooms/r1': room('bob', 's1'), 'owned/bob/s1': 'r1' }));
