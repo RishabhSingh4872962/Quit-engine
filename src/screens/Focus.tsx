@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Alert, Pressable, StyleSheet, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -9,7 +9,21 @@ import { useTranslation } from 'react-i18next';
 import { HABITS } from '../habits';
 import { useLang } from '../i18n';
 import { actions } from '../lib/actions';
-import { FOCUS_OPTIONS, focusEnd, readExactAsked, useFocusDone, useFocusPrefs, useFocusSession, useFocusTotals } from '../lib/focus';
+import {
+  FOCUS_OPTIONS,
+  focusEnd,
+  FocusMode,
+  focusPhase,
+  planFromPrefs,
+  POMODORO_PRESETS,
+  readExactAsked,
+  sessionMode,
+  STOPWATCH_CAP,
+  useFocusDone,
+  useFocusPrefs,
+  useFocusSession,
+  useFocusTotals,
+} from '../lib/focus';
 import { clock, formatDuration } from '../lib/format';
 import { allowExactAlarms, exactAlarmsAllowed } from '../lib/notifications';
 import { premiumAvailable, usePremium } from '../lib/premium';
@@ -18,10 +32,13 @@ import { audioPlayer, pauseMedia, playMedia, stopMedia, useCurrentMedia } from '
 import { useTracked } from '../lib/storage';
 import { useNow } from '../lib/streak';
 import { MediaItem, mediaCatalog, mediaTitle } from '../media/catalog';
+import { FOCUS_TAGS } from '../rooms/data';
 import { fonts, radius, useColors } from '../theme';
 import { AppText } from '../components/AppText';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
+import { FlipToFocus } from '../components/FlipToFocus';
+import { LIVE } from '../components/RoomCard';
 import { Screen } from '../components/Screen';
 import { Segmented } from '../components/Segmented';
 import { StreakRing } from '../components/StreakRing';
@@ -74,14 +91,35 @@ export function FocusScreen() {
   };
 
   const locale = lang === 'hi' ? 'hi-IN' : 'en-IN';
-  // `now` can lag a tick behind a fresh start, so clamp to the session length.
-  const remaining = session ? Math.min(session.minutes * 60_000, focusEnd(session) - now) : prefs.minutes * 60_000;
-  const progress = session
-    ? Math.min(1, Math.max(0, 1 - remaining / (session.minutes * 60_000)))
-    : done?.complete ? 1 : 0;
+  const mode: FocusMode = session ? sessionMode(session) : prefs.mode;
+  const plan = planFromPrefs(prefs);
+  // What the ring shows: time left in this phase (a stopwatch counts up). `now` can lag a tick
+  // behind a fresh start, so values are clamped.
+  let shown: number;
+  let caption: string;
+  let progress: number;
+  let onBreak = false;
+  if (session && mode === 'stopwatch') {
+    shown = Math.max(0, now - session.startedAt);
+    caption = t('focus.soFar');
+    progress = Math.min(1, shown / (STOPWATCH_CAP * 60_000));
+  } else if (session) {
+    const p = focusPhase(session, now);
+    shown = Math.min(p.total, p.left);
+    onBreak = p.phase === 'break';
+    caption = mode === 'pomodoro'
+      ? t(onBreak ? 'focus.roundBreak' : 'focus.roundFocus', { round: p.round, rounds: p.rounds })
+      : t('focus.of', { count: session.minutes });
+    progress = Math.min(1, Math.max(0, 1 - shown / p.total));
+  } else {
+    shown = mode === 'stopwatch' ? 0 : plan.minutes * 60_000;
+    caption = t('focus.ready');
+    progress = done?.complete ? 1 : 0;
+  }
 
+  // A stopwatch ends when you stop it, so no "are you sure".
   const confirmEnd = () =>
-    Alert.alert(t('focus.endTitle'), t('focus.endBody'), [
+    mode === 'stopwatch' ? actions.endFocus() : Alert.alert(t('focus.endTitle'), t('focus.endBody'), [
       { text: t('focus.keepGoing'), style: 'cancel' },
       { text: t('focus.endConfirm'), onPress: actions.endFocus },
     ]);
@@ -96,7 +134,7 @@ export function FocusScreen() {
   };
   const start = () => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    actions.startFocus(prefs.minutes, blockOn);
+    actions.startFocus(plan, blockOn);
     void askExactAlarmsOnce();
   };
   // Loops stop; guided audio pauses, so it can continue where it was.
@@ -108,6 +146,7 @@ export function FocusScreen() {
 
   return (
     <Screen scroll>
+      {session && prefs.flip && <FlipToFocus />}
       <View style={s.header}>
         <AppText variant="title">{t('focus.title')}</AppText>
         <AppText variant="muted">{t('focus.sub')}</AppText>
@@ -119,16 +158,15 @@ export function FocusScreen() {
             <Ionicons name="checkmark" size={56} color={c.accent} />
           ) : (
             <>
-              <AppText style={s.clock} color={c.accentText}>{clock(remaining)}</AppText>
-              <AppText variant="caption">
-                {session ? t('focus.of', { count: session.minutes }) : t('focus.ready')}
-              </AppText>
+              <AppText style={s.clock} color={onBreak ? LIVE : c.accentText}>{clock(shown)}</AppText>
+              <AppText variant="caption" center>{caption}</AppText>
             </>
           )}
         </StreakRing>
 
         {session ? (
           <View style={s.full}>
+            {session.tag && <AppText variant="caption" center>{t('focus.focusingOn', { tag: t(`rooms.tags.${session.tag}`) })}</AppText>}
             {session.blockReels && premium && (
               <AppText variant="caption" center>
                 {t('focus.blockingNow', {
@@ -136,7 +174,12 @@ export function FocusScreen() {
                 })}
               </AppText>
             )}
-            <Button variant="ghost" label={t('focus.end')} onPress={confirmEnd} />
+            <Button
+              variant={mode === 'stopwatch' ? 'primary' : 'ghost'}
+              icon={mode === 'stopwatch' ? 'stop' : undefined}
+              label={mode === 'stopwatch' ? t('focus.finish') : t('focus.end')}
+              onPress={confirmEnd}
+            />
           </View>
         ) : done ? (
           <Animated.View entering={FadeIn.duration(400)} style={s.full}>
@@ -150,10 +193,50 @@ export function FocusScreen() {
         ) : (
           <View style={s.full}>
             <Segmented
-              options={FOCUS_OPTIONS.map((n) => ({ value: String(n), label: t('focus.minutes', { count: n }) }))}
-              value={String(prefs.minutes)}
-              onChange={(v) => actions.setFocusPrefs({ minutes: Number(v) })}
+              options={(['timer', 'pomodoro', 'stopwatch'] as const).map((m) => ({ value: m, label: t(`focus.modes.${m}`) }))}
+              value={prefs.mode}
+              onChange={(m) => actions.setFocusPrefs({ mode: m })}
             />
+            {prefs.mode === 'timer' && (
+              <Segmented
+                options={FOCUS_OPTIONS.map((n) => ({ value: String(n), label: t('focus.minutes', { count: n }) }))}
+                value={String(prefs.minutes)}
+                onChange={(v) => actions.setFocusPrefs({ minutes: Number(v) })}
+              />
+            )}
+            {prefs.mode === 'pomodoro' && (
+              <>
+                <Segmented
+                  options={POMODORO_PRESETS.map((p, i) => ({ value: String(i), label: `${p.focus}/${p.brk} ×${p.rounds}` }))}
+                  value={String(prefs.pomodoro)}
+                  onChange={(v) => actions.setFocusPrefs({ pomodoro: Number(v) })}
+                />
+                <AppText variant="caption" center>
+                  {t('focus.pomodoroSub', { focus: plan.minutes, brk: plan.brk ?? 0, rounds: plan.rounds ?? 1 })}
+                </AppText>
+              </>
+            )}
+            {prefs.mode === 'stopwatch' && <AppText variant="caption" center>{t('focus.stopwatchSub')}</AppText>}
+            <View style={s.tagBlock}>
+              <AppText variant="label">{t('focus.focusingOnTitle')}</AppText>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tagRow}>
+                {FOCUS_TAGS.map((id) => {
+                  const on = prefs.tag === id;
+                  return (
+                    <Pressable
+                      key={id}
+                      onPress={() => actions.setFocusPrefs({ tag: on ? undefined : id })}
+                      style={[s.tagChip, { backgroundColor: on ? c.accent : c.surfaceAlt }]}
+                      accessibilityRole="radio"
+                      accessibilityState={{ checked: on }}
+                    >
+                      <AppText style={s.tagText} color={on ? c.onAccent : c.text}>{t(`rooms.tags.${id}`)}</AppText>
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            </View>
+            <ToggleRow title={t('focus.flip')} sub={t('focus.flipSub')} value={prefs.flip} onChange={(flip) => actions.setFocusPrefs({ flip })} />
             {canBlock && (
               <ToggleRow
                 title={t('focus.blockReels')}
@@ -289,6 +372,10 @@ const s = StyleSheet.create({
   full: { alignSelf: 'stretch', gap: 12 },
   header: { gap: 2, marginBottom: 16 },
   timerCard: { alignItems: 'center', gap: 18 },
+  tagBlock: { gap: 8 },
+  tagRow: { gap: 8, paddingRight: 8 },
+  tagChip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: radius.pill },
+  tagText: { fontWeight: '600' },
   clock: { fontFamily: fonts.bold, fontSize: 44, lineHeight: 54, includeFontPadding: false },
   totals: { flexDirection: 'row', alignItems: 'center', marginTop: 14 },
   stat: { flex: 1, alignItems: 'center', gap: 2 },

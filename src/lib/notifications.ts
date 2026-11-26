@@ -3,7 +3,7 @@ import { AndroidImportance, IosAuthorizationStatus } from 'expo-notifications';
 import { Linking, Platform } from 'react-native';
 import i18n, { milestoneLabel } from '../i18n';
 import { HABITS, isHabitId } from '../habits';
-import { focusEnd, readSession } from './focus';
+import { focusEnd, phaseChanges, readSession } from './focus';
 import { isReelCounterOn } from './reels';
 import { readCheckin, readMilestoneAlerts, readState, readTracked, writeActive } from './storage';
 import { DAY_MS } from './streak';
@@ -117,8 +117,25 @@ async function rebuild() {
     });
   }
 
-  // End of a running focus session; opens the Focus tab.
+  // Pomodoro: "break time" and "back to focus" at each phase change (alarm clock: on time).
   const focus = readSession();
+  if (focus) {
+    for (const [i, c] of phaseChanges(focus, Date.now()).entries()) {
+      await Notifications.scheduleNotificationAsync({
+        identifier: `focus-phase-${i}`,
+        content: {
+          title: t(c.kind === 'break' ? 'notifications.breakTitle' : 'notifications.backTitle'),
+          body: c.kind === 'break'
+            ? t('notifications.breakBody', { count: c.brk })
+            : t('notifications.backBody', { round: c.round, rounds: focus.rounds ?? 1 }),
+          data: { url: 'quitengine://focus' },
+        },
+        trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: new Date(c.at), channelId: CHANNEL, delivery: 'alarmClock' },
+      });
+    }
+  }
+
+  // End of a running focus session; opens the Focus tab.
   if (focus && focusEnd(focus) > Date.now()) {
     await Notifications.scheduleNotificationAsync({
       identifier: 'focus-done',

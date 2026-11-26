@@ -6,7 +6,7 @@ import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { useLang } from '../i18n';
 import { actions } from '../lib/actions';
-import { focusEnd, useFocusPrefs, useFocusSession } from '../lib/focus';
+import { focusEnd, sessionMode, useFocusPrefs, useFocusSession } from '../lib/focus';
 import { clock, formatDuration } from '../lib/format';
 import { usePremium } from '../lib/premium';
 import { useReelCounter } from '../lib/reels';
@@ -83,6 +83,7 @@ export function RoomScreen({ route }: Props) {
   const visible = (members ?? []).filter((m) => !hiddenPeople.includes(m.uid));
   const focusing = visible.filter((m) => m.state === 'focus').length;
   const sessionLeft = session ? focusEnd(session) - now : 0;
+  const stopwatch = session ? sessionMode(session) === 'stopwatch' : false;
   const mine = room?.owner !== '' && room?.owner === uid;
   const inviteCode = room?.code;
 
@@ -106,7 +107,7 @@ export function RoomScreen({ route }: Props) {
   const focusWithRoom = () => {
     if (!room) return;
     const { minutes, endsAt } = roomSession(room, now, prefs.minutes);
-    actions.startFocus(minutes, premium && counterOn && prefs.blockReels, endsAt);
+    actions.startFocus({ mode: 'timer', minutes }, premium && counterOn && prefs.blockReels, endsAt);
   };
 
   const menu = () => {
@@ -190,7 +191,7 @@ export function RoomScreen({ route }: Props) {
           <Button icon="enter-outline" label={t('rooms.join')} onPress={join} disabled={busy || !room} />
         ) : session && sessionLeft > 0 ? (
           <>
-            <Button icon="timer-outline" variant="soft" label={t('rooms.focusing', { time: clock(sessionLeft) })} onPress={() => navigation.navigate('Main', { screen: 'Focus' })} />
+            <Button icon="timer-outline" variant="soft" label={stopwatch && session ? t('rooms.focusingSoFar', { time: clock(now - session.startedAt) }) : t('rooms.focusing', { time: clock(sessionLeft) })} onPress={() => navigation.navigate('Main', { screen: 'Focus' })} />
           </>
         ) : (
           room && (
@@ -241,7 +242,7 @@ export function RoomScreen({ route }: Props) {
 function MemberTile({ m, me, now, onLongPress }: { m: Member; me: boolean; now: number; onLongPress: () => void }) {
   const { t } = useTranslation();
   const c = useColors();
-  const focusingNow = m.state === 'focus' && m.ends > now;
+  const focusingNow = m.state === 'focus';
   return (
     <Pressable
       onLongPress={onLongPress}
@@ -258,7 +259,11 @@ function MemberTile({ m, me, now, onLongPress }: { m: Member; me: boolean; now: 
       </View>
       <AppText style={s.nick} numberOfLines={1}>{me ? `${m.nick} (${t('rooms.you')})` : m.nick}</AppText>
       <AppText variant="caption" color={focusingNow ? c.accentText : undefined}>
-        {focusingNow ? `⏱ ${t('rooms.memberLeft', { time: formatDuration(m.ends - now, t) })}` : t('rooms.memberHere')}
+        {!focusingNow
+          ? t('rooms.memberHere')
+          : m.ends
+            ? `⏱ ${t('rooms.memberLeft', { time: formatDuration(m.ends - now, t) })}`
+            : `⏱ ${t('rooms.memberSoFar', { time: formatDuration(now - m.since, t) })}`}
       </AppText>
       {m.today > 0 && <AppText variant="caption">{t('rooms.memberToday', { time: formatDuration(m.today * 60_000, t) })}</AppText>}
     </Pressable>

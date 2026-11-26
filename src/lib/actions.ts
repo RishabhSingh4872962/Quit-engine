@@ -20,9 +20,13 @@ import { HABITS } from '../habits';
 import { BlockPrefs, syncReelBlock, writeBlock } from './blocking';
 import {
   addFocusMinutes,
+  focusedMinutes,
   focusEnd,
+  FocusPlan,
   FocusPrefs,
+  readFocusPrefs,
   readSession,
+  sessionMode,
   writeExactAsked,
   writeFocusDone,
   writeFocusPrefs,
@@ -209,28 +213,37 @@ export const actions = {
    * Starts a focus session. With blockReels (Premium) the reel service blocks reels until it ends.
    * `endsAt` lines the end up with a room's round (the start moves back by under a minute).
    */
-  startFocus(minutes: number, blockReels: boolean, endsAt?: number) {
-    if (!endsAt) writeFocusPrefs({ minutes, blockReels });
-    else writeFocusPrefs({ blockReels });
+  startFocus(plan: FocusPlan, blockReels: boolean, endsAt?: number) {
     writeFocusDone(null);
-    writeSession({ startedAt: endsAt ? endsAt - minutes * 60_000 : Date.now(), minutes, blockReels });
+    const tag = readFocusPrefs().tag;
+    writeSession({
+      startedAt: endsAt ? endsAt - plan.minutes * 60_000 : Date.now(),
+      blockReels,
+      ...plan,
+      ...(tag ? { tag } : {}),
+    });
     armFocusTimer();
     syncReelBlock();
     syncRoomPresence(); // "focusing · N min left" in the room I'm in
     void syncNotifications(); // "focus complete" alert at the end
-    track('focus_started', { minutes });
+    track('focus_started', { minutes: plan.minutes, mode: plan.mode });
   },
 
-  /** Ends the session early. The minutes so far still count. */
+  /**
+   * Ends the session now. The minutes so far still count. Stopping a stopwatch is how it's meant to
+   * end, so that counts as finished; a timer or pomodoro ended early does not get a room post.
+   */
   endFocus() {
     const s = readSession();
     if (!s) return;
     const now = Date.now();
-    const minutes = Math.floor((Math.min(now, focusEnd(s)) - s.startedAt) / 60_000);
+    const minutes = focusedMinutes(s, now);
+    const complete = sessionMode(s) === 'stopwatch' && minutes > 0;
     addFocusMinutes(now, minutes);
-    writeFocusDone(minutes > 0 ? { minutes, complete: false } : null);
+    writeFocusDone(minutes > 0 ? { minutes, complete } : null);
     finishFocus();
-    void shareFocus(minutes, false); // minutes count on the room leaderboard (if opted in); no post
+    void shareFocus(minutes, complete);
+    if (complete) track('focus_completed', { minutes, mode: 'stopwatch' });
   },
 
   /**
@@ -241,11 +254,12 @@ export const actions = {
     const s = readSession();
     if (!s) return;
     if (Date.now() < focusEnd(s)) return armFocusTimer();
-    addFocusMinutes(focusEnd(s), s.minutes);
-    writeFocusDone({ minutes: s.minutes, complete: true });
+    const minutes = focusedMinutes(s, focusEnd(s)); // pomodoro: focus rounds only
+    addFocusMinutes(focusEnd(s), minutes);
+    writeFocusDone({ minutes, complete: true });
     finishFocus();
-    void shareFocus(s.minutes, true); // "finished a 50-min session" in the room, + leaderboard
-    track('focus_completed', { minutes: s.minutes });
+    void shareFocus(minutes, true); // "finished a 50-min session" in the room, + leaderboard
+    track('focus_completed', { minutes, mode: sessionMode(s) });
   },
 
   /** The "end sessions on time?" question is asked at most once. */

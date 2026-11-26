@@ -17,8 +17,8 @@ type Events = {
   backup_enabled: undefined;
   backup_restored: undefined;
   account_deleted: undefined;
-  focus_started: { minutes: number };
-  focus_completed: { minutes: number };
+  focus_started: { minutes: number; mode: 'timer' | 'pomodoro' | 'stopwatch' };
+  focus_completed: { minutes: number; mode: 'timer' | 'pomodoro' | 'stopwatch' };
 };
 
 export function track<E extends keyof Events>(name: E, ...params: Events[E] extends undefined ? [] : [Events[E]]) {

@@ -22,7 +22,7 @@ import {
 } from '@react-native-firebase/database';
 import { useMMKVString } from 'react-native-mmkv';
 import { FocusTag, isFocusTag, RoomKind, ROOM_KINDS } from '../rooms/data';
-import { focusEnd, readSession, readTodayMinutes } from './focus';
+import { focusEnd, readSession, readTodayMinutes, sessionMode } from './focus';
 import { localDay } from './reels';
 import { storage } from './storage';
 import { reportError } from './telemetry';
@@ -367,10 +367,11 @@ export function useCurrentRoom(): CurrentRoom | null {
 let presence: { room: string; stop: () => void } | null = null;
 
 /** My presence fields: what I'm doing right now (from the focus timer) and today's focus minutes. */
+// A stopwatch has no planned end, so it's shown as "focusing · N min so far" (ends 0).
 function presenceState() {
   const s = readSession();
-  const ends = s ? focusEnd(s) : 0;
-  return ends > Date.now() ? { state: 'focus', ends } : { state: 'idle', ends: 0 };
+  if (!s || focusEnd(s) <= Date.now()) return { state: 'idle', ends: 0 };
+  return { state: 'focus', ends: sessionMode(s) === 'stopwatch' ? 0 : focusEnd(s), ...(s.tag ? { tag: s.tag } : {}) };
 }
 
 /** Writes my presence; `connected` (a fresh connection) also sets my "here" marker. */
@@ -387,7 +388,7 @@ async function writePresence(connected: boolean) {
       nick: profile.nick,
       avatar: profile.avatar,
       ...(profile.tag ? { tag: profile.tag } : {}),
-      ...presenceState(),
+      ...presenceState(), // a session's tag replaces the profile's
       since: serverTimestamp(),
       away: false,
       conn: true,
@@ -490,7 +491,9 @@ export function useMembers(roomId: string, now: number): Member[] | undefined {
         conn: o.conn !== false,
         today: num(o.today),
       };
-      if (m.state === 'focus' && m.ends <= now) m.state = 'idle';
+      // Open-ended (stopwatch) sessions count while connected, or for up to 3 hours.
+      const open = m.ends === 0 && (m.conn || now - m.since < 3 * 3_600_000);
+      if (m.state === 'focus' && m.ends <= now && !open) m.state = 'idle';
       if (m.conn || m.state === 'focus') list.push(m);
     }
     // Focusing first, then longest focused today.
