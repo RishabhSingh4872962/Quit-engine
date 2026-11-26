@@ -32,6 +32,8 @@ Firebase and RevenueCat are service providers acting for us, so nothing below co
 | Health and fitness → **Health info** | Yes | Optional | No | App functionality | Cloud backup: which habits are tracked (nicotine, nail biting, skin picking…), quiz answers, streak numbers |
 | Financial info → **Purchase history** | Yes | Optional (only if the user buys) | No | App functionality, Analytics | RevenueCat (subscription status, renewals, refunds) |
 | App activity → **App interactions** | Yes | Required | No | Analytics, App functionality | Google Analytics for Firebase: habit-neutral events and shared screen views (see `src/lib/telemetry.ts`); in rooms (optional): focus status, focus minutes, finished-session posts, high fives |
+| Audio → **Voice or sound recordings** | Yes | Optional | **Yes** (processed ephemerally) | App functionality | Voice calls in invite-only rooms, streamed live through LiveKit; never recorded or stored |
+| Photos and videos → **Videos** | Yes | Optional | **Yes** (processed ephemerally) | App functionality | Optional camera in those calls, streamed live; never recorded or stored |
 | App activity → **Other user-generated content** | Yes | Optional | No | App functionality | Rooms: nicknames and names of rooms people create (shown to other users in rooms) |
 | App info and performance → **Crash logs** | Yes | Required | No | App functionality, Analytics | Firebase Crashlytics (release builds) |
 | App info and performance → **Diagnostics** | Yes | Required | No | App functionality, Analytics | Crashlytics device metadata and app state; Analytics device info |
@@ -40,6 +42,10 @@ Firebase and RevenueCat are service providers acting for us, so nothing below co
 Not collected: location (no location permission; Firebase only derives a rough country from the connection),
 photos and videos, audio, files, contacts, calendar, messages, web browsing, installed apps list, advertising ID
 (the `AD_ID` permission is removed and `google_analytics_adid_collection_enabled` is `false`).
+
+### Calls
+LiveKit (media) and Cloudflare (the token Worker) are service providers. Calls only exist in invite-only rooms,
+only while the app is on screen; microphone and camera are asked for when first used.
 
 ### Rooms and "shared"
 What people show in rooms (nickname, focus minutes) is seen by other users because they chose to join.

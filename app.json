@@ -126,6 +126,21 @@
           "supportsBackgroundPlayback": false,
           "supportsPictureInPicture": false
         }
+      ],
+      [
+        "@livekit/react-native-expo-plugin",
+        {
+          "android": {
+            "audioType": "communication"
+          }
+        }
+      ],
+      [
+        "@config-plugins/react-native-webrtc",
+        {
+          "cameraPermission": "Quit Engine uses the camera only when you turn it on in a call with your invite-only room.",
+          "microphonePermission": "Quit Engine uses the microphone only when you join a voice call in your invite-only room."
+        }
       ]
     ],
     "scheme": "quitengine"

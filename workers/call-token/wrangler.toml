@@ -1,0 +1,11 @@
+# Call tokens for invite-only rooms. Deploy: cd workers/call-token && npx wrangler deploy
+# Secrets (never in git): npx wrangler secret put LIVEKIT_API_KEY / LIVEKIT_API_SECRET
+name = "quit-engine-calls"
+main = "src/index.js"
+compatibility_date = "2026-11-01"
+
+[vars]
+DB_URL = "https://quit-engine-app-default-rtdb.asia-southeast1.firebasedatabase.app"
+FIREBASE_PROJECT = "quit-engine-app"
+# Your LiveKit Cloud project URL (Settings > Project), e.g. wss://quit-engine-abc123.livekit.cloud
+LIVEKIT_URL = "wss://REPLACE-ME.livekit.cloud"

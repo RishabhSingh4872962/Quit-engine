@@ -8,6 +8,7 @@ import { useLang } from '../i18n';
 import { actions } from '../lib/actions';
 import { focusEnd, sessionMode, useFocusPrefs, useFocusSession } from '../lib/focus';
 import { clock, formatDuration } from '../lib/format';
+import { callsAvailable } from '../lib/calls';
 import { usePremium } from '../lib/premium';
 import { useReelCounter } from '../lib/reels';
 import {
@@ -39,6 +40,7 @@ import { avatarEmoji } from '../rooms/data';
 import { fonts, radius, useColors } from '../theme';
 import { AppText } from '../components/AppText';
 import { Button } from '../components/Button';
+import { CallPanel } from '../components/CallPanel';
 import { Card } from '../components/Card';
 import { IconButton } from '../components/IconButton';
 import { Chip, LIVE, roomTitle } from '../components/RoomCard';
@@ -221,6 +223,8 @@ export function RoomScreen({ route }: Props) {
           />
         </Card>
       )}
+
+      {room?.hidden && inRoom && callsAvailable && <CallPanel roomId={id} />}
 
       <View style={s.section}>
         <AppText variant="heading">{t('rooms.hereNow')}</AppText>

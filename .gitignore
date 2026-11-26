@@ -51,3 +51,4 @@ GoogleService-Info.plist
 firebase-debug.log
 database-debug.log
 .firebase/
+.dev.vars

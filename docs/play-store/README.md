@@ -55,7 +55,22 @@ Profiles in [`eas.json`](../../eas.json): `development` (dev client APK), `previ
 3. `npx eas-cli env:create --name EXPO_PUBLIC_REVENUECAT_ANDROID_KEY --value <public SDK key> --environment production --environment preview`
 4. Test with a license-tester account on the internal track. Builds without the key show no paywall; only debug builds use the test mode.
 
-## 6. Focus sounds, music and videos
+## 6. Calls in invite-only rooms (LiveKit + Cloudflare)
+1. LiveKit Cloud (free): create a project; note its URL (`wss://….livekit.cloud`), API key and API secret.
+2. Put the URL in `workers/call-token/wrangler.toml` (`LIVEKIT_URL`), then:
+   ```sh
+   cd workers/call-token
+   npx wrangler login
+   npx wrangler secret put LIVEKIT_API_KEY      # paste the key
+   npx wrangler secret put LIVEKIT_API_SECRET   # paste the secret (never in git)
+   npx wrangler deploy                          # prints https://quit-engine-calls.<you>.workers.dev
+   ```
+3. Set `EXPO_PUBLIC_CALLS_URL` to that Worker URL (`.env` locally, EAS env for builds). Without it the call
+   card is hidden.
+4. Play Console: microphone and camera are normal runtime permissions (no declaration); Data Safety rows are in
+   [data-safety.md](data-safety.md).
+
+## 6b. Focus sounds, music and videos
 Extra content is listed in the Remote Config parameter `media_catalog` (JSON array; format in
 `src/media/catalog.ts`), with files in Firebase Storage or any https host. Only use files you're allowed to
 use in an app: your own, CC0, or a licence that allows in-app streaming (many "free" music sites forbid
