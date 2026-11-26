@@ -4,6 +4,7 @@ import {
   deleteUser,
   getAuth,
   GoogleAuthProvider,
+  linkWithCredential,
   onAuthStateChanged,
   reauthenticateWithCredential,
   signInWithCredential,
@@ -24,6 +25,7 @@ import { useMMKVNumber } from 'react-native-mmkv';
 import { isHabitId } from '../habits';
 import { HabitId } from '../habits/types';
 import { syncNotifications } from './notifications';
+import { deleteRoomsData } from './rooms';
 import { readActive, readState, readTracked, storage, writeActive, writeState, writeTracked } from './storage';
 import { reportError, track } from './telemetry';
 import { updateStreakWidget } from '../widget';
@@ -51,6 +53,13 @@ export function useAuthUser(): User | null {
   return user;
 }
 
+/**
+ * The Google account used for backup, or null. Rooms sign in anonymously, so "signed in" alone does
+ * NOT mean backup is on: only a Google (non-anonymous) account backs up habit data.
+ */
+const backupUser = (u: User | null) => (u && !u.isAnonymous ? u : null);
+export const useBackupUser = () => backupUser(useAuthUser());
+
 /** Epoch ms of the last successful backup on this phone, if any. */
 export function useLastBackupAt(): number | undefined {
   const [value] = useMMKVNumber(LAST_BACKUP_KEY, storage);
@@ -66,11 +75,25 @@ async function googleCredential() {
   return GoogleAuthProvider.credential(idToken);
 }
 
-/** Shows the Google account picker and signs in to Firebase. Returns false if the user cancelled. */
+/**
+ * Shows the Google account picker and signs in to Firebase. Returns false if the user cancelled.
+ * Someone already in rooms (anonymous) is upgraded in place, so their room nickname stays theirs;
+ * if that Google account already has a backup elsewhere, we switch to it instead.
+ */
 export async function signInWithGoogle(): Promise<boolean> {
   const credential = await googleCredential();
   if (!credential) return false;
-  await signInWithCredential(getAuth(), credential);
+  const current = getAuth().currentUser;
+  if (current?.isAnonymous) {
+    try {
+      await linkWithCredential(current, credential);
+    } catch (e) {
+      if ((e as { code?: string }).code !== 'auth/credential-already-in-use') throw e;
+      await signInWithCredential(getAuth(), credential);
+    }
+  } else {
+    await signInWithCredential(getAuth(), credential);
+  }
   track('backup_enabled');
   return true;
 }
@@ -81,9 +104,9 @@ export async function signOut() {
   storage.remove(LAST_BACKUP_KEY);
 }
 
-/** Uploads tracked habits (no slip history). No-op when signed out. */
+/** Uploads tracked habits (no slip history). No-op unless backup (a Google account) is on. */
 export async function backupNow() {
-  const uid = getAuth().currentUser?.uid;
+  const uid = backupUser(getAuth().currentUser)?.uid;
   const tracked = readTracked();
   if (!uid || !tracked.length) return;
 
@@ -112,7 +135,7 @@ export async function backupNow() {
 
 /** Backs up quietly (e.g. when the app goes to the background); failures are only reported. */
 export function backupInBackground() {
-  if (!getAuth().currentUser) return;
+  if (!backupUser(getAuth().currentUser)) return;
   backupNow().catch((e) => reportError(e, 'background backup'));
 }
 
@@ -125,7 +148,7 @@ export interface CloudBackup {
 
 /** The signed-in user's backup, or null if they have none. */
 export async function readCloudBackup(): Promise<CloudBackup | null> {
-  const uid = getAuth().currentUser?.uid;
+  const uid = backupUser(getAuth().currentUser)?.uid;
   if (!uid) return null;
   const root = await getDoc(userDoc(uid));
   if (!root.exists()) return null;
@@ -178,6 +201,7 @@ export function restoreBackup(backup: CloudBackup) {
 export async function deleteBackupAndAccount() {
   const user = getAuth().currentUser;
   if (!user) return;
+  await deleteRoomsData(false); // nickname, rooms, posts, leaderboard rows (same account)
 
   const batch = writeBatch(db());
   (await getDocs(habitsCol(user.uid))).forEach((d) => batch.delete(d.ref));

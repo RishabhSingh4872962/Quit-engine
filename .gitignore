@@ -49,4 +49,5 @@ GoogleService-Info.plist
 
 # Firebase CLI
 firebase-debug.log
+database-debug.log
 .firebase/

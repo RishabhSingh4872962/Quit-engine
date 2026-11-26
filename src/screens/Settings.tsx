@@ -15,7 +15,7 @@ import {
   restoreBackup,
   signInWithGoogle,
   signOut,
-  useAuthUser,
+  useBackupUser,
   useLastBackupAt,
 } from '../lib/backup';
 import {
@@ -51,7 +51,7 @@ export function SettingsScreen() {
   const lang = useLang();
   const theme = useThemePref();
   const c = useColors();
-  const user = useAuthUser();
+  const user = useBackupUser();
 
   const themes: { value: ThemePref; label: string }[] = [
     { value: 'system', label: t('settings.system') },
@@ -266,7 +266,7 @@ function BackupSettings() {
   const { t } = useTranslation();
   const lang = useLang();
   const c = useColors();
-  const user = useAuthUser();
+  const user = useBackupUser();
   const lastAt = useLastBackupAt();
   const [busy, setBusy] = useState(false);
 
