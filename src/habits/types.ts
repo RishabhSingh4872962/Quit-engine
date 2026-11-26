@@ -36,4 +36,9 @@ export interface HabitConfig {
    * minutes each answer stands for (e.g. "3–4 hours" -> 210).
    */
   reelBaseline?: { quizId: string; minutes: number[] };
+  /**
+   * Android only: apps offered for "pause before opening" (a breathing pause when they open).
+   * Only installed ones are shown; package ids must also be in the reel-guard manifest <queries>.
+   */
+  gateApps?: { id: string; name: string }[];
 }

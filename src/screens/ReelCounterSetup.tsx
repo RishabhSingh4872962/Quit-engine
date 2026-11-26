@@ -50,6 +50,7 @@ export function ReelCounterSetupScreen() {
         {row('eye-outline', t('reels.reads1'), c.accent)}
         {row('swap-vertical', t('reels.reads2'), c.accent)}
         {row('school-outline', t('reels.reads3'), c.accent)}
+        {row('pause-circle-outline', t('reels.reads4'), c.accent)}
       </Card>
 
       <Card style={s.card}>

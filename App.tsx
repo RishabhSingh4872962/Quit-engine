@@ -10,6 +10,7 @@ import { routeNotificationTaps, setupNotifications, syncNotifications } from './
 import { initPremium } from './src/lib/premium';
 import { actions } from './src/lib/actions';
 import { syncReelBlock } from './src/lib/blocking';
+import { syncGate } from './src/lib/gate';
 import { applyReelRules, syncReelLimit } from './src/lib/reels';
 import { initRemoteConfig, remote } from './src/lib/remoteConfig';
 import { resumeRoom } from './src/lib/rooms';
@@ -54,6 +55,7 @@ export default function App() {
     initPremium();
     applyReelRules(remote.reelRules()); // fixes for changed Instagram/YouTube screens, without an app update
     syncReelLimit(); // limit, bubble and their texts
+    syncGate(); // pause before opening (apps, texts)
     syncReelBlock(); // blocking rules (also turns them off if Premium ended)
     actions.checkReelLimit(); // a day over the reel limit ends the reel-free streak
     actions.checkFocus(); // finishes a focus session that ended while the app was closed
@@ -67,6 +69,7 @@ export default function App() {
     const onLang = () => {
       syncReelLimit(); // texts shown by the service follow the app language
       syncReelBlock();
+      syncGate();
     };
     i18n.on('languageChanged', onLang);
     return () => {

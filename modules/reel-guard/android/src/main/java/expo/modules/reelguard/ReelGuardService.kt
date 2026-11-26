@@ -2,8 +2,11 @@ package expo.modules.reelguard
 
 import android.accessibilityservice.AccessibilityService
 import android.appwidget.AppWidgetManager
+import android.content.BroadcastReceiver
 import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.ApplicationInfo
 import android.graphics.PixelFormat
 import android.graphics.Rect
@@ -64,6 +67,27 @@ class ReelGuardService : AccessibilityService() {
   private var misses = 0
   private val debug by lazy { (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0 }
 
+  // "Pause before opening" and app opens: the watched app in front right now (null = something else).
+  private var watched: Set<String> = emptySet()
+  private var front: String? = null
+  private var lastFrontCheck = 0L
+  // While a watched app is in front, check every few seconds whether it still is: the window-change
+  // event can fire mid-transition, and events from the launcher or other apps are filtered out.
+  private val frontWatch = object : Runnable {
+    override fun run() {
+      if (front == null) return
+      checkFront()
+      if (front != null) handler.postDelayed(this, 3_000)
+    }
+  }
+  private val gate by lazy { OpenGate(this) { pkg, open -> gateChoice(pkg, open) } }
+  private val screenOff = object : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+      front = null // unlocking straight into an app counts as opening it
+      gate.hide()
+    }
+  }
+
   private val ticker = object : Runnable {
     override fun run() {
       val pkg = active ?: return
@@ -82,24 +106,42 @@ class ReelGuardService : AccessibilityService() {
     instance = this
     applyRules()
     ReelStore.prune(this)
+    val filter = IntentFilter(Intent.ACTION_SCREEN_OFF)
+    if (Build.VERSION.SDK_INT >= 33) registerReceiver(screenOff, filter, RECEIVER_NOT_EXPORTED) else registerReceiver(screenOff, filter)
   }
 
-  /** Reloads detection rules (also after JS sends new ones) and listens only to those apps. */
+  /**
+   * Reloads detection rules and "pause before opening" apps (also after JS sends new ones) and
+   * listens only to those apps. Apps that are only in the pause list are never read: only the fact
+   * that they came to the front is used.
+   */
   fun applyRules() {
     rules = ReelStore.rules(this).associateBy { it.pkg }
-    serviceInfo = serviceInfo?.apply { packageNames = rules.keys.toTypedArray() }
-    if (debug) dlog("watching ${rules.keys}")
+    watched = rules.keys + ReelStore.gateConfig(this)?.apps.orEmpty()
+    serviceInfo = serviceInfo?.apply { packageNames = watched.toTypedArray() }
+    if (debug) dlog("watching $watched")
   }
 
   override fun onAccessibilityEvent(event: AccessibilityEvent) {
     // App switches (not tied to one package): check right away whether we left the reels player.
     if (event.eventType == AccessibilityEvent.TYPE_WINDOWS_CHANGED) {
+      checkFront()
+      if (front != null) handler.postDelayed({ checkFront() }, 700) // again once the transition settles
       if (active != null) checkScreen()
       return
     }
     val pkg = event.packageName?.toString() ?: return
     if (debug && event.eventType != AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) {
       dlog("event ${AccessibilityEvent.eventTypeToString(event.eventType)} $pkg src=${event.source?.viewIdResourceName}")
+    }
+    if (pkg != front && pkg in watched) {
+      // Content changes fire constantly (e.g. a mini player in the background): check those at most ~1.4×/s.
+      val now = SystemClock.elapsedRealtime()
+      val state = event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED
+      if (state || (event.eventType == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED && now - lastFrontCheck >= 700)) {
+        lastFrontCheck = now
+        appInFront(pkg)
+      }
     }
     val rule = rules[pkg] ?: return
     when (event.eventType) {
@@ -140,6 +182,7 @@ class ReelGuardService : AccessibilityService() {
   /** Is a configured app's reels player in the active window? Enters or leaves accordingly. */
   private fun checkScreen() {
     lastScreenCheck = SystemClock.elapsedRealtime()
+    if (gate.showing) return // nothing counts while the pause asks first
     val apps = windows.filter { it.type == AccessibilityWindowInfo.TYPE_APPLICATION }
     // The app window the user is in. Its root is only readable for the configured apps.
     val root = apps.firstOrNull { it.isActive }?.root
@@ -463,6 +506,48 @@ class ReelGuardService : AccessibilityService() {
     }
   }
 
+  /** The full-screen app on top (not a floating picture-in-picture window); null if we can't tell. */
+  private fun topApp(): String? =
+    windows.filter { it.type == AccessibilityWindowInfo.TYPE_APPLICATION && !(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && it.isInPictureInPictureMode) }
+      .maxByOrNull { it.layer }?.root?.packageName?.toString()
+
+  /** A watched app sent an event: if it really is in front now, that's an open. */
+  private fun appInFront(pkg: String) {
+    if (topApp() != pkg) return // e.g. its mini player, or a window behind
+    front = pkg
+    handler.removeCallbacks(frontWatch)
+    handler.postDelayed(frontWatch, 3_000)
+    val opens = ReelStore.addOpen(this, pkg)
+    if (debug) dlog("open $pkg ($opens today)")
+    val cfg = ReelStore.gateConfig(this) ?: return
+    if (pkg !in cfg.apps || System.currentTimeMillis() < ReelStore.graceUntil(this, pkg)) return
+    hideBubble()
+    gate.show(pkg, cfg, opens)
+    if (debug) dlog("gate $pkg")
+  }
+
+  /** On any window change: did the app in front change? Then the next visit is a new open. */
+  private fun checkFront() {
+    val f = front ?: return
+    if (topApp() == f) return
+    front = null
+    if (gate.pkg == f) gate.hide()
+  }
+
+  /** The user's answer on the pause: open (no pause again for a while) or not now (home screen). */
+  private fun gateChoice(pkg: String, open: Boolean) {
+    val cfg = ReelStore.gateConfig(this)
+    if (open) {
+      ReelStore.setGrace(this, pkg, System.currentTimeMillis() + (cfg?.graceMin ?: 10) * 60_000L)
+      if (debug) dlog("gate open $pkg")
+    } else {
+      ReelStore.addSkip(this, pkg)
+      front = null
+      performGlobalAction(GLOBAL_ACTION_HOME)
+      if (debug) dlog("gate not now $pkg")
+    }
+  }
+
   /** Asks the home-screen widget to redraw (it shows today's reel count). */
   private fun refreshWidget() {
     try {
@@ -512,6 +597,9 @@ class ReelGuardService : AccessibilityService() {
   override fun onDestroy() {
     exit()
     hideBubble()
+    gate.hide()
+    handler.removeCallbacks(frontWatch)
+    runCatching { unregisterReceiver(screenOff) }
     instance = null
     super.onDestroy()
   }

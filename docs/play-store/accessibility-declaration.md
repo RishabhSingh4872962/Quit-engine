@@ -24,6 +24,11 @@ features described to the user, with a prominent in-app disclosure, affirmative 
 >    compare it with the user's list of allowed channels, and pause and leave videos from other channels.
 >    This has its own consent dialog.
 >
+> 5. Optional "Pause before opening": for apps the user picks (e.g. Instagram, YouTube, games), it notices only
+>    that the app came to the front, counts the open on the phone, and shows a short full-screen breathing pause
+>    with "Not now" (goes to the home screen) and "Open" (continues; no pause again for a grace period the user
+>    sets). Nothing inside those apps is read.
+>
 > Every action is a fixed rule the user set up ("if the reel count reaches your limit, then pause"). The service
 > does not read messages, comments, captions, passwords or text input, does not act in other apps, and does not
 > send anything off the device. All counts are stored only on the phone. Users can turn it off at any time in

@@ -36,6 +36,25 @@ data class StudyConfig(
   val prefixes: List<String>, // Subscribe button labels: "Subscribe to <channel>." (YouTube in English)
 )
 
+/**
+ * "Pause before opening" (set by the user): when one of these apps comes to the front, a short
+ * breathing screen asks before it opens. Texts arrive from JS already in the app's language.
+ */
+data class GateConfig(
+  val apps: Set<String>,
+  val breathSec: Int,
+  val graceMin: Int, // after "Open", no pause for this app for this long
+  val names: Map<String, String>, // package -> name shown ("Instagram")
+  val title: String, // "Take a breath"
+  val breatheIn: String,
+  val breatheOut: String,
+  val ask: String, // "Open {app}?"
+  val opensOne: String, // "You've opened {app} {count} time today"
+  val opensOther: String,
+  val stay: String, // "Not now"
+  val open: String, // "Open {app}"
+)
+
 /** How to recognise the reels screen of one app, by Android view IDs (the part after ":id/"). */
 data class ReelRule(
   val pkg: String,
@@ -170,6 +189,69 @@ object ReelStore {
     null
   }
 
+  // ---- "Pause before opening" and app opens ----
+
+  fun setGate(ctx: Context, json: String?) {
+    prefs(ctx).edit().apply { if (json.isNullOrBlank()) remove("gate") else putString("gate", json) }.apply()
+    gateLoaded = false
+  }
+
+  @Volatile private var gateLoaded = false
+  @Volatile private var gateCached: GateConfig? = null
+
+  fun gateConfig(ctx: Context): GateConfig? {
+    if (!gateLoaded) {
+      gateCached = parseGate(ctx)
+      gateLoaded = true
+    }
+    return gateCached
+  }
+
+  private fun parseGate(ctx: Context): GateConfig? = try {
+    prefs(ctx).getString("gate", null)?.let { JSONObject(it) }?.let { o ->
+      val names = o.optJSONObject("names")
+      val t = o.optJSONObject("text") ?: JSONObject()
+      GateConfig(
+        apps = o.optJSONArray("apps")?.strings()?.toSet().orEmpty(),
+        breathSec = o.optInt("breath", 6).coerceIn(3, 30),
+        graceMin = o.optInt("grace", 10).coerceIn(1, 120),
+        names = names?.keys()?.asSequence()?.associateWith { names.getString(it) }.orEmpty(),
+        title = t.optString("title", "Take a breath"),
+        breatheIn = t.optString("breatheIn", "Breathe in"),
+        breatheOut = t.optString("breatheOut", "Breathe out"),
+        ask = t.optString("ask", "Open {app}?"),
+        opensOne = t.optString("opensOne", "{count}"),
+        opensOther = t.optString("opensOther", "{count}"),
+        stay = t.optString("stay", "Not now"),
+        open = t.optString("open", "Open {app}"),
+      ).takeIf { it.apps.isNotEmpty() }
+    }
+  } catch (e: Exception) {
+    null
+  }
+
+  /** Counts one open of an app today and returns today's opens of that app. */
+  fun addOpen(ctx: Context, pkg: String): Int {
+    val key = "${day(System.currentTimeMillis())}|$pkg|o"
+    val p = prefs(ctx)
+    val n = p.getInt(key, 0) + 1
+    p.edit().putInt(key, n).apply()
+    listener?.invoke()
+    return n
+  }
+
+  /** "Not now" on the pause: the app wasn't opened. */
+  fun addSkip(ctx: Context, pkg: String) {
+    val key = "${day(System.currentTimeMillis())}|$pkg|s"
+    val p = prefs(ctx)
+    p.edit().putInt(key, p.getInt(key, 0) + 1).apply()
+    listener?.invoke()
+  }
+
+  /** No pause before opening this app until then (after "Open", or when our app sends the user back). */
+  fun setGrace(ctx: Context, pkg: String, until: Long) = prefs(ctx).edit().putLong("grace|$pkg", until).apply()
+  fun graceUntil(ctx: Context, pkg: String) = prefs(ctx).getLong("grace|$pkg", 0)
+
   fun todayCount(ctx: Context, pkg: String) =
     prefs(ctx).getInt("${day(System.currentTimeMillis())}|$pkg|n", 0)
 
@@ -214,7 +296,7 @@ object ReelStore {
     if (notify) listener?.invoke()
   }
 
-  /** Last `days` days, oldest first: [{ day, apps: { pkg: { count, ms } }, hours: [24 counts] }]. */
+  /** Last `days` days, oldest first: [{ day, apps: { pkg: { count, ms, opens, skips } }, hours: [24 counts] }]. */
   fun stats(ctx: Context, days: Int): List<Map<String, Any>> {
     val all = prefs(ctx).all
     val cal = Calendar.getInstance()
@@ -231,10 +313,12 @@ object ReelStore {
           parts[2].drop(1).toIntOrNull()?.takeIf { it in 0..23 }?.let { hours[it] += value as Int }
           continue
         }
-        val app = apps[parts[1]] ?: mapOf("count" to 0, "ms" to 0.0)
+        val app = apps[parts[1]] ?: mapOf("count" to 0, "ms" to 0.0, "opens" to 0, "skips" to 0)
         apps[parts[1]] = when (parts[2]) {
           "n" -> app + ("count" to (value as Int))
           "ms" -> app + ("ms" to (value as Long).toDouble())
+          "o" -> app + ("opens" to (value as Int))
+          "s" -> app + ("skips" to (value as Int))
           else -> app
         }
       }

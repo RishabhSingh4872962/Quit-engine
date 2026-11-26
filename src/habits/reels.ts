@@ -33,6 +33,27 @@ export const reels: HabitConfig = {
     { id: 'com.instagram.android', name: 'Instagram Reels' },
     { id: 'com.google.android.youtube', name: 'YouTube Shorts' },
   ],
+  // "Pause before opening": apps people open on autopilot (social, short video, games, streaming).
+  gateApps: [
+    { id: 'com.instagram.android', name: 'Instagram' },
+    { id: 'com.google.android.youtube', name: 'YouTube' },
+    { id: 'com.facebook.katana', name: 'Facebook' },
+    { id: 'com.snapchat.android', name: 'Snapchat' },
+    { id: 'com.twitter.android', name: 'X' },
+    { id: 'in.mohalla.sharechat', name: 'ShareChat' },
+    { id: 'in.mohalla.video', name: 'Moj' },
+    { id: 'com.eterno.shortvideos', name: 'Josh' },
+    { id: 'com.instagram.lite', name: 'Instagram Lite' },
+    { id: 'com.facebook.lite', name: 'Facebook Lite' },
+    { id: 'com.reddit.frontpage', name: 'Reddit' },
+    { id: 'com.pinterest', name: 'Pinterest' },
+    { id: 'com.pubg.imobile', name: 'BGMI' },
+    { id: 'com.dts.freefiremax', name: 'Free Fire MAX' },
+    { id: 'com.dts.freefireth', name: 'Free Fire' },
+    { id: 'com.netflix.mediaclient', name: 'Netflix' },
+    { id: 'in.startv.hotstar', name: 'JioHotstar' },
+    { id: 'com.mxtech.videoplayer.ad', name: 'MX Player' },
+  ],
   // Short-video apps popular in India. Users can switch any of them off (e.g. YouTube for study).
   screenTime: {
     apps: [

@@ -28,6 +28,7 @@ import {
   useReelLimit,
 } from '../lib/reels';
 import { useBlock } from '../lib/blocking';
+import { BREATH_OPTIONS, GRACE_OPTIONS, installedGateApps, useGate } from '../lib/gate';
 import { useNow } from '../lib/streak';
 import { manageSubscription, premiumAvailable, premiumTestMode, usePremium } from '../lib/premium';
 import { remote } from '../lib/remoteConfig';
@@ -69,6 +70,7 @@ export function SettingsScreen() {
 
       <ReelCounterSettings />
 
+      <GateSettings />
       <BlockingSettings />
 
       <Section icon="language" title={t('settings.language')}>
@@ -135,6 +137,68 @@ function BlockingSettings() {
         />
       ) : (
         <Button variant="soft" icon="sparkles" label={t('premium.unlock')} onPress={() => navigation.navigate('Paywall')} />
+      )}
+    </Section>
+  );
+}
+
+/**
+ * "Pause before opening" (like one sec): a breathing pause when chosen apps open. Uses the reel
+ * counter's accessibility service, so it needs that switched on first.
+ */
+function GateSettings() {
+  const { t } = useTranslation();
+  const navigation = useNavigation();
+  const tracked = useTracked();
+  const gate = useGate();
+  const { enabled, stats } = useReelCounter(1);
+  const [apps] = useState(installedGateApps); // installed apps rarely change while Settings is open
+  if (!reelCounterAvailable || !tracked.some((id) => HABITS[id].gateApps)) return null;
+  const today = stats[stats.length - 1];
+  const opensOf = (id: string) => today?.apps[id]?.opens ?? 0;
+  const opens = gate.apps.reduce((n, id) => n + opensOf(id), 0);
+  const skips = gate.apps.reduce((n, id) => n + (today?.apps[id]?.skips ?? 0), 0);
+  const toggle = (id: string, on: boolean) =>
+    actions.setGate({ apps: on ? [...gate.apps, id] : gate.apps.filter((a) => a !== id) });
+
+  return (
+    <Section icon="pause-circle-outline" title={t('gate.settingsTitle')}>
+      <AppText variant="muted">{t('gate.settingsSub')}</AppText>
+      {!enabled ? (
+        <>
+          <AppText variant="caption">{t('gate.needCounter')}</AppText>
+          <Button variant="soft" icon="film-outline" label={t('gate.turnOn')} onPress={() => navigation.navigate('ReelCounterSetup')} />
+        </>
+      ) : (
+        <>
+          {apps.length === 0 && <AppText variant="caption">{t('gate.noApps')}</AppText>}
+          {apps.map((a) => (
+            <ToggleRow
+              key={a.id}
+              title={a.name}
+              sub={t('gate.appToday', { count: opensOf(a.id) })}
+              value={gate.apps.includes(a.id)}
+              onChange={(on) => toggle(a.id, on)}
+            />
+          ))}
+          {gate.apps.length > 0 && (
+            <>
+              <AppText variant="label">{t('gate.breath')}</AppText>
+              <Segmented
+                options={BREATH_OPTIONS.map((n) => ({ value: String(n), label: t('gate.seconds', { count: n }) }))}
+                value={String(gate.breath)}
+                onChange={(v) => actions.setGate({ breath: Number(v) })}
+              />
+              <AppText variant="label">{t('gate.grace')}</AppText>
+              <Segmented
+                options={GRACE_OPTIONS.map((n) => ({ value: String(n), label: t('gate.minutes', { count: n }) }))}
+                value={String(gate.grace)}
+                onChange={(v) => actions.setGate({ grace: Number(v) })}
+              />
+              {opens > 0 && <AppText variant="caption">{t('gate.todayLine', { opens, skips })}</AppText>}
+            </>
+          )}
+        </>
       )}
     </Section>
   );

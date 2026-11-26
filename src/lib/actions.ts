@@ -18,6 +18,7 @@ import {
 import { streakDays } from './streak';
 import { HABITS } from '../habits';
 import { BlockPrefs, syncReelBlock, writeBlock } from './blocking';
+import { GatePrefs, syncGate, writeGate } from './gate';
 import {
   addFocusMinutes,
   focusedMinutes,
@@ -260,6 +261,12 @@ export const actions = {
     finishFocus();
     void shareFocus(minutes, true); // "finished a 50-min session" in the room, + leaderboard
     track('focus_completed', { minutes, mode: sessionMode(s) });
+  },
+
+  /** "Pause before opening": which apps, breath length and grace time. */
+  setGate(patch: Partial<GatePrefs>) {
+    writeGate(patch);
+    syncGate();
   },
 
   /** The "end sessions on time?" question is asked at most once. */

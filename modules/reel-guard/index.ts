@@ -3,7 +3,8 @@ import type { EventSubscription } from 'expo';
 
 export interface ReelDay {
   day: string; // YYYY-MM-DD, local time
-  apps: Record<string, { count: number; ms: number }>; // by package id
+  // by package id; opens = times the app came to the front, skips = "Not now" on the pause before opening
+  apps: Record<string, { count: number; ms: number; opens?: number; skips?: number }>;
   hours: number[]; // reels per hour of the day (0–23), all apps together
 }
 
@@ -31,6 +32,13 @@ interface ReelGuardModule {
   resetToday(): void;
   /** Opens an installed app by package; false if it can't be opened. */
   openApp(pkg: string): boolean;
+  /**
+   * "Pause before opening": { apps: string[], breath: seconds, grace: minutes, names: {pkg: name},
+   * text: { title, breatheIn, breatheOut, ask, opensOne, opensOther, stay, open } }; null = off.
+   */
+  setGate(json: string | null): void;
+  /** Which of these packages are installed (they must be listed in the module's manifest <queries>). */
+  installedApps(pkgs: string[]): string[];
   /** Detection rules as JSON (from Remote Config); null restores the built-in ones. */
   setRules(json: string | null): void;
   addListener(event: 'onChange', listener: () => void): EventSubscription;

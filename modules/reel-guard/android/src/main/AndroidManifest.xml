@@ -1,4 +1,25 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <!-- Apps offered for "pause before opening": lets the app check which ones are installed. -->
+  <queries>
+    <package android:name="com.instagram.android" />
+    <package android:name="com.google.android.youtube" />
+    <package android:name="com.facebook.katana" />
+    <package android:name="com.snapchat.android" />
+    <package android:name="com.twitter.android" />
+    <package android:name="in.mohalla.sharechat" />
+    <package android:name="in.mohalla.video" />
+    <package android:name="com.eterno.shortvideos" />
+    <package android:name="com.reddit.frontpage" />
+    <package android:name="com.pinterest" />
+    <package android:name="com.pubg.imobile" />
+    <package android:name="com.dts.freefiremax" />
+    <package android:name="com.dts.freefireth" />
+    <package android:name="com.netflix.mediaclient" />
+    <package android:name="in.startv.hotstar" />
+    <package android:name="com.mxtech.videoplayer.ad" />
+    <package android:name="com.instagram.lite" />
+    <package android:name="com.facebook.lite" />
+  </queries>
   <application>
     <!-- Counts reels/shorts in a few chosen apps. Bound only by the system (BIND_ACCESSIBILITY_SERVICE). -->
     <service

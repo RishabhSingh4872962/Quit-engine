@@ -85,7 +85,9 @@ class ReelGuardModule : Module() {
     Function("resetToday") { ReelStore.resetToday(context) }
 
     // Back to the app the pause interrupted. Starting an activity needs no package visibility.
+    // A short grace so "pause before opening" doesn't ask again right after our own pause screen.
     Function("openApp") { pkg: String ->
+      ReelStore.setGrace(context, pkg, System.currentTimeMillis() + 2 * 60_000L)
       try {
         context.startActivity(
           Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER).setPackage(pkg)
@@ -95,6 +97,17 @@ class ReelGuardModule : Module() {
       } catch (e: RuntimeException) {
         false
       }
+    }
+
+    // "Pause before opening": { apps, breath, grace, names, text }; null = off.
+    Function("setGate") { json: String? ->
+      ReelStore.setGate(context, json)
+      ReelGuardService.instance?.applyRules()
+    }
+
+    // Which of these apps are installed (only packages listed in the manifest's <queries> are visible).
+    Function("installedApps") { pkgs: List<String> ->
+      pkgs.filter { context.packageManager.getLaunchIntentForPackage(it) != null }
     }
 
     // New detection rules (JSON array) from Remote Config; null/invalid = built-in defaults.

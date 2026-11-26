@@ -22,6 +22,8 @@ export function ReelsTodayCard({ apps }: { apps: App[] }) {
   const today = stats[stats.length - 1];
   const total = dayTotals(today, apps.map((a) => a.id));
   const used = apps.filter((a) => (today?.apps[a.id]?.count ?? 0) > 0);
+  const opens = apps.reduce((n, a) => n + (today?.apps[a.id]?.opens ?? 0), 0);
+  const skips = apps.reduce((n, a) => n + (today?.apps[a.id]?.skips ?? 0), 0);
 
   return (
     <Card style={s.card}>
@@ -45,6 +47,7 @@ export function ReelsTodayCard({ apps }: { apps: App[] }) {
               {total.count > 0 ? t('reels.time', { time: formatDuration(total.ms, t) }) : t('reels.none')}
             </AppText>
             {total.count === 0 && <AppText variant="caption" style={s.tip}>{t('reels.restartTip')}</AppText>}
+            {opens > 0 && <AppText variant="caption" style={s.tip}>{t('gate.todayLine', { opens, skips })}</AppText>}
           </View>
           {limit > 0 ? (
             <View style={s.limit}>
