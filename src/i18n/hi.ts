@@ -21,7 +21,7 @@ export const hi: Shape<typeof en> = {
     home: 'होम',
     focus: 'फ़ोकस',
     rooms: 'रूम्स',
-    milestones: 'लक्ष्य',
+    milestones: 'प्रगति',
     settings: 'सेटिंग्स',
   },
   setup: {
@@ -175,7 +175,10 @@ export const hi: Shape<typeof en> = {
     year_other: '{{count}} साल',
   },
   milestones: {
-    title: 'लक्ष्य',
+    title: 'प्रगति',
+    list: 'लक्ष्य',
+    next: 'अगला लक्ष्य',
+    around: 'लगभग {{date}}',
     summary: '{{total}} में से {{reached}} पूरे',
     reachedOn: '{{date}} को पूरा हुआ',
     toGo_one: 'बस {{count}} दिन और',

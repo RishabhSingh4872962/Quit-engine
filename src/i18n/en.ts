@@ -20,7 +20,7 @@ export const en = {
     home: 'Home',
     focus: 'Focus',
     rooms: 'Rooms',
-    milestones: 'Milestones',
+    milestones: 'Progress',
     settings: 'Settings',
   },
   setup: {
@@ -177,7 +177,10 @@ export const en = {
     year_other: '{{count}} years',
   },
   milestones: {
-    title: 'Milestones',
+    title: 'Progress',
+    list: 'Milestones',
+    next: 'Next milestone',
+    around: 'Around {{date}}',
     summary: '{{reached}} of {{total}} reached',
     reachedOn: 'Reached on {{date}}',
     toGo_one: '{{count}} day to go',
