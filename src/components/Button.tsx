@@ -42,6 +42,7 @@ export function Button({ label, onPress, variant = 'primary', icon, style, disab
   return (
     <APressable
       accessibilityRole="button"
+      accessibilityLabel={label} // not the icon glyph
       accessibilityState={{ disabled }}
       disabled={disabled}
       onPressIn={() => { scale.set(withSpring(0.97, SPRING)); }}

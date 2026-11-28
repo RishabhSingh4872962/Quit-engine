@@ -2,7 +2,7 @@
 
 The app's one look, chosen 28 Nov 2026 from three directions (Midnight, Garden, Clean). Dark only.
 Use this file when designing new screens, and import it into AI design tools (e.g. Google Stitch's
-DESIGN.md import) so generated screens match the app. Code: `src/theme/index.ts`, `src/components/`.
+DESIGN.md import) so generated screens match the app. Ready-made prompts: `stitch-prompt.md`. Code: `src/theme/index.ts`, `src/components/`.
 
 ## Feel
 
@@ -70,6 +70,9 @@ accent glow (main button, orb) and the floating tab bar's dark shadow.
 - **Streak orb**: a radial-gradient sphere (`accentLight` highlight top-left → `accent` → `accentDeep` edge), a
   wide `glow`, the number inside in white 800, a thin ring around it (`accentText` arc on a 7% white track)
   filling toward the next milestone. Breathes slowly (scale ±2.5%), still with reduced motion.
+- **Glow mark** (`GlowMark`): the orb's light without a number, a white icon inside; for hero moments only
+  (welcome, Premium, a reached milestone).
+- **Text field** (`TextField`): `surfaceAlt`, 1 px border, radius 18, Poppins 15, accent cursor.
 - **Status chip**: pill on `surfaceAlt` with a tiny progress bar and a caption.
 - **Habit pill**: the current habit (icon + name + chevron) at top-left of Home; opens a bottom sheet to switch
   or add a habit.
