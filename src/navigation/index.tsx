@@ -7,6 +7,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
 import { useTracked } from '../lib/storage';
 import { Palette } from '../theme';
+import { BuddyScreen } from '../screens/Buddy';
 import { CelebrateScreen } from '../screens/Celebrate';
 import { CheckInScreen } from '../screens/CheckIn';
 import { CreateRoomScreen } from '../screens/CreateRoom';
@@ -88,6 +89,8 @@ const RootStack = createNativeStackNavigator({
         // Evening check-in; also opened by the daily check-in notification: quitengine://checkin
         CheckIn: { screen: CheckInScreen, linking: 'checkin', options: { presentation: 'modal', animation: 'slide_from_bottom' } },
         Journal: { screen: JournalScreen, options: { presentation: 'modal', animation: 'slide_from_bottom' } },
+        // Accountability buddy: pairing, their summary, "5 more" requests
+        Buddy: { screen: BuddyScreen, options: { presentation: 'modal', animation: 'slide_from_bottom' } },
         // Study time by day and subject, daily goal, my subjects (from the Focus tab)
         Study: { screen: StudyScreen, options: { presentation: 'modal', animation: 'slide_from_bottom' } },
         // "Learn instead", from the pause screen

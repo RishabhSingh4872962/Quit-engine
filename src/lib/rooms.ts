@@ -35,7 +35,7 @@ import { reportError } from './telemetry';
  */
 
 const DB_URL = 'https://quit-engine-app-default-rtdb.asia-southeast1.firebasedatabase.app';
-const db = () => getDatabase(getApp(), DB_URL);
+export const db = () => getDatabase(getApp(), DB_URL);
 /** All shared room timers count from midnight IST, 1 Jan 2026, so rounds start on the hour / half hour. */
 const ANCHOR = 1767205800000;
 

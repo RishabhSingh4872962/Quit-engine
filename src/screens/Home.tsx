@@ -11,6 +11,7 @@ import { remote } from '../lib/remoteConfig';
 import { readPaywallOffered, useActiveHabit, useHabitState, useTracked } from '../lib/storage';
 import { reelCounterAvailable } from '../lib/reels';
 import { confirmSlip } from '../lib/slip';
+import { useBuddy } from '../lib/buddy';
 import { screenTimeAvailable } from '../lib/screenTime';
 import { milestoneProgress, useNow } from '../lib/streak';
 import { fonts, useColors } from '../theme';
@@ -20,6 +21,7 @@ import { Card } from '../components/Card';
 import { HabitSwitcher } from '../components/HabitSwitcher';
 import { IconButton } from '../components/IconButton';
 import { JournalCard } from '../components/JournalCard';
+import { AskCard } from './Buddy';
 import { Screen } from '../components/Screen';
 import { ReelsTodayCard } from '../components/ReelsTodayCard';
 import { ScreenTimeCard } from '../components/ScreenTimeCard';
@@ -34,6 +36,7 @@ export function HomeScreen() {
   const state = useHabitState(habit.id);
   const now = useNow();
   const focused = useIsFocused();
+  const buddy = useBuddy();
 
   const started = state.streakStart !== null;
   const { days, next, progress } = milestoneProgress(state.streakStart, habit.milestones, now);
@@ -67,6 +70,8 @@ export function HomeScreen() {
   return (
     <Screen scroll>
       <HabitSwitcher />
+
+      {buddy.kind === 'paired' && buddy.asks.map((a) => <AskCard key={a.id} ask={a} name={buddy.status?.name} />)}
 
       <Animated.View key={habit.id} entering={FadeIn.duration(400)} style={s.header}>
         <View style={s.headerText}>

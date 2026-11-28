@@ -54,6 +54,7 @@ export function SettingsScreen() {
   const theme = useThemePref();
   const c = useColors();
   const user = useBackupUser();
+  const navigation = useNavigation();
 
   const themes: { value: ThemePref; label: string }[] = [
     { value: 'system', label: t('settings.system') },
@@ -73,6 +74,11 @@ export function SettingsScreen() {
 
       <GateSettings />
       <BlockingSettings />
+
+      <Section icon="people" title={t('buddy.title')}>
+        <AppText variant="muted">{t('buddy.settingsSub')}</AppText>
+        <Button variant="soft" icon="people-outline" label={t('buddy.open')} onPress={() => navigation.navigate('Buddy')} />
+      </Section>
 
       <Section icon="language" title={t('settings.language')}>
         <Segmented options={LANGS.map((l) => ({ value: l.id, label: l.label }))} value={lang} onChange={setLanguage} />

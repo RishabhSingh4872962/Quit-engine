@@ -25,6 +25,7 @@ import { useMMKVNumber } from 'react-native-mmkv';
 import { isHabitId } from '../habits';
 import { HabitId } from '../habits/types';
 import { syncNotifications } from './notifications';
+import { endPairing } from './buddy';
 import { deleteRoomsData } from './rooms';
 import { readActive, readState, readTracked, storage, writeActive, writeState, writeTracked } from './storage';
 import { reportError, track } from './telemetry';
@@ -201,6 +202,7 @@ export function restoreBackup(backup: CloudBackup) {
 export async function deleteBackupAndAccount() {
   const user = getAuth().currentUser;
   if (!user) return;
+  await endPairing(); // buddy pairing (same account)
   await deleteRoomsData(false); // nickname, rooms, posts, leaderboard rows (same account)
 
   const batch = writeBatch(db());

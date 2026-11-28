@@ -17,6 +17,7 @@ import { resumeRoom } from './src/lib/rooms';
 import { readThemePref } from './src/lib/storage';
 import { trackScreen } from './src/lib/telemetry';
 import { updateStreakWidget } from './src/widget';
+import { useBuddySync } from './src/lib/buddy';
 import { Navigation, navTheme } from './src/navigation';
 import { applyThemePref, useColors } from './src/theme';
 
@@ -40,6 +41,7 @@ export default function App() {
   const theme = useMemo(() => navTheme(c), [c]);
   const navRef = useNavigationContainerRef();
   const lastRoute = useRef<string | undefined>(undefined);
+  useBuddySync(); // share my summary with my buddy; apply their answer to my "5 more"
 
   // Screen-view analytics: route names only (Home, Urge…), never habit names.
   const onNavChange = () => {

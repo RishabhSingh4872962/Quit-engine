@@ -20,6 +20,7 @@ import { HABITS } from '../habits';
 import { BlockPrefs, syncReelBlock, writeBlock } from './blocking';
 import { GatePrefs, syncGate, writeGate } from './gate';
 import { addUrge, checkInDay, clearJournal, NOTE_MAX, writeDay } from './journal';
+import { publishBuddyStatus } from './buddy';
 import { earnReels, readEarned } from './earn';
 import {
   addFocusMinutes,
@@ -118,6 +119,7 @@ export const actions = {
       celebrated: 0,
     });
     track('slip_logged');
+    void publishBuddyStatus(); // days on track changed
     void syncNotifications();
     updateStreakWidget();
   },
@@ -140,6 +142,7 @@ export const actions = {
     const note = entry.note?.trim().slice(0, NOTE_MAX);
     writeDay(id, checkInDay(Date.now()), { mood: entry.mood, kept: entry.kept, note: note || undefined, checkedAt: Date.now() });
     track('checkin_done');
+    void publishBuddyStatus(); // "kept their promise" for my buddy
   },
 
   /** Deletes this habit's urge diary, promises and check-ins from the phone. The streak stays. */
@@ -339,6 +342,7 @@ function resetPausesKeepEarned() {
 
 function finishFocus() {
   writeSession(null);
+  void publishBuddyStatus(); // focus minutes today
   armFocusTimer();
   syncReelBlock(); // lifts the focus block (other blocking rules stay)
   syncRoomPresence();

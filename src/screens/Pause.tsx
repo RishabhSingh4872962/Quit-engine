@@ -7,6 +7,7 @@ import { StackActions, StaticScreenProps, useNavigation } from '@react-navigatio
 import { useTranslation } from 'react-i18next';
 import { HABIT_LIST } from '../habits';
 import { actions } from '../lib/actions';
+import { ASK_REELS, askBuddy, clearAskAnswer, useAskAnswer, useBuddy, useMyAsk } from '../lib/buddy';
 import { EARN_CAP, EARN_FOCUS_MINUTES, EARN_FOCUS_REELS, EARN_LEARN_REELS, useEarnedToday } from '../lib/earn';
 import { useFocusPrefs, useFocusSession } from '../lib/focus';
 import { usePremium } from '../lib/premium';
@@ -45,6 +46,10 @@ export function PauseScreen({ route }: Props) {
   const premium = usePremium();
   const app = route.params?.app;
   const [phase, setPhase] = useState(0);
+  const buddy = useBuddy();
+  const myAsk = useMyAsk();
+  const answer = useAskAnswer();
+  const buddyName = buddy.kind === 'paired' ? buddy.status?.name : undefined;
 
   useEffect(() => {
     const timer = setTimeout(() => setPhase((p) => (p + 1) % PHASES.length), PHASES[phase].secs * 1000);
@@ -98,6 +103,16 @@ export function PauseScreen({ route }: Props) {
               onPress={earnByFocus}
               disabled={!!session}
             />
+            {buddy.kind === 'paired' && (
+              <EarnOption
+                icon="people-outline"
+                title={t('buddy.askButton', { name: buddyName ?? t('buddy.yourBuddy') })}
+                reward={t('pause.reward', { count: Math.min(ASK_REELS, left) })}
+                note={myAsk ? t('buddy.askWaiting') : undefined}
+                onPress={() => void askBuddy()}
+                disabled={!!myAsk}
+              />
+            )}
             <EarnOption
               icon="school-outline"
               title={t('pause.earnLearn', { count: 5 })}
@@ -109,6 +124,13 @@ export function PauseScreen({ route }: Props) {
           <AppText variant="muted">{t('pause.earnCapped', { count: EARN_CAP })}</AppText>
         )}
         {earned > 0 && left > 0 && <AppText variant="caption">{t('pause.earnedToday', { count: earned })}</AppText>}
+        {answer && (
+          <Pressable onPress={clearAskAnswer} accessibilityRole="button">
+            <AppText variant="caption">
+              {answer === 'no' ? t('buddy.answerNo') : t('buddy.answerYes', { count: Number(answer.slice(4)) })}
+            </AppText>
+          </Pressable>
+        )}
       </Card>
 
       <View style={s.actions}>
@@ -166,8 +188,8 @@ const s = StyleSheet.create({
   circle: { alignItems: 'center' },
   phase: { marginTop: 12 },
   earn: { gap: 8 },
-  earnRow: { flexDirection: 'row', gap: 10, marginTop: 4 },
-  option: { flex: 1, borderRadius: radius.md, padding: 14, gap: 6 },
+  earnRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 4 },
+  option: { flex: 1, minWidth: '45%', borderRadius: radius.md, padding: 14, gap: 6 },
   dim: { opacity: 0.6 },
   optionIcon: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
   optionTitle: { fontWeight: '700', fontSize: 15, lineHeight: 20 },

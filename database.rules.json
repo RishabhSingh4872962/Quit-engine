@@ -197,6 +197,61 @@
       }
     },
 
+    "pairs": {
+      "$code": {
+        ".read": "auth != null",
+        ".write": "auth != null && (!newData.exists() ? (data.child('a').val() === auth.uid || data.child('b').val() === auth.uid) : !data.exists() ? (newData.child('a').val() === auth.uid && !newData.child('b').exists() && !root.child('bans/' + auth.uid).exists()) : (!data.child('b').exists() && data.child('a').val() !== auth.uid && newData.child('b').val() === auth.uid && newData.child('a').val() === data.child('a').val() && newData.child('at').val() === data.child('at').val() && data.child('at').val() > now - 86400000))",
+        ".validate": "$code.matches(/^[A-HJ-NP-Z2-9]{6}$/) && newData.hasChildren(['a', 'at'])",
+        "a": { ".validate": "newData.isString()" },
+        "b": { ".validate": "newData.isString()" },
+        "at": { ".validate": "newData.isNumber() && newData.val() <= now" },
+        "$other": { ".validate": false }
+      }
+    },
+
+    "buddy": {
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || data.child('with').val() === auth.uid)",
+        ".write": "auth != null && auth.uid === $uid && (!newData.exists() || ((root.child('pairs/' + newData.child('code').val() + '/a').val() === auth.uid && root.child('pairs/' + newData.child('code').val() + '/b').val() === newData.child('with').val()) || (root.child('pairs/' + newData.child('code').val() + '/b').val() === auth.uid && root.child('pairs/' + newData.child('code').val() + '/a').val() === newData.child('with').val())))",
+        ".validate": "newData.hasChildren(['with', 'code', 'at'])",
+        "with": { ".validate": "newData.isString() && newData.val() !== $uid" },
+        "code": { ".validate": "newData.isString() && newData.val().matches(/^[A-HJ-NP-Z2-9]{6}$/)" },
+        "at": { ".validate": "newData.isNumber() && newData.val() <= now" },
+        "$other": { ".validate": false }
+      }
+    },
+
+    "bstatus": {
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || root.child('buddy/' + $uid + '/with').val() === auth.uid)",
+        ".write": "auth != null && auth.uid === $uid",
+        ".validate": "newData.hasChildren(['name', 'streak', 'focus', 'day', 'at'])",
+        "name": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 20 && !newData.val().contains('<')" },
+        "streak": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100000" },
+        "focus": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1440" },
+        "kept": { ".validate": "newData.isBoolean()" },
+        "day": { ".validate": "newData.isString() && newData.val().matches(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/)" },
+        "at": { ".validate": "newData.isNumber() && newData.val() <= now" },
+        "$other": { ".validate": false }
+      }
+    },
+
+    "breq": {
+      "$code": {
+        ".read": "auth != null && (root.child('pairs/' + $code + '/a').val() === auth.uid || root.child('pairs/' + $code + '/b').val() === auth.uid)",
+        ".write": "auth != null && !newData.exists() && (root.child('pairs/' + $code + '/a').val() === auth.uid || root.child('pairs/' + $code + '/b').val() === auth.uid)",
+        "$id": {
+          ".write": "auth != null && (root.child('pairs/' + $code + '/a').val() === auth.uid || root.child('pairs/' + $code + '/b').val() === auth.uid) && (!newData.exists() || (!data.exists() ? (newData.child('from').val() === auth.uid && newData.child('state').val() === 'wait' && !root.child('bans/' + auth.uid).exists()) : (data.child('from').val() !== auth.uid && data.child('state').val() === 'wait' && newData.child('from').val() === data.child('from').val() && newData.child('n').val() === data.child('n').val() && newData.child('at').val() === data.child('at').val())))",
+          ".validate": "newData.hasChildren(['from', 'n', 'at', 'state'])",
+          "from": { ".validate": "newData.isString()" },
+          "n": { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 10" },
+          "at": { ".validate": "newData.isNumber() && newData.val() <= now" },
+          "state": { ".validate": "newData.isString() && newData.val().matches(/^(wait|yes|no)$/)" },
+          "$other": { ".validate": false }
+        }
+      }
+    },
+
     "reports": {
       "$id": {
         ".write": "auth != null && !data.exists() && newData.exists()",

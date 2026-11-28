@@ -12,6 +12,7 @@ import {
   useRoomProfile,
   useRoomsUid,
 } from '../lib/rooms';
+import { endPairing } from '../lib/buddy';
 import { reportError } from '../lib/telemetry';
 import { AVATARS, avatarIds, FocusTag, FOCUS_TAGS, isBlockedText, NICK_RE } from '../rooms/data';
 import { radius, useColors } from '../theme';
@@ -76,6 +77,7 @@ function ProfileForm({ initial, join }: { initial: RoomProfile | null; join?: { 
         onPress: async () => {
           setBusy(true);
           try {
+            await endPairing(); // the account goes, so the buddy pairing ends too
             await deleteRoomsData(true);
             navigation.goBack();
           } catch (e) {
