@@ -14,7 +14,6 @@ import { syncGate } from './src/lib/gate';
 import { applyReelRules, syncReelLimit } from './src/lib/reels';
 import { initRemoteConfig, remote } from './src/lib/remoteConfig';
 import { resumeRoom } from './src/lib/rooms';
-import { readThemePref } from './src/lib/storage';
 import { trackScreen } from './src/lib/telemetry';
 import { updateStreakWidget } from './src/widget';
 import { useBuddySync } from './src/lib/buddy';
@@ -25,7 +24,7 @@ import { applyThemePref, useColors } from './src/theme';
 // Links into the app: the reel counter opens quitengine://pause at the daily limit.
 const linking = { prefixes: ['quitengine://'] };
 
-applyThemePref(readThemePref());
+applyThemePref(); // Midnight is dark only: native dialogs and pickers follow
 initRemoteConfig();
 // Going to the background: quiet backup for signed-in users, and a fresh widget.
 AppState.addEventListener('change', (state) => {
@@ -89,7 +88,7 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <StatusBar style={c.scheme === 'dark' ? 'light' : 'dark'} />
+      <StatusBar style="light" />
       <Navigation theme={theme} linking={linking} ref={navRef} onReady={onNavChange} onStateChange={onNavChange} />
     </SafeAreaProvider>
   );

@@ -24,7 +24,7 @@ Needs a development build (native modules: MMKV, Reanimated, Firebase), not Expo
 - `src/lib/actions.ts` — every state change goes through here (streak start, slip, add/remove habit, settings), so side effects like rescheduling notifications live in one place.
 - `src/lib/notifications.ts` — expo-notifications: milestone alerts per habit + one daily check-in; rebuilt from state after any relevant change. Copy is neutral (shows on the lock screen).
 - `src/i18n/` — i18next with typed keys; `en.ts` is the source, `hi.ts` must match its shape. Shared UI text only; habit text stays in habit configs.
-- `src/theme/` — calm & soft palette derived from the selected habit's accent; light/dark/system via `Appearance`. Baloo 2 font (Latin + Devanagari).
+- `src/theme/` — "Midnight" design system (dark only, chosen 28 Nov 2026 from three directions): near-black ground, dark glass surfaces, the selected habit's accent as a glowing gradient (`backgroundImage` / `boxShadow`, RN new arch). Poppins (Latin + Devanagari, embedded via expo-font); `AppText` maps `fontWeight` to the Poppins file. Floating tab bar (`FloatingTabBar`), glowing streak `Orb`, `HabitPicker` sheet. Design rules for people and AI tools (Stitch): `docs/design/DESIGN.md`.
 - `src/navigation/` — React Navigation 7 static API: onboarding until a habit is tracked, then tabs (Home, Milestones, Settings) plus modals (Urge, Celebrate, AddHabit).
 - `src/screens/`, `src/components/` — UI; animations with Reanimated 4 (+ worklets).
 - `src/widget/` — Android home-screen streak widget (react-native-android-widget). Shows days only, never the habit name. Refreshed from `actions.ts` and hourly.

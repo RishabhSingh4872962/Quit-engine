@@ -55,6 +55,7 @@ export const en = {
     urgesResisted: 'urges resisted',
     bestStreak: 'best streak',
     addHabit: 'Add a habit',
+    switchHabit: 'Switch habit',
   },
   urge: {
     breatheIn: 'Breathe in',

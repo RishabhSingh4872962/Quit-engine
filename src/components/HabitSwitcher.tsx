@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
+import { Pressable, ScrollView, StyleSheet } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
@@ -9,6 +9,7 @@ import { useLang } from '../i18n';
 import { actions } from '../lib/actions';
 import { useActiveHabitId, useTracked } from '../lib/storage';
 import { makePalette, radius, useColors } from '../theme';
+import { AppText } from './AppText';
 
 /** Chips for each tracked habit (each in its own colour), plus "+" to add another. */
 export function HabitSwitcher() {
@@ -40,10 +41,10 @@ export function HabitSwitcher() {
               void Haptics.selectionAsync();
               actions.setActive(id);
             }}
-            style={[s.chip, { backgroundColor: active ? h.accent : c.surface, borderColor: active ? h.accent : c.border }]}
+            style={[s.chip, { backgroundColor: active ? h.accent : c.surfaceAlt, borderColor: active ? h.accent : c.border }]}
           >
             <Ionicons name={habit.icon} size={16} color={active ? h.onAccent : h.accentText} />
-            <Text style={[s.label, { color: active ? h.onAccent : c.text }]}>{habit.name[lang]}</Text>
+            <AppText style={s.label} color={active ? h.onAccent : c.text}>{habit.name[lang]}</AppText>
           </Pressable>
         );
       })}

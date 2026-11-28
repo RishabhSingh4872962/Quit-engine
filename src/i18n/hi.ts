@@ -56,6 +56,7 @@ export const hi: Shape<typeof en> = {
     urgesResisted: 'बार तलब पर जीत',
     bestStreak: 'सबसे लंबी स्ट्रीक',
     addHabit: 'नई आदत जोड़ें',
+    switchHabit: 'आदत बदलें',
   },
   urge: {
     breatheIn: 'साँस अंदर',

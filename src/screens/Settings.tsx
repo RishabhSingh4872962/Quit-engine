@@ -35,8 +35,8 @@ import { manageSubscription, premiumAvailable, premiumTestMode, usePremium } fro
 import { remote } from '../lib/remoteConfig';
 import { reportError } from '../lib/telemetry';
 import { hasPermission, requestPermission, syncNotifications } from '../lib/notifications';
-import { ThemePref, useCheckin, useMilestoneAlerts, useThemePref, useTracked } from '../lib/storage';
-import { makePalette, radius, setThemePref, useColors } from '../theme';
+import { useCheckin, useMilestoneAlerts, useTracked } from '../lib/storage';
+import { makePalette, radius, useColors } from '../theme';
 import { pinStreakWidget } from '../widget';
 import { AppText } from '../components/AppText';
 import { Button } from '../components/Button';
@@ -51,16 +51,9 @@ const PRIVACY_URL = 'https://quit-engine-app.web.app/privacy';
 export function SettingsScreen() {
   const { t } = useTranslation();
   const lang = useLang();
-  const theme = useThemePref();
   const c = useColors();
   const user = useBackupUser();
   const navigation = useNavigation();
-
-  const themes: { value: ThemePref; label: string }[] = [
-    { value: 'system', label: t('settings.system') },
-    { value: 'light', label: t('settings.light') },
-    { value: 'dark', label: t('settings.dark') },
-  ];
 
   return (
     <Screen scroll>
@@ -82,10 +75,6 @@ export function SettingsScreen() {
 
       <Section icon="language" title={t('settings.language')}>
         <Segmented options={LANGS.map((l) => ({ value: l.id, label: l.label }))} value={lang} onChange={setLanguage} />
-      </Section>
-
-      <Section icon="contrast" title={t('settings.appearance')}>
-        <Segmented options={themes} value={theme} onChange={setThemePref} />
       </Section>
 
       <NotificationSettings />

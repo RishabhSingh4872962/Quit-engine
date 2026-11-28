@@ -41,7 +41,7 @@ export function StreakWidget({ days, unit, sub, colors, size }: {
       <SvgWidget svg={leaf(colors.accent)} style={{ width: 20, height: 20 }} />
       <TextWidget
         text={String(days)}
-        style={{ fontSize: numberSize, fontFamily: 'Baloo2_800ExtraBold', color: colors.accentText as Hex }}
+        style={{ fontSize: numberSize, fontFamily: 'Poppins_800ExtraBold', color: colors.accentText as Hex }}
       />
       <TextWidget text={unit} style={{ fontSize: 14, color: colors.textMuted as Hex }} />
       {sub ? <TextWidget text={sub} style={{ fontSize: 12, color: colors.accentText as Hex, marginTop: 4 }} /> : null}

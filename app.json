@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "dark",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.quitengine.app"
@@ -42,9 +42,11 @@
         "expo-font",
         {
           "fonts": [
-            "./node_modules/@expo-google-fonts/baloo-2/600SemiBold/Baloo2_600SemiBold.ttf",
-            "./node_modules/@expo-google-fonts/baloo-2/700Bold/Baloo2_700Bold.ttf",
-            "./node_modules/@expo-google-fonts/baloo-2/800ExtraBold/Baloo2_800ExtraBold.ttf"
+            "./node_modules/@expo-google-fonts/poppins/400Regular/Poppins_400Regular.ttf",
+            "./node_modules/@expo-google-fonts/poppins/500Medium/Poppins_500Medium.ttf",
+            "./node_modules/@expo-google-fonts/poppins/600SemiBold/Poppins_600SemiBold.ttf",
+            "./node_modules/@expo-google-fonts/poppins/700Bold/Poppins_700Bold.ttf",
+            "./node_modules/@expo-google-fonts/poppins/800ExtraBold/Poppins_800ExtraBold.ttf"
           ]
         }
       ],
@@ -106,10 +108,10 @@
           "image": "./assets/splash-icon.png",
           "imageWidth": 120,
           "resizeMode": "contain",
-          "backgroundColor": "#F7F6FD",
+          "backgroundColor": "#0A0A12",
           "dark": {
             "image": "./assets/splash-icon.png",
-            "backgroundColor": "#141320"
+            "backgroundColor": "#0A0A12"
           }
         }
       ],

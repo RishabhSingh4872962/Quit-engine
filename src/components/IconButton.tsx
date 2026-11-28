@@ -14,7 +14,7 @@ export function IconButton({ icon, label, onPress, filled }: {
       hitSlop={12}
       accessibilityRole="button"
       accessibilityLabel={label}
-      style={filled ? [s.filled, { backgroundColor: c.surfaceAlt }] : undefined}
+      style={filled ? [s.filled, { backgroundColor: c.surfaceAlt, borderColor: c.border }] : undefined}
     >
       <Ionicons name={icon} size={filled ? 22 : 26} color={c.text} />
     </Pressable>
@@ -22,5 +22,5 @@ export function IconButton({ icon, label, onPress, filled }: {
 }
 
 const s = StyleSheet.create({
-  filled: { width: 40, height: 40, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
+  filled: { width: 42, height: 42, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center', borderWidth: 1 },
 });

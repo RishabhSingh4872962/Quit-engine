@@ -1,86 +1,99 @@
 import { useMemo } from 'react';
-import { Appearance, Platform, useColorScheme } from 'react-native';
+import { Appearance, Platform, TextStyle } from 'react-native';
 import { BRAND_ACCENT, HABITS } from '../habits';
-import { mix } from '../lib/color';
-import { storage, THEME_KEY, ThemePref, useActiveHabitId } from '../lib/storage';
+import { mix, withAlpha } from '../lib/color';
+import { useActiveHabitId } from '../lib/storage';
 
+/**
+ * "Midnight": the app's one look. Near-black ground, soft glass-like surfaces, and the selected
+ * habit's colour as a glowing accent (each habit keeps its own colour). Dark only, by design.
+ */
 export interface Palette {
-  scheme: 'light' | 'dark';
-  bg: string; // screen background, faintly tinted with the habit accent
-  surface: string; // cards
-  surfaceAlt: string; // inset areas (segmented controls, tracks)
+  scheme: 'dark';
+  bg: string; // screen background
+  surface: string; // cards and tiles
+  surfaceAlt: string; // inset areas: tracks, chips, segmented controls, inputs
+  surfaceHigh: string; // raised elements on a surface (selected segment, pressed rows)
   text: string;
-  textMuted: string;
-  border: string;
-  accent: string; // buttons, ring
-  accentText: string; // accent-coloured text that stays readable on bg
-  accentSoft: string; // soft fills (ring track, soft buttons)
+  textMuted: string; // secondary text (passes 4.5:1 on bg and surface)
+  border: string; // hairlines around surfaces
+  accent: string; // buttons, rings, active states
+  accentText: string; // accent-coloured text, readable on dark
+  accentSoft: string; // soft fills behind accent icons and chips
+  accentLight: string; // light end of gradients
+  accentDeep: string; // dark end of gradients (the orb's edge)
+  glow: string; // coloured shadow / halo
   onAccent: string; // text on accent
+  success: string;
+  danger: string;
 }
 
-/** Calm & soft palette, derived from a habit's accent so each habit gets its own tint. */
-export function makePalette(accent: string, scheme: 'light' | 'dark'): Palette {
-  if (scheme === 'dark') {
-    const base = '#15141B';
-    return {
-      scheme,
-      bg: mix(accent, '#0E0D13', 0.9),
-      surface: mix(accent, base, 0.86),
-      surfaceAlt: mix(accent, base, 0.78),
-      text: '#F4F2FA',
-      textMuted: '#A7A3B8',
-      border: mix(accent, base, 0.72),
-      accent: mix(accent, '#FFFFFF', 0.1),
-      accentText: mix(accent, '#FFFFFF', 0.4),
-      accentSoft: mix(accent, base, 0.7),
-      onAccent: '#FFFFFF',
-    };
-  }
+export const BG = '#0A0A12';
+
+/** The Midnight palette, tinted by a habit's accent. `_scheme` is ignored (dark only). */
+export function makePalette(accent: string, _scheme?: 'light' | 'dark'): Palette {
   return {
-    scheme,
-    bg: mix(accent, '#FFFFFF', 0.95),
-    surface: '#FFFFFF',
-    surfaceAlt: mix(accent, '#FFFFFF', 0.9),
-    text: '#1D1B29',
-    textMuted: '#6E6A80',
-    border: mix(accent, '#FFFFFF', 0.86),
-    accent,
-    accentText: mix(accent, '#000000', 0.12),
-    accentSoft: mix(accent, '#FFFFFF', 0.84),
+    scheme: 'dark',
+    bg: BG,
+    surface: '#14141F',
+    surfaceAlt: '#1D1D2C',
+    surfaceHigh: '#272739',
+    text: '#F4F3FA',
+    textMuted: '#A3A1B8',
+    border: '#22222F',
+    accent: mix(accent, '#FFFFFF', 0.08),
+    accentText: mix(accent, '#FFFFFF', 0.5),
+    accentSoft: mix(accent, BG, 0.76),
+    accentLight: mix(accent, '#FFFFFF', 0.38),
+    accentDeep: mix(accent, '#000000', 0.55),
+    glow: withAlpha(accent, 0.45),
     onAccent: '#FFFFFF',
+    success: '#4ADE80',
+    danger: '#F87171',
   };
 }
 
 /** Palette tinted by the selected habit (brand colour before onboarding). */
 export function useColors(): Palette {
-  const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
   const id = useActiveHabitId();
   const accent = id ? HABITS[id].accent : BRAND_ACCENT;
-  return useMemo(() => makePalette(accent, scheme), [accent, scheme]);
+  return useMemo(() => makePalette(accent), [accent]);
+}
+
+/** Native UI (alerts, pickers, the keyboard) follows the app's dark look. */
+export function applyThemePref(_pref?: unknown) {
+  Appearance.setColorScheme('dark');
+}
+
+/** Kept for older callers; the app is dark only. */
+export function setThemePref(_pref?: unknown) {
+  applyThemePref();
 }
 
 /**
- * Applies the user's choice app-wide, including native UI (alerts, pickers).
- * useColorScheme() then reports the override.
- */
-export function applyThemePref(pref: ThemePref) {
-  Appearance.setColorScheme(pref === 'system' ? 'auto' : pref);
-}
-
-export function setThemePref(pref: ThemePref) {
-  storage.set(THEME_KEY, pref);
-  applyThemePref(pref);
-}
-
-/**
- * Baloo 2 (embedded via the expo-font plugin) covers Latin and Devanagari, so Hindi
- * headings match English ones. Android uses the file name as the family name.
+ * Poppins (embedded via the expo-font plugin) covers Latin and Devanagari, so Hindi matches
+ * English. Android uses the file name as the family name; one family per weight.
  */
 export const fonts = {
-  display: Platform.select({ ios: 'Baloo2-ExtraBold', default: 'Baloo2_800ExtraBold' }),
-  bold: Platform.select({ ios: 'Baloo2-Bold', default: 'Baloo2_700Bold' }),
-  semibold: Platform.select({ ios: 'Baloo2-SemiBold', default: 'Baloo2_600SemiBold' }),
+  regular: Platform.select({ ios: 'Poppins-Regular', default: 'Poppins_400Regular' }),
+  medium: Platform.select({ ios: 'Poppins-Medium', default: 'Poppins_500Medium' }),
+  semibold: Platform.select({ ios: 'Poppins-SemiBold', default: 'Poppins_600SemiBold' }),
+  bold: Platform.select({ ios: 'Poppins-Bold', default: 'Poppins_700Bold' }),
+  display: Platform.select({ ios: 'Poppins-ExtraBold', default: 'Poppins_800ExtraBold' }),
 };
 
-export const radius = { sm: 12, md: 18, lg: 24, pill: 999 };
-export const space = { xs: 4, sm: 8, md: 16, lg: 24, xl: 32 };
+/** The Poppins family for a CSS-style weight (custom fonts on Android ignore fontWeight). */
+export function fontFor(weight: TextStyle['fontWeight'] | undefined) {
+  const w = typeof weight === 'number' ? weight : weight === 'bold' ? 700 : Number(weight ?? 400);
+  if (w >= 800) return fonts.display;
+  if (w >= 700) return fonts.bold;
+  if (w >= 600) return fonts.semibold;
+  if (w >= 500) return fonts.medium;
+  return fonts.regular;
+}
+
+export const radius = { sm: 12, md: 18, lg: 22, xl: 28, pill: 999 };
+export const space = { xs: 4, sm: 8, md: 16, lg: 20, xl: 32 };
+
+/** Coloured glow under the main button and the orb (RN boxShadow, new architecture). */
+export const glowShadow = (color: string, blur = 30, y = 10) => `0px ${y}px ${blur}px ${color}`;

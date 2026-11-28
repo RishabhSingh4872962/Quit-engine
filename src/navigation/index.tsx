@@ -6,6 +6,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
 import { useTracked } from '../lib/storage';
+import { FloatingTabBar } from '../components/FloatingTabBar';
 import { Palette } from '../theme';
 import { BuddyScreen } from '../screens/Buddy';
 import { CelebrateScreen } from '../screens/Celebrate';
@@ -49,6 +50,7 @@ const tabOptions = (tab: TabKey, icon: IconName, activeIcon: IconName) => ({
 });
 
 const Tabs = createBottomTabNavigator({
+  tabBar: (props) => <FloatingTabBar {...props} />,
   screenOptions: { headerShown: false },
   screens: {
     Home: { screen: HomeScreen, options: tabOptions('home', 'home-outline', 'home') },
@@ -116,7 +118,7 @@ declare module '@react-navigation/native' {
 export const Navigation = createStaticNavigation(RootStack);
 
 export function navTheme(c: Palette): Theme {
-  const base = c.scheme === 'dark' ? DarkTheme : DefaultTheme;
+  const base = c.scheme === 'dark' ? DarkTheme : DefaultTheme; // Midnight is always dark
   return {
     ...base,
     colors: {

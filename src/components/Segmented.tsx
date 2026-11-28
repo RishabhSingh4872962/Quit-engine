@@ -1,12 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { radius, useColors } from '../theme';
+import { AppText } from './AppText';
 
 const PAD = 4;
 
-/** Pill switcher with a sliding thumb, e.g. English | हिंदी or System | Light | Dark. */
+/** Pill switcher with a sliding thumb, e.g. 7 days | 30 days or Timer | Pomodoro | Stopwatch. */
 export function Segmented<T extends string>({ options, value, onChange }: {
   options: { value: T; label: string }[]; value: T; onChange: (v: T) => void;
 }) {
@@ -30,11 +31,9 @@ export function Segmented<T extends string>({ options, value, onChange }: {
     <View
       accessibilityRole="radiogroup"
       onLayout={(e) => setWidth(e.nativeEvent.layout.width - PAD * 2)}
-      style={[s.track, { backgroundColor: c.surfaceAlt }]}
+      style={[s.track, { backgroundColor: c.surfaceAlt, borderColor: c.border }]}
     >
-      {segment > 0 && (
-        <Animated.View style={[s.thumb, { width: segment, backgroundColor: c.scheme === 'dark' ? c.accentSoft : c.surface }, thumb]} />
-      )}
+      {segment > 0 && <Animated.View style={[s.thumb, { width: segment, backgroundColor: c.surfaceHigh }, thumb]} />}
       {options.map((o) => {
         const active = o.value === value;
         return (
@@ -49,7 +48,7 @@ export function Segmented<T extends string>({ options, value, onChange }: {
               onChange(o.value);
             }}
           >
-            <Text style={[s.label, { color: active ? c.text : c.textMuted }]}>{o.label}</Text>
+            <AppText style={s.label} color={active ? c.text : c.textMuted} numberOfLines={1}>{o.label}</AppText>
           </Pressable>
         );
       })}
@@ -58,19 +57,8 @@ export function Segmented<T extends string>({ options, value, onChange }: {
 }
 
 const s = StyleSheet.create({
-  track: { flexDirection: 'row', borderRadius: radius.pill, padding: PAD },
-  thumb: {
-    position: 'absolute',
-    top: PAD,
-    bottom: PAD,
-    left: PAD,
-    borderRadius: radius.pill,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-  },
+  track: { flexDirection: 'row', borderRadius: radius.pill, padding: PAD, borderWidth: 1 },
+  thumb: { position: 'absolute', top: PAD, bottom: PAD, left: PAD, borderRadius: radius.pill },
   segment: { flex: 1, paddingVertical: 10, alignItems: 'center' },
-  label: { fontSize: 15, fontWeight: '600' },
+  label: { fontSize: 14, lineHeight: 20, fontWeight: '600' },
 });

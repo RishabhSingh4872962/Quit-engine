@@ -27,9 +27,9 @@ export function ToggleRow({ title, sub, value, onChange }: {
       <Switch
         value={value}
         onValueChange={onChange}
-        trackColor={{ false: c.surfaceAlt, true: c.accent }}
-        thumbColor="#FFFFFF"
-        ios_backgroundColor={c.surfaceAlt}
+        trackColor={{ false: c.surfaceHigh, true: c.accent }}
+        thumbColor={value ? '#FFFFFF' : '#C9C7DA'}
+        ios_backgroundColor={c.surfaceHigh}
         accessibilityElementsHidden
         importantForAccessibility="no-hide-descendants"
       />
@@ -41,5 +41,5 @@ const s = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   pressed: { opacity: 0.7 },
   flex: { flex: 1 },
-  title: { fontSize: 16, fontWeight: '600' },
+  title: { fontSize: 15.5, lineHeight: 22, fontWeight: '600' },
 });
