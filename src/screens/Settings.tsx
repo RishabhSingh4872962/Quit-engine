@@ -203,6 +203,7 @@ function GateSettings() {
 /** On/off status of reel counting; turning it off happens in Android's Accessibility settings. */
 function ReelCounterSettings() {
   const { t } = useTranslation();
+  const c = useColors();
   const navigation = useNavigation();
   const tracked = useTracked();
   const { enabled } = useReelCounter(1);
@@ -252,10 +253,10 @@ function ReelCounterSettings() {
             }
           />
           {limit > 0 && pausesOff && (
-            <View style={s.pausesOff}>
-              <AppText variant="caption" style={s.flex}>{t('reels.pausesOff')}</AppText>
+            <View style={[s.pausesOff, { backgroundColor: c.surfaceAlt }]}>
+              <AppText variant="caption">{t('reels.pausesOff')}</AppText>
               <Button
-                variant="ghost"
+                variant="soft"
                 label={t('reels.pausesOn')}
                 onPress={() => {
                   actions.resumeReelPauses();
@@ -520,7 +521,7 @@ const s = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   rowTitle: { fontSize: 16, fontWeight: '600' },
   limitBlock: { gap: 10, marginTop: 4 },
-  pausesOff: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  pausesOff: { gap: 10, padding: 14, borderRadius: radius.md },
   timePill: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 6, borderRadius: radius.pill },
   banner: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: radius.sm },
   link: { fontSize: 14, fontWeight: '700' },

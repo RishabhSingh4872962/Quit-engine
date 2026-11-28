@@ -25,7 +25,7 @@ type Props = StaticScreenProps<{ app?: string } | undefined>;
 
 const ROUND = 5; // questions per round
 const NEED = 3; // right answers that earn reels
-const WRONG = '#D64545';
+const WRONG = '#F87171'; // the palette's danger red: readable on dark
 const DECK_KEY = 'learn.deck';
 
 /**

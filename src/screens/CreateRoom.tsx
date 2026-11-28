@@ -70,7 +70,7 @@ export function CreateRoomScreen() {
           style={[s.input, { color: c.text, backgroundColor: c.surfaceAlt }]}
           accessibilityLabel={t('rooms.name')}
         />
-        {error && <AppText variant="caption" color="#D64545">{error}</AppText>}
+        {error && <AppText variant="caption" color={c.danger}>{error}</AppText>}
       </Card>
 
       <Card style={s.card}>

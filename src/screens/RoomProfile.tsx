@@ -114,7 +114,7 @@ function ProfileForm({ initial, join }: { initial: RoomProfile | null; join?: { 
           style={[s.input, { color: c.text, backgroundColor: c.surfaceAlt }]}
           accessibilityLabel={t('rooms.nick')}
         />
-        <AppText variant="caption" color={error ? '#D64545' : undefined}>{error ?? t('rooms.nickHint')}</AppText>
+        <AppText variant="caption" color={error ? c.danger : undefined}>{error ?? t('rooms.nickHint')}</AppText>
       </Card>
 
       <Card style={s.card}>

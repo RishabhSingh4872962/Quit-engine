@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { HABIT_LIST } from '../habits';
 import { useLang } from '../i18n';
+import { mix } from '../lib/color';
 import { formatDuration } from '../lib/format';
 import { dayTotals, ReelDay, useReelCounter, useReelLimit } from '../lib/reels';
 import { readState, useTracked } from '../lib/storage';
@@ -137,6 +138,7 @@ export function ReelStatsScreen() {
 /** Reels per day; days over the limit in a muted colour, with a line at the limit. */
 function DayBars({ days, ids, limit, labels }: { days: ReelDay[]; ids: string[]; limit: number; labels: boolean }) {
   const c = useColors();
+  const mid = mix(c.accent, c.bg, 0.45); // bars that aren't highlighted: still visible on dark
   const lang = useLang();
   const counts = days.map((d) => dayTotals(d, ids).count);
   const max = Math.max(limit, ...counts, 1);
@@ -152,7 +154,7 @@ function DayBars({ days, ids, limit, labels }: { days: ReelDay[]; ids: string[];
                 s.bar,
                 {
                   height: `${Math.max(2, (n / max) * 100)}%`,
-                  backgroundColor: limit > 0 && n > limit ? c.textMuted : i === today ? c.accent : c.accentSoft,
+                  backgroundColor: limit > 0 && n > limit ? '#6E6B85' : i === today ? c.accent : mid,
                 },
               ]}
             />
@@ -178,6 +180,7 @@ function DayBars({ days, ids, limit, labels }: { days: ReelDay[]; ids: string[];
 /** Reels by hour of day (midnight to midnight); late-night hours highlighted. */
 function HourBars({ hours }: { hours: number[] }) {
   const c = useColors();
+  const mid = mix(c.accent, c.bg, 0.45); // bars that aren't highlighted: still visible on dark
   const max = Math.max(...hours, 1);
   return (
     <View>
@@ -187,7 +190,7 @@ function HourBars({ hours }: { hours: number[] }) {
             <View
               style={[
                 s.bar,
-                { height: `${Math.max(2, (n / max) * 100)}%`, backgroundColor: LATE_HOURS.includes(h) ? c.accent : c.accentSoft },
+                { height: `${Math.max(2, (n / max) * 100)}%`, backgroundColor: LATE_HOURS.includes(h) ? c.accent : mid },
               ]}
             />
           </View>

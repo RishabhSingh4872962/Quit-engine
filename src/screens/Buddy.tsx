@@ -173,7 +173,7 @@ export function BuddyScreen() {
         </>
       )}
 
-      {error && <AppText variant="caption" color="#D64545" style={s.gap}>{error}</AppText>}
+      {error && <AppText variant="caption" color={c.danger} style={s.gap}>{error}</AppText>}
       <AppText variant="caption" center style={s.privacy}>{t('buddy.privacy')}</AppText>
     </Screen>
   );
