@@ -31,11 +31,28 @@ export function BreathingCircle({ phase, secs, size = 280, children }: {
 
   const disc = (d: number) => ({ width: d, height: d, borderRadius: d / 2 });
 
+  // Midnight: a soft glow that swells with the breath, a translucent layer, the glowing orb at the core.
   return (
     <View style={[s.center, { width: size, height: size }]}>
-      <Animated.View style={[s.abs, disc(size), { backgroundColor: withAlpha(c.accent, 0.14) }, halo]} />
-      <Animated.View style={[s.abs, disc(size), { backgroundColor: withAlpha(c.accent, 0.28) }, middle]} />
-      <View style={[s.center, disc(size * 0.38), { backgroundColor: c.accent }]}>{children}</View>
+      <Animated.View
+        style={[s.abs, disc(size), { backgroundImage: `radial-gradient(circle, ${withAlpha(c.accent, 0.42)} 0%, ${withAlpha(c.accent, 0)} 70%)` }, halo]}
+      />
+      <Animated.View
+        style={[s.abs, disc(size), { backgroundColor: withAlpha(c.accent, 0.16), borderWidth: 1, borderColor: withAlpha(c.accentText, 0.22) }, middle]}
+      />
+      <View
+        style={[
+          s.center,
+          disc(size * 0.38),
+          {
+            backgroundColor: c.accent,
+            backgroundImage: `radial-gradient(circle at 34% 28%, ${c.accentLight} 0%, ${c.accent} 50%, ${c.accentDeep} 100%)`,
+            boxShadow: `0px 0px 40px ${c.glow}`,
+          },
+        ]}
+      >
+        {children}
+      </View>
     </View>
   );
 }
