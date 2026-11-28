@@ -62,7 +62,7 @@ Focus: Reels addiction (reference: Regain). Reels plan, in order:
 - Phase 6, all-in-one (competitor research 26 Nov 2026: one app instead of one sec, Opal, Forest, YPT, I Am Sober...), one at a time, in order:
   1. Pause before opening a chosen app (breathing gate, native overlay) + open counts (done)
   2. Urge diary (trigger/intensity/time, patterns) + daily pledge and evening check-in (done)
-  3. Earn extra reels with a focus session + exam flashcards ("learn instead") on the pause screen
+  3. Earn extra reels with a focus session + exam flashcards ("learn instead") on the pause screen (done)
   4. Study time by subject + daily goal + subject rank in rooms
   5. Block reels/shorts in browsers (disclosure update)
   6. Accountability buddy (pair by code, opt-in summary, buddy approves extra time)

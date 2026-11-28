@@ -7,7 +7,7 @@ import { StackActions, StaticScreenProps, useNavigation } from '@react-navigatio
 import { useTranslation } from 'react-i18next';
 import { HABIT_LIST } from '../habits';
 import { actions } from '../lib/actions';
-import { EARN_CAP, EARN_FOCUS_MINUTES, EARN_FOCUS_REELS, useEarnedToday } from '../lib/earn';
+import { EARN_CAP, EARN_FOCUS_MINUTES, EARN_FOCUS_REELS, EARN_LEARN_REELS, useEarnedToday } from '../lib/earn';
 import { useFocusPrefs, useFocusSession } from '../lib/focus';
 import { usePremium } from '../lib/premium';
 import { allowMoreReelsToday, openReelApp, stopPausesToday, useReelLimit } from '../lib/reels';
@@ -97,6 +97,12 @@ export function PauseScreen({ route }: Props) {
               note={session ? t('pause.earnBusy') : undefined}
               onPress={earnByFocus}
               disabled={!!session}
+            />
+            <EarnOption
+              icon="school-outline"
+              title={t('pause.earnLearn', { count: 5 })}
+              reward={t('pause.reward', { count: Math.min(EARN_LEARN_REELS, left) })}
+              onPress={() => navigation.navigate('Learn', { app })}
             />
           </View>
         ) : (

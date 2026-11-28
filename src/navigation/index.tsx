@@ -13,6 +13,7 @@ import { CreateRoomScreen } from '../screens/CreateRoom';
 import { FocusScreen } from '../screens/Focus';
 import { HomeScreen } from '../screens/Home';
 import { JournalScreen } from '../screens/Journal';
+import { LearnScreen } from '../screens/Learn';
 import { MilestonesScreen } from '../screens/Milestones';
 import { AddHabitScreen, OnboardingScreen } from '../screens/Onboarding';
 import { PauseScreen } from '../screens/Pause';
@@ -86,6 +87,8 @@ const RootStack = createNativeStackNavigator({
         // Evening check-in; also opened by the daily check-in notification: quitengine://checkin
         CheckIn: { screen: CheckInScreen, linking: 'checkin', options: { presentation: 'modal', animation: 'slide_from_bottom' } },
         Journal: { screen: JournalScreen, options: { presentation: 'modal', animation: 'slide_from_bottom' } },
+        // "Learn instead", from the pause screen
+        Learn: { screen: LearnScreen, options: { presentation: 'modal', animation: 'slide_from_bottom' } },
         Room: { screen: RoomScreen, options: { animation: 'slide_from_right' } },
         RoomProfile: { screen: RoomProfileScreen, options: { presentation: 'modal', animation: 'slide_from_bottom' } },
         CreateRoom: { screen: CreateRoomScreen, options: { presentation: 'modal', animation: 'slide_from_bottom' } },

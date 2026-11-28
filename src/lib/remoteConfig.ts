@@ -11,6 +11,7 @@ const DEFAULTS = {
   paywall_after_onboarding: true, // offer Premium once after onboarding (only if it has value for the user)
   reel_rules: '', // JSON detection rules for the reel counter; '' = built-in (see modules/reel-guard)
   media_catalog: '', // JSON array of extra sounds, music, guided audio and videos (see src/media/catalog.ts)
+  learn_decks: '', // JSON array of extra question decks for "Learn instead" (see src/learn/decks.ts)
 };
 
 export function initRemoteConfig() {
@@ -30,6 +31,7 @@ export const remote = {
   cloudBackupEnabled: () => getValue(getRemoteConfig(), 'cloud_backup_enabled').asBoolean(),
   reelRules: () => getValue(getRemoteConfig(), 'reel_rules').asString(),
   mediaCatalog: () => getValue(getRemoteConfig(), 'media_catalog').asString(),
+  learnDecks: () => getValue(getRemoteConfig(), 'learn_decks').asString(),
   paywallAfterOnboarding: () => getValue(getRemoteConfig(), 'paywall_after_onboarding').asBoolean(),
   breathingRounds: () => clamp(getValue(getRemoteConfig(), 'breathing_rounds').asNumber() || 4, 1, 10),
 };
