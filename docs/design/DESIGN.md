@@ -77,6 +77,10 @@ accent glow (main button, orb) and the floating tab bar's dark shadow.
 - **Segmented control**: pill track `surfaceAlt`, sliding `surfaceHigh` thumb.
 - **Chips**: pill, `surfaceAlt`; selected = `accent` with white text.
 - **Switch rows**: the whole row toggles; track `surfaceHigh` → `accent`.
+- **Grouped list** (Settings, `components/Group.tsx`): a section label, then one card whose rows are split by
+  inset hairlines. Row = 34 px icon circle (`accentSoft`, or the habit's own colour), title 15.5/600, caption
+  subtitle, then a muted value and a chevron when it opens something. Destructive rows use `danger`.
+  Explanations go under the card as a caption, not inside every row.
 - **Tab bar**: floating dark pill (`#161622`, border, deep shadow), 16 px from the sides, icons only
   (labels for screen readers); the active tab sits on an `accentSoft` pill. Tabs: Home, Focus, Rooms,
   Progress (milestones + plant), Settings.

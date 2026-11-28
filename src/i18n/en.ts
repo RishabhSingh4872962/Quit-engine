@@ -641,6 +641,8 @@ export const en = {
   buddy: {
     title: 'Accountability buddy',
     open: 'Open buddy',
+    rowSub: 'Pair with someone you trust',
+    rowWith: 'With {{name}}',
     settingsSub: 'Pair with one person you trust. You see each other\'s days on track and focus time, and they can say yes when you ask for 5 more.',
     intro: "One person you trust. You see each other's days on track, focus time today and today's check-in: never which habit, never your journal.",
     nameTitle: 'Your name for your buddy',
@@ -820,11 +822,9 @@ export const en = {
   settings: {
     title: 'Settings',
     language: 'Language',
-    appearance: 'Appearance',
-    system: 'System',
-    light: 'Light',
-    dark: 'Dark',
     habits: 'Your habits',
+    reels: 'Reels',
+    general: 'General',
     addHabit: 'Add a habit',
     removeTitle: 'Stop tracking {{name}}?',
     removeBody: 'Your progress is kept, so adding it back later restores it.',
