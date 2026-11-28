@@ -12,6 +12,8 @@ type Events = {
   streak_started: undefined;
   slip_logged: undefined;
   urge_exercise_done: undefined;
+  pledge_made: undefined;
+  checkin_done: undefined;
   milestone_reached: { days: number };
   streak_shared: undefined;
   backup_enabled: undefined;
@@ -35,7 +37,7 @@ export function track<E extends keyof Events>(name: E, ...params: Events[E] exte
  */
 const NEUTRAL_SCREENS = new Set([
   'Onboarding', 'Home', 'Focus', 'Rooms', 'Room', 'RoomProfile', 'CreateRoom', 'Milestones', 'Settings', 'Urge', 'Celebrate',
-  'AddHabit', 'Share',
+  'AddHabit', 'Share', 'CheckIn', 'Journal',
 ]);
 
 /** Route names only (Home, Milestones, Urge…), never habit names. */

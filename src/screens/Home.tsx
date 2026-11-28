@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
@@ -10,6 +10,7 @@ import { premiumHasValueFor, usePremium } from '../lib/premium';
 import { remote } from '../lib/remoteConfig';
 import { readPaywallOffered, useActiveHabit, useHabitState, useTracked } from '../lib/storage';
 import { reelCounterAvailable } from '../lib/reels';
+import { confirmSlip } from '../lib/slip';
 import { screenTimeAvailable } from '../lib/screenTime';
 import { milestoneProgress, useNow } from '../lib/streak';
 import { fonts, useColors } from '../theme';
@@ -18,6 +19,7 @@ import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { HabitSwitcher } from '../components/HabitSwitcher';
 import { IconButton } from '../components/IconButton';
+import { JournalCard } from '../components/JournalCard';
 import { Screen } from '../components/Screen';
 import { ReelsTodayCard } from '../components/ReelsTodayCard';
 import { ScreenTimeCard } from '../components/ScreenTimeCard';
@@ -61,12 +63,6 @@ export function HomeScreen() {
     : next !== undefined
       ? t('home.nextMilestone', { count: next - days })
       : t('home.allMilestones');
-
-  const confirmSlip = () =>
-    Alert.alert(t('home.slipTitle'), days > 0 ? t('home.slipBodyDays', { count: days }) : t('home.slipBody'), [
-      { text: t('common.cancel'), style: 'cancel' },
-      { text: t('home.slipConfirm'), onPress: () => actions.relapse(habit.id) },
-    ]);
 
   return (
     <Screen scroll>
@@ -116,12 +112,18 @@ export function HomeScreen() {
               label={habit.urgeButton?.[lang] ?? t('home.urgeButton')}
               onPress={() => navigation.navigate('Urge', { habitId: habit.id })}
             />
-            <Button variant="ghost" label={t('home.slipped')} onPress={confirmSlip} />
+            <Button variant="ghost" label={t('home.slipped')} onPress={() => confirmSlip(habit.id, t)} />
           </>
         ) : (
           <Button icon="play" label={t('home.startStreak')} onPress={() => void actions.startStreak(habit.id)} />
         )}
       </Animated.View>
+
+      {started && (
+        <Animated.View key={`journal-${habit.id}`} entering={FadeInDown.delay(330).duration(600)} style={s.screenTime}>
+          <JournalCard habit={habit} now={now} />
+        </Animated.View>
+      )}
 
       {habit.reelApps && reelCounterAvailable && (
         <Animated.View key={`reels-${habit.id}`} entering={FadeInDown.delay(350).duration(600)} style={s.screenTime}>

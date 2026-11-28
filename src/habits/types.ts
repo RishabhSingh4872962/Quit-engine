@@ -17,6 +17,13 @@ export interface HabitConfig {
   quiz: { id: string; q: Record<Lang, string>; options: Record<Lang, string>[] }[];
   /** Replaces the generic "I'm having an urge" button, e.g. "I want to text them". */
   urgeButton?: Record<Lang, string>;
+  /** The daily promise on Home ("Today I won't smoke or chew tobacco"). */
+  pledge?: Record<Lang, string>;
+  /**
+   * Urge diary: triggers specific to this habit, shown after the shared ones (bored, stressed…).
+   * Ids are stored on the phone only; labels in both languages.
+   */
+  triggers?: { id: string; label: Record<Lang, string> }[];
   /** Exercises offered by the urge button. */
   urgeExercises: ('breathing' | 'timer')[];
   /** Streak milestones in days. */

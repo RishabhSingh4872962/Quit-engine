@@ -19,6 +19,7 @@ import { streakDays } from './streak';
 import { HABITS } from '../habits';
 import { BlockPrefs, syncReelBlock, writeBlock } from './blocking';
 import { GatePrefs, syncGate, writeGate } from './gate';
+import { addUrge, checkInDay, clearJournal, NOTE_MAX, writeDay } from './journal';
 import {
   addFocusMinutes,
   focusedMinutes,
@@ -118,9 +119,29 @@ export const actions = {
     updateStreakWidget();
   },
 
-  resistUrge(id: HabitId) {
+  /** The urge passed after the exercise. The diary part (trigger, strength) stays on the phone. */
+  resistUrge(id: HabitId, diary: { trigger?: string; strength?: number } = {}) {
     writeState(id, { urgesResisted: readState(id).urgesResisted + 1 });
+    addUrge(id, { at: Date.now(), ...diary });
     track('urge_exercise_done');
+  },
+
+  /** Today's promise (Home). */
+  pledge(id: HabitId) {
+    writeDay(id, localDay(Date.now()), { pledgedAt: Date.now() });
+    track('pledge_made');
+  },
+
+  /** Evening check-in: mood, promise kept, a private note. Only the fact that it happened is counted. */
+  checkIn(id: HabitId, entry: { mood?: number; kept?: boolean; note?: string }) {
+    const note = entry.note?.trim().slice(0, NOTE_MAX);
+    writeDay(id, checkInDay(Date.now()), { mood: entry.mood, kept: entry.kept, note: note || undefined, checkedAt: Date.now() });
+    track('checkin_done');
+  },
+
+  /** Deletes this habit's urge diary, promises and check-ins from the phone. The streak stays. */
+  clearJournal(id: HabitId) {
+    clearJournal(id);
   },
 
   markCelebrated(id: HabitId, milestone: number) {

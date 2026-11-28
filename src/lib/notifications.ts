@@ -181,7 +181,7 @@ async function rebuild() {
   if (checkin.enabled) {
     await Notifications.scheduleNotificationAsync({
       identifier: 'checkin',
-      content: { title: t('notifications.checkinTitle'), body: t('notifications.checkinBody') },
+      content: { title: t('notifications.checkinTitle'), body: t('notifications.checkinBody'), data: { url: 'quitengine://checkin' } },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.DAILY,
         hour: checkin.hour,

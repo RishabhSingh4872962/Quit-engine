@@ -6,7 +6,7 @@ Play Console → App content → Data safety. Based on the code as of 22 Nov 202
 Update this file when the app starts sending anything new.
 
 "Collected" in Play's sense means *sent off the phone*. Data the app only processes on the phone (reel counts,
-accessibility events, usage stats, blocking rules) is not declared here. It is explained in the privacy policy and
+accessibility events, usage stats, blocking rules, the journal) is not declared here. It is explained in the privacy policy and
 the Accessibility declaration.
 
 ## Overview questions
@@ -67,6 +67,8 @@ to "Optional".
 - No analytics event, user property or screen view may name a habit. Reel screens, Pause and Paywall are kept out
   by the allow-list in `src/lib/telemetry.ts`. Keep it an allow-list.
 - No reel counts, screen time, blocking rules or YouTube channel names may leave the phone.
+- The journal (urge triggers and strength, promises, moods, notes) never leaves the phone and is not in the backup.
+  Analytics only gets `pledge_made` / `checkin_done` with no parameters.
 - Don't add RevenueCat customer attributes (email, name) or ad-ID integrations. Either one would add Personal info or
   Device ID rows for RevenueCat.
 - Check the data-retention setting in Google Analytics (Admin → Data collection → Data retention). The privacy policy

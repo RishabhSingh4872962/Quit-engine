@@ -29,4 +29,10 @@ export const noContact: HabitConfig = {
   urgeButton: { en: 'I want to text them', hi: 'उन्हें मैसेज करने का मन है' },
   urgeExercises: ['breathing', 'timer'],
   milestones: [1, 3, 7, 14, 30, 60, 90],
+  pledge: { en: "Today I won't reach out to them.", hi: 'आज का वादा: उनसे कोई संपर्क नहीं।' },
+  triggers: [
+    { id: 'photo', label: { en: 'Saw a photo or their profile', hi: 'फ़ोटो या उनकी प्रोफ़ाइल दिखी' } },
+    { id: 'memory', label: { en: 'A song or memory', hi: 'कोई गाना या याद' } },
+    { id: 'night', label: { en: 'Alone at night', hi: 'रात में अकेले' } },
+  ],
 };

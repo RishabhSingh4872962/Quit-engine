@@ -28,6 +28,13 @@ export const reels: HabitConfig = {
   ],
   urgeExercises: ['breathing', 'timer'],
   milestones: [1, 3, 7, 14, 30, 60, 90],
+  pledge: { en: "Today I'll keep reels under my limit.", hi: 'आज का वादा: रील्स मेरी लिमिट के अंदर।' },
+  triggers: [
+    { id: 'waiting', label: { en: 'Waiting or travelling', hi: 'इंतज़ार या सफ़र में' } },
+    { id: 'bed', label: { en: 'In bed before sleep', hi: 'सोने से पहले बिस्तर में' } },
+    { id: 'study', label: { en: 'Avoiding study or work', hi: 'पढ़ाई या काम से बचना' } },
+    { id: 'notification', label: { en: 'A notification pulled me in', hi: 'नोटिफ़िकेशन ने खींच लिया' } },
+  ],
   reelBaseline: { quizId: 'hours', minutes: [90, 210, 300] }, // answers 1–2 h, 3–4 h, 5+ h
   reelApps: [
     { id: 'com.instagram.android', name: 'Instagram Reels' },

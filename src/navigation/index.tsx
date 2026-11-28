@@ -8,9 +8,11 @@ import { useTranslation } from 'react-i18next';
 import { useTracked } from '../lib/storage';
 import { Palette } from '../theme';
 import { CelebrateScreen } from '../screens/Celebrate';
+import { CheckInScreen } from '../screens/CheckIn';
 import { CreateRoomScreen } from '../screens/CreateRoom';
 import { FocusScreen } from '../screens/Focus';
 import { HomeScreen } from '../screens/Home';
+import { JournalScreen } from '../screens/Journal';
 import { MilestonesScreen } from '../screens/Milestones';
 import { AddHabitScreen, OnboardingScreen } from '../screens/Onboarding';
 import { PauseScreen } from '../screens/Pause';
@@ -81,6 +83,9 @@ const RootStack = createNativeStackNavigator({
         // Opened by the reel counter at the daily limit: quitengine://pause?app=<package>
         Pause: { screen: PauseScreen, linking: 'pause', options: { presentation: 'fullScreenModal', animation: 'fade' } },
         Video: { screen: VideoScreen, options: { presentation: 'modal', animation: 'slide_from_bottom' } },
+        // Evening check-in; also opened by the daily check-in notification: quitengine://checkin
+        CheckIn: { screen: CheckInScreen, linking: 'checkin', options: { presentation: 'modal', animation: 'slide_from_bottom' } },
+        Journal: { screen: JournalScreen, options: { presentation: 'modal', animation: 'slide_from_bottom' } },
         Room: { screen: RoomScreen, options: { animation: 'slide_from_right' } },
         RoomProfile: { screen: RoomProfileScreen, options: { presentation: 'modal', animation: 'slide_from_bottom' } },
         CreateRoom: { screen: CreateRoomScreen, options: { presentation: 'modal', animation: 'slide_from_bottom' } },
