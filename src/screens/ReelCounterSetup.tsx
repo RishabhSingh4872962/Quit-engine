@@ -51,6 +51,7 @@ export function ReelCounterSetupScreen() {
         {row('swap-vertical', t('reels.reads2'), c.accent)}
         {row('school-outline', t('reels.reads3'), c.accent)}
         {row('pause-circle-outline', t('reels.reads4'), c.accent)}
+        {row('globe-outline', t('reels.reads5'), c.accent)}
       </Card>
 
       <Card style={s.card}>

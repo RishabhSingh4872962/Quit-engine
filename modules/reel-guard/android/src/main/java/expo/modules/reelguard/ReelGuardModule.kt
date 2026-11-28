@@ -110,6 +110,12 @@ class ReelGuardModule : Module() {
       pkgs.filter { context.packageManager.getLaunchIntentForPackage(it) != null }
     }
 
+    // "Count in browsers": Shorts/Reels pages in browsers (address bar only). Off by default.
+    Function("setWeb") { on: Boolean ->
+      ReelStore.setWeb(context, on)
+      ReelGuardService.instance?.applyRules()
+    }
+
     // New detection rules (JSON array) from Remote Config; null/invalid = built-in defaults.
     Function("setRules") { json: String? ->
       ReelStore.saveRules(context, json)

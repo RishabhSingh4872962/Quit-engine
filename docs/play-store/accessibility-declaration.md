@@ -12,7 +12,7 @@ features described to the user, with a prominent in-app disclosure, affirmative 
 **Which features use the Accessibility API?** Paste:
 
 > Quit Engine helps people cut down on short-video scrolling. With the user's consent, its accessibility service
-> runs only in Instagram and YouTube and uses view IDs (for example `clips_viewer_view_pager`,
+> runs in Instagram and YouTube (and, only if the user turns on "Count in browsers", in web browsers) and uses view IDs (for example `clips_viewer_view_pager`,
 > `reel_player_page_container`) to detect when the Reels or Shorts player is open and when the user swipes to the
 > next reel. It uses this to:
 > 1. Count reels/Shorts watched and time spent in the reels player per day, shown to the user in the app.
@@ -28,6 +28,12 @@ features described to the user, with a prominent in-app disclosure, affirmative 
 >    that the app came to the front, counts the open on the phone, and shows a short full-screen breathing pause
 >    with "Not now" (goes to the home screen) and "Open" (continues; no pause again for a grace period the user
 >    sets). Nothing inside those apps is read.
+> 6. Optional "Count in browsers" (its own consent dialog, off by default): in browsers (Chrome, Samsung Internet,
+>    Firefox, Edge, Brave, Opera, DuckDuckGo), it reads only the text of the address bar (view ID `url_bar` and
+>    equivalents) while the browser is on screen, to notice YouTube Shorts and Instagram Reels pages
+>    (`youtube.com/shorts/…`, `instagram.com/reels/…`). Those count like reels in the apps, and the same limit,
+>    pause and blocking rules apply (Back leaves the page). The address is compared on the phone and never
+>    stored or sent; page content, history and typed text are not read.
 >
 > Every action is a fixed rule the user set up ("if the reel count reaches your limit, then pause"). The service
 > does not read messages, comments, captions, passwords or text input, does not act in other apps, and does not

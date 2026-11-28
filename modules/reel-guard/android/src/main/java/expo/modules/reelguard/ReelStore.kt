@@ -64,6 +64,9 @@ data class ReelRule(
   val pip: Boolean = false, // the app's picture-in-picture window only ever plays reels (Instagram)
 )
 
+/** A browser and its address bar's view IDs: the only thing "count in browsers" reads there. */
+data class WebRule(val pkg: String, val urlIds: List<String>)
+
 /**
  * Per-day reel counts and time, kept in SharedPreferences so the service can write them while
  * the JS app isn't running. Only numbers per app per day are stored, nothing about the reels.
@@ -95,6 +98,25 @@ object ReelStore {
      "pager":["reel_recycler"],
      "page":["reel_player_page_container"]}
   ]"""
+
+  /**
+   * Browsers for "count in browsers" (off unless the user turns it on). Chromium-based ones share
+   * "url_bar"; Chrome is verified, the others follow their known address-bar IDs.
+   */
+  val WEB_RULES = listOf(
+    WebRule("com.android.chrome", listOf("url_bar")),
+    WebRule("com.chrome.beta", listOf("url_bar")),
+    WebRule("com.brave.browser", listOf("url_bar")),
+    WebRule("com.microsoft.emmx", listOf("url_bar")),
+    WebRule("com.kiwibrowser.browser", listOf("url_bar")),
+    WebRule("com.sec.android.app.sbrowser", listOf("location_bar_edit_text")),
+    WebRule("org.mozilla.firefox", listOf("mozac_browser_toolbar_url_view")),
+    WebRule("com.opera.browser", listOf("url_field")),
+    WebRule("com.duckduckgo.mobile.android", listOf("omnibarTextInput")),
+  )
+
+  fun setWeb(ctx: Context, on: Boolean) = prefs(ctx).edit().putBoolean("web", on).apply()
+  fun webOn(ctx: Context) = prefs(ctx).getBoolean("web", false)
 
   private fun prefs(ctx: Context): SharedPreferences = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
   private fun day(time: Long): String = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date(time))

@@ -68,6 +68,7 @@ to "Optional".
   by the allow-list in `src/lib/telemetry.ts`. Keep it an allow-list.
 - No reel counts, screen time, blocking rules or YouTube channel names may leave the phone.
 - The journal (urge triggers and strength, promises, moods, notes) never leaves the phone and is not in the backup.
+- "Count in browsers" reads web addresses on the phone only; never log, store or send them (it would be Web browsing history).
   Analytics only gets `pledge_made` / `checkin_done` with no parameters.
 - Don't add RevenueCat customer attributes (email, name) or ad-ID integrations. Either one would add Personal info or
   Device ID rows for RevenueCat.

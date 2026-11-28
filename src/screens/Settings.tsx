@@ -26,6 +26,7 @@ import {
   useReelBubble,
   useReelCounter,
   useReelLimit,
+  useWebReels,
 } from '../lib/reels';
 import { useBlock } from '../lib/blocking';
 import { BREATH_OPTIONS, GRACE_OPTIONS, installedGateApps, useGate } from '../lib/gate';
@@ -212,6 +213,7 @@ function ReelCounterSettings() {
   const { enabled } = useReelCounter(1);
   const limit = useReelLimit();
   const bubble = useReelBubble();
+  const web = useWebReels();
   const [pausesOff, setPausesOff] = useState(false);
   useFocusEffect(
     useCallback(() => {
@@ -240,6 +242,19 @@ function ReelCounterSettings() {
             sub={t('reels.bubbleSub')}
             value={bubble}
             onChange={(on) => actions.setReelBubble(on)}
+          />
+          <ToggleRow
+            title={t('reels.webTitle')}
+            sub={t('reels.webSub')}
+            value={web}
+            onChange={(on) =>
+              on
+                ? Alert.alert(t('reels.webConsentTitle'), t('reels.webConsentBody'), [
+                    { text: t('reels.notNow'), style: 'cancel' },
+                    { text: t('reels.webConsentAgree'), onPress: () => actions.setWebReels(true) },
+                  ])
+                : actions.setWebReels(false)
+            }
           />
           {limit > 0 && pausesOff && (
             <View style={s.pausesOff}>

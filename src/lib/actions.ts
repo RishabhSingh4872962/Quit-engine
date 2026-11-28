@@ -49,6 +49,7 @@ import {
   writeReelBubble,
   writeReelConsent,
   writeReelLimit,
+  writeWebReels,
 } from './reels';
 import { shareFocus, syncRoomPresence } from './rooms';
 import { track } from './telemetry';
@@ -163,6 +164,12 @@ export const actions = {
   setReelBlock(patch: Partial<BlockPrefs>) {
     writeBlock(patch);
     syncReelBlock();
+  },
+
+  /** Count Shorts/Reels opened in browsers too (the Settings switch asks for consent first). */
+  setWebReels(on: boolean) {
+    writeWebReels(on);
+    syncReelLimit();
   },
 
   /** Live counter bubble while watching reels. */

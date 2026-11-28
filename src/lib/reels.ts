@@ -77,11 +77,23 @@ export function useReelBubble(): boolean {
   return v ?? false;
 }
 
-/** Sends the limit, bubble setting and their texts (in the app's language) to the native service. */
+// ---------- Count in browsers (opt-in, own consent) ----------
+
+const WEB_KEY = 'reels.web';
+export const readWebReels = () => storage.getBoolean(WEB_KEY) ?? false;
+export const writeWebReels = (on: boolean) => storage.set(WEB_KEY, on);
+
+export function useWebReels(): boolean {
+  const [v] = useMMKVBoolean(WEB_KEY, storage);
+  return v ?? false;
+}
+
+/** Sends the limit, bubble, browser setting and texts (in the app's language) to the native service. */
 export function syncReelLimit() {
   try {
     ReelGuard?.setLimit(readReelLimit(), i18n.t('reels.nudge'));
     ReelGuard?.setBubble(readReelBubble(), i18n.t('reels.bubble'));
+    ReelGuard?.setWeb(readWebReels());
   } catch (e) {
     reportError(e, 'reel settings');
   }
