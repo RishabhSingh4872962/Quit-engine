@@ -206,17 +206,25 @@ export async function isNickFree(nick: string, uid: string | null) {
   return owner === null || owner === uid;
 }
 
-/** Saves the profile; claims the nickname (and releases the old one) in the same write. */
+/**
+ * Saves the profile; claims the nickname (and releases the old one) in the same write. A nickname
+ * that is already mine is not written again: the rules only allow claiming a free one or releasing
+ * one, so re-writing it would make every edit of avatar, tag or leaderboard fail.
+ */
 export async function saveRoomProfile(p: RoomProfile, previousNick?: string) {
   const uid = await roomsUid();
+  const nick = p.nick.toLowerCase();
   const updates: Record<string, unknown> = {
-    [`nicks/${p.nick.toLowerCase()}`]: uid,
     [`profiles/${uid}`]: { nick: p.nick, avatar: p.avatar, board: p.board, at: serverTimestamp(), ...(p.tag ? { tag: p.tag } : {}) },
   };
-  if (previousNick && previousNick.toLowerCase() !== p.nick.toLowerCase()) updates[`nicks/${previousNick.toLowerCase()}`] = null;
+  if ((await get(ref(db(), `nicks/${nick}`))).val() !== uid) updates[`nicks/${nick}`] = uid;
+  if (previousNick && previousNick.toLowerCase() !== nick) updates[`nicks/${previousNick.toLowerCase()}`] = null;
   await update(ref(db()), updates);
-  // Leaving leaderboards removes me from them.
-  if (!p.board) await clearFootprint('board/');
+  // Leaving leaderboards removes me from them (the overall and the per-subject ones).
+  if (!p.board) {
+    await clearFootprint('board/');
+    await clearFootprint('sboard/');
+  }
   if (readCurrentRoom()) void writePresence(false);
 }
 

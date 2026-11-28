@@ -56,6 +56,8 @@ await expect('free-text avatar', false, patch('', 'bob', { 'nicks/bobby': 'bob',
 await expect('bob valid profile', true, patch('', 'bob', { 'nicks/bobby': 'bob', 'profiles/bob': profile('Bobby') }));
 await expect('alice edits bob\'s profile', false, patch('profiles/bob', 'alice', { avatar: 'a02' }));
 await expect('alice renames: releases old nick, claims new', true, patch('', 'alice', { 'nicks/alice_1': null, 'nicks/alice_2': 'alice', 'profiles/alice/nick': 'alice_2' }));
+await expect('alice edits her profile, keeping her nick (no nick write)', true, patch('', 'alice', { 'profiles/alice': profile('alice_2') }));
+await expect('alice writes her own nick claim again (the app must skip it)', false, put('nicks/alice_2', 'alice', 'alice'));
 await expect('bob releases alice\'s nick', false, del('nicks/alice_2', 'bob'));
 await expect('deleting a nick that is already gone (no-op)', true, del('nicks/nobody_here', 'bob'));
 await expect('unknown profile field', false, patch('profiles/alice', 'alice', { email: 'x@y.z' }));
