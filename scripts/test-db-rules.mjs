@@ -134,6 +134,20 @@ await expect('alice posts 120 min at once', false, put(`board/jee/d20261124/alic
 await expect('bad period key', false, put('board/jee/today/alice', 'alice', { nick: 'alice_2', avatar: 'a01', min: 10, at: TS }));
 await expect('alice opts out: deletes her entry', true, del(`board/jee/${day}/alice`, 'alice'));
 
+console.log('\nSubject leaderboard (opt-in)');
+const row = (min) => ({ nick: 'alice_2', avatar: 'a01', min, at: TS });
+await expect('bob (not opted in) posts physics minutes', false, put(`sboard/jee/${day}/physics/bob`, 'bob', { nick: 'Bobby', avatar: 'a01', min: 25, at: TS }));
+await expect('alice posts 25 min of physics', true, put(`sboard/jee/${day}/physics/alice`, 'alice', row(25)));
+await expect('anyone signed in reads the physics board', true, get(`sboard/jee/${day}/physics`, 'bob'));
+await expect('signed-out read', false, get(`sboard/jee/${day}/physics`, null));
+await expect('alice adds 25 more physics right away', false, patch(`sboard/jee/${day}/physics/alice`, 'alice', { min: 50, at: TS }));
+await expect('free-text subject', false, put(`sboard/jee/${day}/astrology/alice`, 'alice', row(10)));
+await expect('alice writes bob\'s subject row', false, put(`sboard/jee/${day}/maths/bob`, 'alice', row(10)));
+await expect('subject row with another nick', false, put(`sboard/jee/${day}/maths/alice`, 'alice', { ...row(10), nick: 'Bobby' }));
+await expect('subject row with extra text', false, put(`sboard/jee/${day}/maths/alice`, 'alice', { ...row(10), note: 'hi' }));
+await expect('subject row in a room that does not exist', false, put(`sboard/nope/${day}/maths/alice`, 'alice', row(10)));
+await expect('alice deletes her subject row', true, del(`sboard/jee/${day}/physics/alice`, 'alice'));
+
 console.log('\nReports & bans');
 await expect('bob reports a nickname', true, put('reports/x1', 'bob', { by: 'bob', room: 'jee', uid: 'alice', why: 'nick', at: TS }));
 await expect('bob reads reports', false, get('reports', 'bob'));

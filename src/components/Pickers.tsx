@@ -36,6 +36,36 @@ export function ChoiceChips<T extends string>({ options, value, onChange, cleara
   );
 }
 
+/** Wrapping chips where several can be on (e.g. my subjects). */
+export function ToggleChips<T extends string>({ options, value, onChange }: {
+  options: { id: T; label: string }[];
+  value: T[];
+  onChange: (ids: T[]) => void;
+}) {
+  const c = useColors();
+  return (
+    <View style={s.chips}>
+      {options.map((o) => {
+        const on = value.includes(o.id);
+        return (
+          <Pressable
+            key={o.id}
+            accessibilityRole="checkbox"
+            accessibilityState={{ checked: on }}
+            onPress={() => {
+              void Haptics.selectionAsync();
+              onChange(on ? value.filter((v) => v !== o.id) : [...value, o.id]);
+            }}
+            style={[s.chip, { backgroundColor: on ? c.accent : c.surfaceAlt }]}
+          >
+            <AppText style={s.chipText} color={on ? c.onAccent : c.text}>{o.label}</AppText>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
 /** A 1–5 row (urge strength, mood). Tapping the picked one clears it. `big` is for emoji. */
 export function ScalePicker({ labels, a11y, value, onChange, big }: {
   labels: readonly string[];

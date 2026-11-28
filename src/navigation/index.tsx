@@ -26,6 +26,7 @@ import { RoomProfileScreen } from '../screens/RoomProfile';
 import { RoomsScreen } from '../screens/Rooms';
 import { SettingsScreen } from '../screens/Settings';
 import { ShareScreen } from '../screens/Share';
+import { StudyScreen } from '../screens/Study';
 import { UrgeScreen } from '../screens/Urge';
 import { VideoScreen } from '../screens/Video';
 
@@ -87,6 +88,8 @@ const RootStack = createNativeStackNavigator({
         // Evening check-in; also opened by the daily check-in notification: quitengine://checkin
         CheckIn: { screen: CheckInScreen, linking: 'checkin', options: { presentation: 'modal', animation: 'slide_from_bottom' } },
         Journal: { screen: JournalScreen, options: { presentation: 'modal', animation: 'slide_from_bottom' } },
+        // Study time by day and subject, daily goal, my subjects (from the Focus tab)
+        Study: { screen: StudyScreen, options: { presentation: 'modal', animation: 'slide_from_bottom' } },
         // "Learn instead", from the pause screen
         Learn: { screen: LearnScreen, options: { presentation: 'modal', animation: 'slide_from_bottom' } },
         Room: { screen: RoomScreen, options: { animation: 'slide_from_right' } },

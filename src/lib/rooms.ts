@@ -21,7 +21,7 @@ import {
   update,
 } from '@react-native-firebase/database';
 import { useMMKVString } from 'react-native-mmkv';
-import { FocusTag, isFocusTag, RoomKind, ROOM_KINDS } from '../rooms/data';
+import { FocusTag, isFocusTag, RoomKind, ROOM_KINDS, Subject } from '../rooms/data';
 import { focusEnd, readSession, readTodayMinutes, sessionMode } from './focus';
 import { localDay } from './reels';
 import { storage } from './storage';
@@ -555,13 +555,17 @@ export function periodKey(kind: 'day' | 'week', now = Date.now()) {
   return `w${d.getFullYear()}${String(week).padStart(2, '0')}`;
 }
 
-export function useBoard(roomId: string, period: string, enabled: boolean): BoardRow[] | undefined {
+/**
+ * Top 10 of a room's leaderboard for a period: overall, or for one subject (`sboard`, written next to
+ * the overall row when the session had a subject).
+ */
+export function useBoard(roomId: string, period: string, enabled: boolean, subject?: Subject): BoardRow[] | undefined {
   const [state, setState] = useState<{ key: string; rows: BoardRow[] } | null>(null);
-  const key = `${roomId}/${period}`;
+  const key = subject ? `sboard/${roomId}/${period}/${subject}` : `board/${roomId}/${period}`;
   useEffect(() => {
     if (!enabled) return;
     return onValue(
-      query(ref(db(), `board/${key}`), orderByChild('min'), limitToLast(10)),
+      query(ref(db(), key), orderByChild('min'), limitToLast(10)),
       (snap) => {
         const rows = children(snap).map(({ key: uid, val }) => {
           const o = (val ?? {}) as Raw;
@@ -577,9 +581,9 @@ export function useBoard(roomId: string, period: string, enabled: boolean): Boar
 
 /**
  * After a focus session in a room: a "finished" post (completed sessions, not in quiet rooms) and,
- * if I opted in, minutes on today's and this week's leaderboard.
+ * if I opted in, minutes on today's and this week's leaderboard (and the subject's, if it had one).
  */
-export async function shareFocus(minutes: number, completed: boolean) {
+export async function shareFocus(minutes: number, completed: boolean, subject?: Subject) {
   const cur = readCurrentRoom();
   const uid = getAuth().currentUser?.uid;
   if (!cur || !uid || minutes < 1) return;
@@ -595,9 +599,11 @@ export async function shareFocus(minutes: number, completed: boolean) {
     }
     if (profile.board) {
       for (const period of [periodKey('day'), periodKey('week')]) {
-        const path = `board/${cur.id}/${period}/${uid}`;
-        await update(ref(db(), path), { nick: profile.nick, avatar: profile.avatar, min: increment(min), at: serverTimestamp() });
-        addFootprint(path);
+        const paths = [`board/${cur.id}/${period}/${uid}`, ...(subject ? [`sboard/${cur.id}/${period}/${subject}/${uid}`] : [])];
+        for (const path of paths) {
+          await update(ref(db(), path), { nick: profile.nick, avatar: profile.avatar, min: increment(min), at: serverTimestamp() });
+          addFootprint(path);
+        }
       }
     }
   } catch (e) {

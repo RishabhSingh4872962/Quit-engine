@@ -16,6 +16,31 @@ export const FOCUS_TAGS = ['jee', 'neet', 'upsc', 'boards', 'college', 'coding',
 export type FocusTag = (typeof FOCUS_TAGS)[number];
 export const isFocusTag = (v: unknown): v is FocusTag => FOCUS_TAGS.includes(v as FocusTag);
 
+/**
+ * Study subjects: ids only (labels in i18n `focus.subjectNames`), so per-subject leaderboards in
+ * rooms carry no free text. Keep in sync with the `sboard` rules in database.rules.json.
+ */
+export const SUBJECTS = [
+  'physics', 'chemistry', 'maths', 'biology', 'science', 'english', 'hindi', 'social', 'history', 'geography',
+  'polity', 'economy', 'current', 'reasoning', 'accounts', 'coding', 'revision', 'mock', 'other',
+] as const;
+export type Subject = (typeof SUBJECTS)[number];
+export const isSubject = (v: unknown): v is Subject => SUBJECTS.includes(v as Subject);
+
+/** Offered first until the user picks their own subjects. */
+export const SUGGESTED_SUBJECTS: Record<FocusTag | 'none', Subject[]> = {
+  jee: ['physics', 'chemistry', 'maths', 'mock'],
+  neet: ['physics', 'chemistry', 'biology', 'mock'],
+  upsc: ['polity', 'history', 'geography', 'economy', 'current'],
+  boards: ['maths', 'science', 'english', 'social'],
+  college: ['maths', 'english', 'revision', 'other'],
+  coding: ['coding', 'maths', 'other'],
+  work: ['other'],
+  reading: ['english', 'other'],
+  other: ['revision', 'other'],
+  none: ['maths', 'science', 'english', 'revision', 'other'],
+};
+
 export const ROOM_KINDS = ['study', 'silent', 'people', 'custom'] as const;
 export type RoomKind = (typeof ROOM_KINDS)[number];
 

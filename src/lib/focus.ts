@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useMMKVString } from 'react-native-mmkv';
-import { FocusTag, isFocusTag } from '../rooms/data';
+import { FocusTag, isFocusTag, isSubject, Subject, SUGGESTED_SUBJECTS } from '../rooms/data';
 import { localDay } from './reels';
 import { storage } from './storage';
 
@@ -21,6 +21,7 @@ export interface FocusSession {
   rounds?: number; // pomodoro: focus rounds
   tag?: FocusTag; // what I'm focusing on (shown on my tile in rooms)
   earn?: number; // reels earned when it completes (started from the pause screen)
+  subject?: Subject; // study time is logged per subject
 }
 
 /** What the next session will be: a mode and its lengths. */
@@ -38,6 +39,9 @@ export interface FocusPrefs {
   pomodoro: number; // index into POMODORO_PRESETS
   tag?: FocusTag;
   flip: boolean; // face down = black screen + soft ticks
+  subject?: Subject; // for the next session
+  subjects: Subject[]; // my subjects (empty = suggestions for the tag)
+  goal: number; // daily focus goal in minutes, 0 = off
 }
 
 // Debug builds get 1-minute options for testing the end of a session or a round.
@@ -50,9 +54,11 @@ export const POMODORO_PRESETS: readonly { focus: number; brk: number; rounds: nu
 ];
 /** A stopwatch stops by itself after this long (so blocking and alarms always have an end). */
 export const STOPWATCH_CAP = 180;
+export const GOAL_OPTIONS = [0, 60, 120, 240, 360, 480] as const;
 const SESSION_KEY = 'focus.session';
 const PREFS_KEY = 'focus.prefs';
 const LOG_KEY = 'focus.log'; // { 'YYYY-MM-DD': minutes }
+const SUBJECT_LOG_KEY = 'focus.subjectLog'; // { 'YYYY-MM-DD': { physics: minutes, … } }
 const KEEP_DAYS = 60;
 
 const parse = <T>(raw: string | undefined, fallback: T): T => {
@@ -159,7 +165,9 @@ const EXACT_ASKED_KEY = 'focus.exactAsked';
 export const readExactAsked = () => storage.getBoolean(EXACT_ASKED_KEY) ?? false;
 export const writeExactAsked = () => storage.set(EXACT_ASKED_KEY, true);
 
-const DEFAULT_PREFS: FocusPrefs = { minutes: 25, blockReels: false, mode: 'timer', pomodoro: 0, flip: false };
+const DEFAULT_PREFS: FocusPrefs = {
+  minutes: 25, blockReels: false, mode: 'timer', pomodoro: 0, flip: false, subjects: [], goal: 0,
+};
 // Only offered values are valid (older versions could store a room round's length).
 const cleanPrefs = (p: Partial<FocusPrefs>): FocusPrefs => {
   const m = { ...DEFAULT_PREFS, ...p };
@@ -169,8 +177,14 @@ const cleanPrefs = (p: Partial<FocusPrefs>): FocusPrefs => {
     mode: ['timer', 'pomodoro', 'stopwatch'].includes(m.mode) ? m.mode : 'timer',
     pomodoro: POMODORO_PRESETS[m.pomodoro] ? m.pomodoro : 0,
     tag: isFocusTag(m.tag) ? m.tag : undefined,
+    subject: isSubject(m.subject) ? m.subject : undefined,
+    subjects: Array.isArray(m.subjects) ? m.subjects.filter(isSubject) : [],
+    goal: (GOAL_OPTIONS as readonly number[]).includes(m.goal) ? m.goal : 0,
   };
 };
+
+/** The subjects offered on the Focus tab: mine, or suggestions for my exam tag. */
+export const mySubjects = (p: FocusPrefs): Subject[] => (p.subjects.length ? p.subjects : SUGGESTED_SUBJECTS[p.tag ?? 'none']);
 export const readFocusPrefs = () => cleanPrefs(parse<Partial<FocusPrefs>>(storage.getString(PREFS_KEY), {}));
 export const writeFocusPrefs = (patch: Partial<FocusPrefs>) =>
   storage.set(PREFS_KEY, JSON.stringify({ ...readFocusPrefs(), ...patch }));
@@ -182,15 +196,33 @@ export function useFocusPrefs(): FocusPrefs {
 
 const readLog = () => parse<Record<string, number>>(storage.getString(LOG_KEY), {});
 
-/** Adds focused minutes to a day and drops days older than KEEP_DAYS. */
-export function addFocusMinutes(at: number, minutes: number) {
+/** Adds focused minutes to a day (and its subject) and drops days older than KEEP_DAYS. */
+export function addFocusMinutes(at: number, minutes: number, subject?: Subject) {
   if (minutes <= 0) return;
-  const log = readLog();
   const day = localDay(at);
-  log[day] = (log[day] ?? 0) + minutes;
   const oldest = localDay(at - KEEP_DAYS * 86_400_000);
+  const log = readLog();
+  log[day] = (log[day] ?? 0) + minutes;
   for (const d of Object.keys(log)) if (d < oldest) delete log[d];
   storage.set(LOG_KEY, JSON.stringify(log));
+  if (!subject) return;
+  const bySubject = parse<Record<string, Record<string, number>>>(storage.getString(SUBJECT_LOG_KEY), {});
+  bySubject[day] = { ...bySubject[day], [subject]: (bySubject[day]?.[subject] ?? 0) + minutes };
+  for (const d of Object.keys(bySubject)) if (d < oldest) delete bySubject[d];
+  storage.set(SUBJECT_LOG_KEY, JSON.stringify(bySubject));
+}
+
+/** Minutes per day, and per subject per day (60 days), for the study screen. Updates live. */
+export function useStudyLog() {
+  const [raw] = useMMKVString(LOG_KEY, storage);
+  const [rawSubjects] = useMMKVString(SUBJECT_LOG_KEY, storage);
+  return useMemo(
+    () => ({
+      days: parse<Record<string, number>>(raw, {}),
+      subjects: parse<Record<string, Partial<Record<Subject, number>>>>(rawSubjects, {}),
+    }),
+    [raw, rawSubjects],
+  );
 }
 
 export const readTodayMinutes = (now = Date.now()) => readLog()[localDay(now)] ?? 0;

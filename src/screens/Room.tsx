@@ -6,7 +6,7 @@ import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { useLang } from '../i18n';
 import { actions } from '../lib/actions';
-import { focusEnd, sessionMode, useFocusPrefs, useFocusSession } from '../lib/focus';
+import { focusEnd, mySubjects, sessionMode, useFocusPrefs, useFocusSession } from '../lib/focus';
 import { clock, formatDuration } from '../lib/format';
 import { callsAvailable } from '../lib/calls';
 import { usePremium } from '../lib/premium';
@@ -36,13 +36,14 @@ import {
 } from '../lib/rooms';
 import { useNow } from '../lib/streak';
 import { reportError } from '../lib/telemetry';
-import { avatarEmoji } from '../rooms/data';
+import { avatarEmoji, Subject } from '../rooms/data';
 import { fonts, radius, useColors } from '../theme';
 import { AppText } from '../components/AppText';
 import { Button } from '../components/Button';
 import { CallPanel } from '../components/CallPanel';
 import { Card } from '../components/Card';
 import { IconButton } from '../components/IconButton';
+import { ChoiceChips } from '../components/Pickers';
 import { Chip, LIVE, roomTitle } from '../components/RoomCard';
 import { Screen } from '../components/Screen';
 import { Segmented } from '../components/Segmented';
@@ -327,7 +328,11 @@ function Leaderboard({ roomId, uid, optedIn, hiddenPeople, now }: {
   const c = useColors();
   const navigation = useNavigation();
   const [period, setPeriod] = useState<'day' | 'week'>('day');
-  const board = useBoard(roomId, periodKey(period, now), true);
+  // Overall, or one of my subjects (people who focused on that subject in this room).
+  const subjects = mySubjects(useFocusPrefs());
+  const [picked, setPicked] = useState<Subject | 'all'>('all');
+  const subject = picked !== 'all' && subjects.includes(picked) ? picked : undefined;
+  const board = useBoard(roomId, periodKey(period, now), true, subject);
   const rows = (board ?? []).filter((r) => !hiddenPeople.includes(r.uid));
   const medals = ['🥇', '🥈', '🥉'];
   return (
@@ -341,7 +346,20 @@ function Leaderboard({ roomId, uid, optedIn, hiddenPeople, now }: {
         value={period}
         onChange={setPeriod}
       />
-      {board && rows.length === 0 && <AppText variant="muted">{t('rooms.boardEmpty')}</AppText>}
+      <ChoiceChips
+        options={[
+          { id: 'all' as const, label: t('rooms.boardAll') },
+          ...subjects.map((id) => ({ id, label: t(`focus.subjectNames.${id}`) })),
+        ]}
+        value={subject ?? 'all'}
+        onChange={(v) => v && setPicked(v)}
+        clearable={false}
+      />
+      {board && rows.length === 0 && (
+        <AppText variant="muted">
+          {subject ? t('rooms.boardSubjectEmpty', { subject: t(`focus.subjectNames.${subject}`) }) : t('rooms.boardEmpty')}
+        </AppText>
+      )}
       {rows.map((r: BoardRow, i) => (
         <View key={r.uid} style={[s.boardRow, r.uid === uid && { backgroundColor: c.accentSoft }]}>
           <AppText style={s.rank}>{medals[i] ?? `#${i + 1}`}</AppText>

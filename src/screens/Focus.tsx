@@ -14,6 +14,7 @@ import {
   focusEnd,
   FocusMode,
   focusPhase,
+  mySubjects,
   planFromPrefs,
   POMODORO_PRESETS,
   readExactAsked,
@@ -58,6 +59,8 @@ export function FocusScreen() {
   const done = useFocusDone();
   const now = useNow(session ? 1000 : 60_000);
   const totals = useFocusTotals(now);
+  // The session that just ended took today's total past the daily goal.
+  const goalJustMet = !!done && prefs.goal > 0 && totals.today >= prefs.goal && totals.today - done.minutes < prefs.goal;
   const tracked = useTracked();
   const premium = usePremium();
   const { enabled: counterOn } = useReelCounter(1);
@@ -167,6 +170,9 @@ export function FocusScreen() {
         {session ? (
           <View style={s.full}>
             {session.tag && <AppText variant="caption" center>{t('focus.focusingOn', { tag: t(`rooms.tags.${session.tag}`) })}</AppText>}
+            {session.subject && (
+              <AppText variant="caption" center>{t('focus.subjectNow', { subject: t(`focus.subjectNames.${session.subject}`) })}</AppText>
+            )}
             {session.earn ? (
               <AppText variant="caption" center color={c.accentText}>{t('focus.earnRunning', { count: session.earn })}</AppText>
             ) : null}
@@ -190,6 +196,7 @@ export function FocusScreen() {
             <AppText variant="muted" center>
               {t(done.complete ? 'focus.doneBody' : 'focus.doneEarlyBody', { count: done.minutes })}
             </AppText>
+            {goalJustMet && <AppText variant="caption" center color={LIVE} style={s.earned}>{t('study.goalReached')}</AppText>}
             {done.earned ? (
               <AppText variant="caption" center color={c.accentText} style={s.earned}>{t('focus.earned', { count: done.earned })}</AppText>
             ) : null}
@@ -242,6 +249,34 @@ export function FocusScreen() {
                 })}
               </ScrollView>
             </View>
+            <View style={s.tagBlock}>
+              <AppText variant="label">{t('focus.subjectTitle')}</AppText>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tagRow}>
+                {mySubjects(prefs).map((id) => {
+                  const on = prefs.subject === id;
+                  return (
+                    <Pressable
+                      key={id}
+                      onPress={() => actions.setFocusPrefs({ subject: on ? undefined : id })}
+                      style={[s.tagChip, { backgroundColor: on ? c.accent : c.surfaceAlt }]}
+                      accessibilityRole="radio"
+                      accessibilityState={{ checked: on }}
+                    >
+                      <AppText style={s.tagText} color={on ? c.onAccent : c.text}>{t(`focus.subjectNames.${id}`)}</AppText>
+                    </Pressable>
+                  );
+                })}
+                <Pressable
+                  onPress={() => navigation.navigate('Study')}
+                  style={[s.tagChip, s.editChip, { borderColor: c.border }]}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('study.subjectsTitle')}
+                >
+                  <Ionicons name="pencil" size={14} color={c.accentText} />
+                  <AppText style={s.tagText} color={c.accentText}>{t('focus.editSubjects')}</AppText>
+                </Pressable>
+              </ScrollView>
+            </View>
             <ToggleRow title={t('focus.flip')} sub={t('focus.flipSub')} value={prefs.flip} onChange={(flip) => actions.setFocusPrefs({ flip })} />
             {canBlock && (
               <ToggleRow
@@ -260,17 +295,50 @@ export function FocusScreen() {
         )}
       </Card>
 
-      <Card style={s.totals}>
-        <View style={s.stat}>
-          <AppText variant="label">{t('focus.today')}</AppText>
-          <AppText style={s.statValue} color={c.accentText}>{formatDuration(totals.today * 60_000, t)}</AppText>
-        </View>
-        <View style={[s.divider, { backgroundColor: c.border }]} />
-        <View style={s.stat}>
-          <AppText variant="label">{t('focus.week')}</AppText>
-          <AppText style={s.statValue}>{formatDuration(totals.week * 60_000, t)}</AppText>
-        </View>
-      </Card>
+      <Pressable
+        onPress={() => navigation.navigate('Study')}
+        accessibilityRole="button"
+        accessibilityHint={t('study.open')}
+        style={({ pressed }) => pressed && s.pressed}
+      >
+        <Card style={s.totalsCard}>
+          <View style={s.totals}>
+            <View style={s.stat}>
+              <AppText variant="label">{t('focus.today')}</AppText>
+              <AppText style={s.statValue} color={c.accentText}>{formatDuration(totals.today * 60_000, t)}</AppText>
+            </View>
+            <View style={[s.divider, { backgroundColor: c.border }]} />
+            <View style={s.stat}>
+              <AppText variant="label">{t('focus.week')}</AppText>
+              <AppText style={s.statValue}>{formatDuration(totals.week * 60_000, t)}</AppText>
+            </View>
+          </View>
+          {prefs.goal > 0 && (
+            <View style={s.goal}>
+              <View style={[s.goalTrack, { backgroundColor: c.surfaceAlt }]}>
+                <View
+                  style={[
+                    s.goalFill,
+                    {
+                      width: `${Math.min(100, (totals.today / prefs.goal) * 100)}%`,
+                      backgroundColor: totals.today >= prefs.goal ? LIVE : c.accent,
+                    },
+                  ]}
+                />
+              </View>
+              <AppText variant="caption">
+                {totals.today >= prefs.goal
+                  ? t('study.goalMet')
+                  : t('study.goalProgress', { done: formatDuration(totals.today * 60_000, t), goal: formatDuration(prefs.goal * 60_000, t) })}
+              </AppText>
+            </View>
+          )}
+          <View style={s.more}>
+            <AppText variant="caption" color={c.accentText} style={s.tagText}>{t('study.open')}</AppText>
+            <Ionicons name="chevron-forward" size={14} color={c.accentText} />
+          </View>
+        </Card>
+      </Pressable>
 
       <Card style={s.card}>
         <AppText variant="heading">{t('focus.soundsTitle')}</AppText>
@@ -384,7 +452,14 @@ const s = StyleSheet.create({
   tagText: { fontWeight: '600' },
   earned: { fontWeight: '600' },
   clock: { fontFamily: fonts.bold, fontSize: 44, lineHeight: 54, includeFontPadding: false },
-  totals: { flexDirection: 'row', alignItems: 'center', marginTop: 14 },
+  totalsCard: { marginTop: 14, gap: 12 },
+  totals: { flexDirection: 'row', alignItems: 'center' },
+  pressed: { opacity: 0.85 },
+  goal: { gap: 6 },
+  goalTrack: { height: 8, borderRadius: radius.pill, overflow: 'hidden' },
+  goalFill: { height: 8, borderRadius: radius.pill },
+  more: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4 },
+  editChip: { flexDirection: 'row', alignItems: 'center', gap: 4, borderWidth: 1, backgroundColor: 'transparent' },
   stat: { flex: 1, alignItems: 'center', gap: 2 },
   statValue: { fontFamily: fonts.bold, fontSize: 22, lineHeight: 30, includeFontPadding: false },
   divider: { width: 1, alignSelf: 'stretch' },

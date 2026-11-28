@@ -37,7 +37,7 @@ export function track<E extends keyof Events>(name: E, ...params: Events[E] exte
  */
 const NEUTRAL_SCREENS = new Set([
   'Onboarding', 'Home', 'Focus', 'Rooms', 'Room', 'RoomProfile', 'CreateRoom', 'Milestones', 'Settings', 'Urge', 'Celebrate',
-  'AddHabit', 'Share', 'CheckIn', 'Journal',
+  'AddHabit', 'Share', 'CheckIn', 'Journal', 'Study',
 ]);
 
 /** Route names only (Home, Milestones, Urge…), never habit names. */

@@ -240,13 +240,14 @@ export const actions = {
    */
   startFocus(plan: FocusPlan, blockReels: boolean, opts: { endsAt?: number; earn?: number } = {}) {
     writeFocusDone(null);
-    const tag = readFocusPrefs().tag;
+    const { tag, subject } = readFocusPrefs();
     writeSession({
       startedAt: opts.endsAt ? opts.endsAt - plan.minutes * 60_000 : Date.now(),
       blockReels,
       ...plan,
       ...(tag ? { tag } : {}),
       ...(opts.earn ? { earn: opts.earn } : {}),
+      ...(subject ? { subject } : {}),
     });
     armFocusTimer();
     syncReelBlock();
@@ -265,10 +266,10 @@ export const actions = {
     const now = Date.now();
     const minutes = focusedMinutes(s, now);
     const complete = sessionMode(s) === 'stopwatch' && minutes > 0;
-    addFocusMinutes(now, minutes);
+    addFocusMinutes(now, minutes, s.subject);
     writeFocusDone(minutes > 0 ? { minutes, complete } : null);
     finishFocus();
-    void shareFocus(minutes, complete);
+    void shareFocus(minutes, complete, s.subject);
     if (complete) track('focus_completed', { minutes, mode: 'stopwatch' });
   },
 
@@ -281,11 +282,11 @@ export const actions = {
     if (!s) return;
     if (Date.now() < focusEnd(s)) return armFocusTimer();
     const minutes = focusedMinutes(s, focusEnd(s)); // pomodoro: focus rounds only
-    addFocusMinutes(focusEnd(s), minutes);
+    addFocusMinutes(focusEnd(s), minutes, s.subject);
     const earned = s.earn ? earnReels(s.earn) : 0; // only a completed session earns
     writeFocusDone({ minutes, complete: true, ...(earned ? { earned } : {}) });
     finishFocus();
-    void shareFocus(minutes, true); // "finished a 50-min session" in the room, + leaderboard
+    void shareFocus(minutes, true, s.subject); // "finished a 50-min session" in the room, + leaderboards
     track('focus_completed', { minutes, mode: sessionMode(s) });
   },
 

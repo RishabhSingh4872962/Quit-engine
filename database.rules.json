@@ -175,6 +175,28 @@
       }
     },
 
+    "sboard": {
+      "$room": {
+        "$period": {
+          "$subject": {
+            ".read": "auth != null",
+            ".indexOn": ["min"],
+            "$uid": {
+              ".write": "auth != null && auth.uid === $uid && (!newData.exists() || (!root.child('bans/' + auth.uid).exists() && root.child('profiles/' + auth.uid + '/board').val() === true && (root.child('rooms/' + $room).exists() || root.child('hidden/' + $room).exists())))",
+              ".validate": "$period.matches(/^(d[0-9]{8}|w[0-9]{6})$/) && $subject.matches(/^(physics|chemistry|maths|biology|science|english|hindi|social|history|geography|polity|economy|current|reasoning|accounts|coding|revision|mock|other)$/) && newData.hasChildren(['nick', 'avatar', 'min', 'at'])",
+              "nick": { ".validate": "newData.val() === root.child('profiles/' + auth.uid + '/nick').val()" },
+              "avatar": { ".validate": "newData.val() === root.child('profiles/' + auth.uid + '/avatar').val()" },
+              "min": {
+                ".validate": "newData.isNumber() && newData.val() <= 10080 && newData.val() - (data.exists() ? data.val() : 0) >= 1 && newData.val() - (data.exists() ? data.val() : 0) <= 90 && newData.val() - (data.exists() ? data.val() : 0) <= (now - (data.parent().child('at').exists() ? data.parent().child('at').val() : 0)) / 60000 + 1"
+              },
+              "at": { ".validate": "newData.val() === now" },
+              "$other": { ".validate": false }
+            }
+          }
+        }
+      }
+    },
+
     "reports": {
       "$id": {
         ".write": "auth != null && !data.exists() && newData.exists()",
