@@ -18,6 +18,7 @@ import { readThemePref } from './src/lib/storage';
 import { trackScreen } from './src/lib/telemetry';
 import { updateStreakWidget } from './src/widget';
 import { useBuddySync } from './src/lib/buddy';
+import { awardDaysOnTrack } from './src/lib/companion';
 import { Navigation, navTheme } from './src/navigation';
 import { applyThemePref, useColors } from './src/theme';
 
@@ -60,6 +61,7 @@ export default function App() {
     syncGate(); // pause before opening (apps, texts)
     syncReelBlock(); // blocking rules (also turns them off if Premium ended)
     actions.checkReelLimit(); // a day over the reel limit ends the reel-free streak
+    awardDaysOnTrack(); // the plant grows with each day on track (after the reel check, so a slip day doesn't count)
     actions.checkFocus(); // finishes a focus session that ended while the app was closed
     resumeRoom(); // back into the room I was in (presence)
     const sub = AppState.addEventListener('change', (s) => {

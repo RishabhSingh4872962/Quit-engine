@@ -44,6 +44,7 @@ import { CallPanel } from '../components/CallPanel';
 import { Card } from '../components/Card';
 import { IconButton } from '../components/IconButton';
 import { ChoiceChips } from '../components/Pickers';
+import { RoomGarden } from '../components/RoomGarden';
 import { Chip, LIVE, roomTitle } from '../components/RoomCard';
 import { Screen } from '../components/Screen';
 import { Segmented } from '../components/Segmented';
@@ -236,6 +237,8 @@ export function RoomScreen({ route }: Props) {
           ))}
         </View>
       </View>
+
+      <RoomGarden roomId={id} minutes={visible.reduce((sum, m) => sum + m.today, 0)} now={now} />
 
       {room && !room.quiet && <Feed roomId={id} uid={uid} now={now} hiddenPeople={hiddenPeople} />}
 

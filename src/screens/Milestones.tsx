@@ -6,9 +6,11 @@ import { useTranslation } from 'react-i18next';
 import { milestoneLabel, useLang } from '../i18n';
 import { useActiveHabit, useHabitState } from '../lib/storage';
 import { DAY_MS, milestoneProgress, useNow } from '../lib/streak';
+import { STAGE_NAMES, STAGES, useCompanion } from '../lib/companion';
 import { radius, useColors } from '../theme';
 import { AppText } from '../components/AppText';
 import { Card } from '../components/Card';
+import { Plant } from '../components/Plant';
 import { Screen } from '../components/Screen';
 
 type Status = 'reached' | 'next' | 'locked';
@@ -33,6 +35,8 @@ export function MilestonesScreen() {
       <AppText variant="muted" style={s.summary}>
         {habit.name[lang]} · {t('milestones.summary', { reached, total: habit.milestones.length })}
       </AppText>
+
+      <CompanionCard now={now} />
 
       {habit.milestones.map((m, i) => {
         const status = statusOf(m);
@@ -98,7 +102,41 @@ function Node({ status }: { status: Status }) {
 }
 
 const NODE = 34;
+/** The growing companion: one plant for the whole app (see src/lib/companion.ts). */
+function CompanionCard({ now }: { now: number }) {
+  const { t } = useTranslation();
+  const c = useColors();
+  const { points, stage, next, progress, resting } = useCompanion(now);
+  return (
+    <Animated.View entering={FadeInDown.duration(400)}>
+      <Card style={s.companion}>
+        <Plant stage={stage} resting={resting} size={110} />
+        <View style={s.companionText}>
+          <AppText variant="label">{t('companion.title')}</AppText>
+          <AppText style={s.companionStage} color={c.accentText}>{t(`companion.stages.${STAGE_NAMES[stage]}`)}</AppText>
+          <AppText variant="caption">{resting ? t('companion.resting') : t('companion.growing')}</AppText>
+          {next !== undefined ? (
+            <>
+              <View style={[s.track, { backgroundColor: c.surfaceAlt }]}>
+                <View style={[s.fill, { backgroundColor: c.accent, width: `${Math.min(1, progress) * 100}%` }]} />
+              </View>
+              <AppText variant="caption">
+                {t('companion.next', { points: points - STAGES[stage], need: next - STAGES[stage], stage: t(`companion.stages.${STAGE_NAMES[stage + 1]}`) })}
+              </AppText>
+            </>
+          ) : (
+            <AppText variant="caption">{t('companion.full')}</AppText>
+          )}
+        </View>
+      </Card>
+    </Animated.View>
+  );
+}
+
 const s = StyleSheet.create({
+  companion: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 18 },
+  companionText: { flex: 1, gap: 4 },
+  companionStage: { fontSize: 20, lineHeight: 26, fontWeight: '700' },
   summary: { marginBottom: 24 },
   row: { flexDirection: 'row', gap: 14 },
   rail: { width: NODE, alignItems: 'center' },

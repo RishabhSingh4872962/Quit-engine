@@ -21,6 +21,7 @@ import { BlockPrefs, syncReelBlock, writeBlock } from './blocking';
 import { GatePrefs, syncGate, writeGate } from './gate';
 import { addUrge, checkInDay, clearJournal, NOTE_MAX, writeDay } from './journal';
 import { publishBuddyStatus } from './buddy';
+import { addCare, CARE } from './companion';
 import { earnReels, readEarned } from './earn';
 import {
   addFocusMinutes,
@@ -128,12 +129,14 @@ export const actions = {
   resistUrge(id: HabitId, diary: { trigger?: string; strength?: number } = {}) {
     writeState(id, { urgesResisted: readState(id).urgesResisted + 1 });
     addUrge(id, { at: Date.now(), ...diary });
+    addCare(CARE.urge);
     track('urge_exercise_done');
   },
 
   /** Today's promise (Home). */
   pledge(id: HabitId) {
     writeDay(id, localDay(Date.now()), { pledgedAt: Date.now() });
+    addCare(CARE.pledge);
     track('pledge_made');
   },
 
@@ -141,6 +144,7 @@ export const actions = {
   checkIn(id: HabitId, entry: { mood?: number; kept?: boolean; note?: string }) {
     const note = entry.note?.trim().slice(0, NOTE_MAX);
     writeDay(id, checkInDay(Date.now()), { mood: entry.mood, kept: entry.kept, note: note || undefined, checkedAt: Date.now() });
+    addCare(CARE.checkin);
     track('checkin_done');
     void publishBuddyStatus(); // "kept their promise" for my buddy
   },
@@ -277,6 +281,7 @@ export const actions = {
     const minutes = focusedMinutes(s, now);
     const complete = sessionMode(s) === 'stopwatch' && minutes > 0;
     addFocusMinutes(now, minutes, s.subject);
+    addCare(Math.floor(minutes / CARE.focusPer));
     writeFocusDone(minutes > 0 ? { minutes, complete } : null);
     finishFocus();
     void shareFocus(minutes, complete, s.subject);
@@ -293,6 +298,7 @@ export const actions = {
     if (Date.now() < focusEnd(s)) return armFocusTimer();
     const minutes = focusedMinutes(s, focusEnd(s)); // pomodoro: focus rounds only
     addFocusMinutes(focusEnd(s), minutes, s.subject);
+    addCare(Math.floor(minutes / CARE.focusPer));
     const earned = s.earn ? earnReels(s.earn) : 0; // only a completed session earns
     writeFocusDone({ minutes, complete: true, ...(earned ? { earned } : {}) });
     finishFocus();
