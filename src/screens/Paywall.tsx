@@ -11,6 +11,9 @@ import { reportError } from '../lib/telemetry';
 import { radius, useColors } from '../theme';
 import { AppText } from '../components/AppText';
 import { Button } from '../components/Button';
+import { Card } from '../components/Card';
+import { GlowMark } from '../components/GlowMark';
+import { RowIcon } from '../components/Group';
 import { IconButton } from '../components/IconButton';
 import { OptionCard } from '../components/OptionCard';
 import { Screen } from '../components/Screen';
@@ -92,8 +95,8 @@ export function PaywallScreen() {
   if (premium) {
     return (
       <Screen edges={['top', 'bottom']} style={s.center}>
-        <Animated.View entering={ZoomIn.springify().damping(20)} style={[s.badge, { backgroundColor: c.accent }]}>
-          <Ionicons name="checkmark" size={48} color={c.onAccent} />
+        <Animated.View entering={ZoomIn.springify().damping(20)} style={s.badge}>
+          <GlowMark icon="checkmark" size={104} />
         </Animated.View>
         <AppText variant="title" center>{t('paywall.thanksTitle')}</AppText>
         <AppText variant="muted" center style={s.thanksBody}>{t('paywall.thanksBody')}</AppText>
@@ -113,27 +116,24 @@ export function PaywallScreen() {
         <IconButton icon="close" label={t('setup.close')} onPress={navigation.goBack} filled />
       </View>
 
+      <View pointerEvents="none" style={[s.halo, { backgroundImage: `radial-gradient(circle, ${c.glow} 0%, rgba(0,0,0,0) 62%)` }]} />
       <Animated.View entering={FadeIn.duration(400)} style={s.hero}>
-        <View style={[s.badge, { backgroundColor: c.accentSoft }]}>
-          <Ionicons name="sparkles" size={36} color={c.accent} />
-        </View>
+        <GlowMark icon="sparkles" size={96} style={s.badge} />
         <AppText variant="title" center>{t('paywall.title')}</AppText>
         <AppText variant="muted" center>{t('paywall.subtitle')}</AppText>
       </Animated.View>
 
-      <View style={s.features}>
+      <Card style={s.features}>
         {features.map((f) => (
           <View key={f.icon} style={s.feature}>
-            <View style={[s.featureIcon, { backgroundColor: c.accentSoft }]}>
-              <Ionicons name={f.icon} size={18} color={c.accent} />
-            </View>
+            <RowIcon icon={f.icon} />
             <View style={s.flex}>
               <AppText style={s.featureTitle}>{f.title}</AppText>
               <AppText variant="caption">{f.body}</AppText>
             </View>
           </View>
         ))}
-      </View>
+      </Card>
 
       {plans === null && !failed && <ActivityIndicator color={c.accent} style={s.loading} />}
 
@@ -182,12 +182,12 @@ const s = StyleSheet.create({
   thanksBody: { marginBottom: 8 },
   topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 40 },
   testChip: { borderRadius: radius.pill, paddingHorizontal: 12, paddingVertical: 4 },
+  halo: { position: 'absolute', top: -60, left: -80, right: -80, height: 460 },
   hero: { alignItems: 'center', gap: 6, marginTop: 8, marginBottom: 24 },
-  badge: { width: 88, height: 88, borderRadius: 44, alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
-  features: { gap: 16, marginBottom: 28 },
+  badge: { marginBottom: 18 },
+  features: { gap: 16, marginBottom: 24 },
   feature: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  featureIcon: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' },
-  featureTitle: { fontSize: 16, fontWeight: '600' },
+  featureTitle: { fontSize: 15.5, lineHeight: 22, fontWeight: '600' },
   loading: { marginVertical: 24 },
   failed: { gap: 12, marginBottom: 12 },
   cta: { marginTop: 4 },

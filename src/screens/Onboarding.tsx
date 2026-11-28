@@ -13,6 +13,7 @@ import { useTracked } from '../lib/storage';
 import { makePalette, radius, useColors } from '../theme';
 import { AppText } from '../components/AppText';
 import { Button } from '../components/Button';
+import { GlowMark } from '../components/GlowMark';
 import { OptionCard } from '../components/OptionCard';
 import { Screen } from '../components/Screen';
 import { IconButton } from '../components/IconButton';
@@ -93,18 +94,7 @@ function Welcome({ onNext }: { onNext: () => void }) {
     <Screen edges={['top', 'bottom']} style={s.between}>
       <View pointerEvents="none" style={[s.halo, { backgroundImage: `radial-gradient(circle, ${c.glow} 0%, rgba(0,0,0,0) 62%)` }]} />
       <Animated.View entering={FadeInDown.duration(600)} style={s.hero}>
-        <View
-          style={[
-            s.mark,
-            {
-              backgroundColor: c.accent,
-              backgroundImage: `radial-gradient(circle at 34% 28%, ${c.accentLight} 0%, ${c.accent} 50%, ${c.accentDeep} 100%)`,
-              boxShadow: `0px 0px 60px ${c.glow}`,
-            },
-          ]}
-        >
-          <Ionicons name="leaf" size={52} color="#FFFFFF" />
-        </View>
+        <GlowMark icon="leaf" style={s.mark} />
         <AppText variant="title" center style={s.appName}>{t('app.name')}</AppText>
         <AppText variant="muted" center>{t('app.tagline')}</AppText>
       </Animated.View>
@@ -251,7 +241,7 @@ const s = StyleSheet.create({
   between: { justifyContent: 'space-between' },
   halo: { position: 'absolute', top: -40, left: -80, right: -80, height: 520 },
   hero: { marginTop: 48, gap: 6, alignItems: 'center' },
-  mark: { width: 120, height: 120, borderRadius: 60, alignItems: 'center', justifyContent: 'center', marginBottom: 22 },
+  mark: { marginBottom: 22 },
   appName: { fontSize: 34, lineHeight: 44 },
   sectionLabel: { marginBottom: 12 },
   privacy: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 14 },
