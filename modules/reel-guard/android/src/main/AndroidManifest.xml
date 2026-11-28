@@ -1,4 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <!-- "Silence notifications while focusing": Do Not Disturb, only after the user grants access in settings. -->
+  <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
   <!-- Apps offered for "pause before opening": lets the app check which ones are installed. -->
   <queries>
     <package android:name="com.instagram.android" />
@@ -21,6 +23,8 @@
     <package android:name="com.facebook.lite" />
   </queries>
   <application>
+    <!-- Turns our focus Do Not Disturb off when the session ends, even if the app isn't running. -->
+    <receiver android:name="expo.modules.reelguard.DndRestoreReceiver" android:exported="false" />
     <!-- Counts reels/shorts in a few chosen apps. Bound only by the system (BIND_ACCESSIBILITY_SERVICE). -->
     <service
       android:name="expo.modules.reelguard.ReelGuardService"

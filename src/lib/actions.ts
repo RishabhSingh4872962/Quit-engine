@@ -22,6 +22,7 @@ import { BlockPrefs, syncReelBlock, writeBlock } from './blocking';
 import { GatePrefs, syncGate, writeGate } from './gate';
 import { addUrge, checkInDay, clearJournal, NOTE_MAX, writeDay } from './journal';
 import { publishBuddyStatus } from './buddy';
+import { endFocusDnd, startFocusDnd } from './dnd';
 import { addCare, CARE } from './companion';
 import { earnReels, readEarned } from './earn';
 import {
@@ -260,15 +261,17 @@ export const actions = {
    */
   startFocus(plan: FocusPlan, blockReels: boolean, opts: { endsAt?: number; earn?: number } = {}) {
     writeFocusDone(null);
-    const { tag, subject } = readFocusPrefs();
-    writeSession({
+    const { tag, subject, dnd } = readFocusPrefs();
+    const session = {
       startedAt: opts.endsAt ? opts.endsAt - plan.minutes * 60_000 : Date.now(),
       blockReels,
       ...plan,
       ...(tag ? { tag } : {}),
       ...(opts.earn ? { earn: opts.earn } : {}),
       ...(subject ? { subject } : {}),
-    });
+    };
+    // Silence notifications until the end (the native side turns it off just before, even if the app is closed).
+    writeSession({ ...session, ...(dnd && startFocusDnd(focusEnd(session)) ? { dnd: true } : {}) });
     armFocusTimer();
     syncReelBlock();
     syncRoomPresence(); // "focusing · N min left" in the room I'm in
@@ -354,6 +357,7 @@ function resetPausesKeepEarned() {
 
 function finishFocus() {
   writeSession(null);
+  endFocusDnd(); // no-op unless we turned it on
   void publishBuddyStatus(); // focus minutes today
   armFocusTimer();
   syncReelBlock(); // lifts the focus block (other blocking rules stay)

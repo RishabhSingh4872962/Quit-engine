@@ -25,6 +25,7 @@ import {
   useFocusSession,
   useFocusTotals,
 } from '../lib/focus';
+import { dndAvailable, openDndAccess, useDndReady } from '../lib/dnd';
 import { clock, formatDuration } from '../lib/format';
 import { allowExactAlarms, exactAlarmsAllowed } from '../lib/notifications';
 import { premiumAvailable, usePremium } from '../lib/premium';
@@ -57,6 +58,7 @@ export function FocusScreen() {
   const session = useFocusSession();
   const prefs = useFocusPrefs();
   const done = useFocusDone();
+  const dndReady = useDndReady();
   const now = useNow(session ? 1000 : 60_000);
   const totals = useFocusTotals(now);
   // The session that just ended took today's total past the daily goal.
@@ -135,6 +137,21 @@ export function FocusScreen() {
       { text: t('focus.exactAllow'), onPress: () => void allowExactAlarms() },
     ]);
   };
+  // DND needs two permissions: Do Not Disturb access, and exact alarms so it ends with the session.
+  const askDndPermissions = () => {
+    if (!dndReady.access) {
+      return Alert.alert(t('focus.dndAccessTitle'), t('focus.dndAccessBody'), [
+        { text: t('reels.notNow'), style: 'cancel' },
+        { text: t('focus.dndAccessOpen'), onPress: openDndAccess },
+      ]);
+    }
+    if (!dndReady.exact) {
+      Alert.alert(t('focus.exactTitle'), t('focus.dndExactBody'), [
+        { text: t('reels.notNow'), style: 'cancel' },
+        { text: t('focus.exactAllow'), onPress: () => void allowExactAlarms() },
+      ]);
+    }
+  };
   const start = () => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     actions.startFocus(plan, blockOn);
@@ -170,6 +187,11 @@ export function FocusScreen() {
         {session ? (
           <View style={s.full}>
             {session.tag && <AppText variant="caption" center>{t('focus.focusingOn', { tag: t(`rooms.tags.${session.tag}`) })}</AppText>}
+            {session.dnd && (
+              <AppText variant="caption" center>
+                {t('focus.dndOn', { time: new Date(focusEnd(session)).toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit' }) })}
+              </AppText>
+            )}
             {session.subject && (
               <AppText variant="caption" center>{t('focus.subjectNow', { subject: t(`focus.subjectNames.${session.subject}`) })}</AppText>
             )}
@@ -277,6 +299,26 @@ export function FocusScreen() {
                 </Pressable>
               </ScrollView>
             </View>
+            {dndAvailable && (
+              <>
+                <ToggleRow
+                  title={t('focus.dnd')}
+                  sub={
+                    prefs.dnd && !dndReady.access ? t('focus.dndNeedsAccess')
+                      : prefs.dnd && !dndReady.exact ? t('focus.dndNeedsExact')
+                        : t('focus.dndSub')
+                  }
+                  value={prefs.dnd}
+                  onChange={(on) => {
+                    actions.setFocusPrefs({ dnd: on });
+                    if (on) askDndPermissions();
+                  }}
+                />
+                {prefs.dnd && (!dndReady.access || !dndReady.exact) && (
+                  <Button variant="soft" label={t('focus.dndAllow')} onPress={askDndPermissions} />
+                )}
+              </>
+            )}
             <ToggleRow title={t('focus.flip')} sub={t('focus.flipSub')} value={prefs.flip} onChange={(flip) => actions.setFocusPrefs({ flip })} />
             {canBlock && (
               <ToggleRow

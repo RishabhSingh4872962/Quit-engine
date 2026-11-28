@@ -116,6 +116,17 @@ class ReelGuardModule : Module() {
       ReelGuardService.instance?.applyRules()
     }
 
+    // "Silence notifications while focusing": Do Not Disturb access, its settings page, start/end.
+    Function("dndAccess") { FocusDnd.hasAccess(context) }
+    Function("openDndAccess") {
+      val activity = appContext.currentActivity
+      val intent = Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)
+      if (activity == null) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+      (activity ?: context).startActivity(intent)
+    }
+    Function("startFocusDnd") { until: Double -> FocusDnd.start(context, until.toLong()) }
+    Function("endFocusDnd") { FocusDnd.end(context) }
+
     // New detection rules (JSON array) from Remote Config; null/invalid = built-in defaults.
     Function("setRules") { json: String? ->
       ReelStore.saveRules(context, json)

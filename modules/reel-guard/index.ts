@@ -39,6 +39,12 @@ interface ReelGuardModule {
   setGate(json: string | null): void;
   /** "Count in browsers": Shorts/Reels pages in browsers, read from the address bar only. */
   setWeb(on: boolean): void;
+  /** Do Not Disturb access granted (needed for "silence notifications while focusing"). */
+  dndAccess(): boolean;
+  openDndAccess(): void;
+  /** Priority-only mode until `until` (epoch ms); false without access or if DND was already on. */
+  startFocusDnd(until: number): boolean;
+  endFocusDnd(): void;
   /** Which of these packages are installed (they must be listed in the module's manifest <queries>). */
   installedApps(pkgs: string[]): string[];
   /** Detection rules as JSON (from Remote Config); null restores the built-in ones. */

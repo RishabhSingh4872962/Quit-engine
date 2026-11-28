@@ -22,6 +22,7 @@ export interface FocusSession {
   tag?: FocusTag; // what I'm focusing on (shown on my tile in rooms)
   earn?: number; // reels earned when it completes (started from the pause screen)
   subject?: Subject; // study time is logged per subject
+  dnd?: boolean; // Do Not Disturb was turned on for this session
 }
 
 /** What the next session will be: a mode and its lengths. */
@@ -42,6 +43,7 @@ export interface FocusPrefs {
   subject?: Subject; // for the next session
   subjects: Subject[]; // my subjects (empty = suggestions for the tag)
   goal: number; // daily focus goal in minutes, 0 = off
+  dnd: boolean; // silence notifications while focusing (Android, needs DND access)
 }
 
 // Debug builds get 1-minute options for testing the end of a session or a round.
@@ -166,7 +168,7 @@ export const readExactAsked = () => storage.getBoolean(EXACT_ASKED_KEY) ?? false
 export const writeExactAsked = () => storage.set(EXACT_ASKED_KEY, true);
 
 const DEFAULT_PREFS: FocusPrefs = {
-  minutes: 25, blockReels: false, mode: 'timer', pomodoro: 0, flip: false, subjects: [], goal: 0,
+  minutes: 25, blockReels: false, mode: 'timer', pomodoro: 0, flip: false, subjects: [], goal: 0, dnd: false,
 };
 // Only offered values are valid (older versions could store a room round's length).
 const cleanPrefs = (p: Partial<FocusPrefs>): FocusPrefs => {
@@ -180,6 +182,7 @@ const cleanPrefs = (p: Partial<FocusPrefs>): FocusPrefs => {
     subject: isSubject(m.subject) ? m.subject : undefined,
     subjects: Array.isArray(m.subjects) ? m.subjects.filter(isSubject) : [],
     goal: (GOAL_OPTIONS as readonly number[]).includes(m.goal) ? m.goal : 0,
+    dnd: m.dnd === true,
   };
 };
 
