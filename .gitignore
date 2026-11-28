@@ -52,3 +52,7 @@ firebase-debug.log
 database-debug.log
 .firebase/
 .dev.vars
+
+# Policy pages hold a personal email: keep them local until a support address exists (see docs/play-store).
+hosting/privacy.html
+hosting/delete-account.html
