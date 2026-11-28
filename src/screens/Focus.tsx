@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
@@ -59,6 +59,8 @@ export function FocusScreen() {
   const prefs = useFocusPrefs();
   const done = useFocusDone();
   const dndReady = useDndReady();
+  // Session options stay folded: the timer and Start come first; a one-line summary shows what's set.
+  const [optionsOpen, setOptionsOpen] = useState(false);
   const now = useNow(session ? 1000 : 60_000);
   const totals = useFocusTotals(now);
   // The session that just ended took today's total past the daily goal.
@@ -96,6 +98,13 @@ export function FocusScreen() {
   };
 
   const locale = lang === 'hi' ? 'hi-IN' : 'en-IN';
+  const optionsSummary = [
+    prefs.tag ? t(`rooms.tags.${prefs.tag}`) : null,
+    prefs.subject ? t(`focus.subjectNames.${prefs.subject}`) : null,
+    prefs.dnd ? t('focus.dndShort') : null,
+    prefs.flip ? t('focus.flipShort') : null,
+    canBlock && blockOn ? t('focus.blockShort') : null,
+  ].filter(Boolean).join(' · ');
   const mode: FocusMode = session ? sessionMode(session) : prefs.mode;
   const plan = planFromPrefs(prefs);
   // What the ring shows: time left in this phase (a stopwatch counts up). `now` can lag a tick
@@ -172,8 +181,8 @@ export function FocusScreen() {
         <AppText variant="muted">{t('focus.sub')}</AppText>
       </View>
 
-      <Card style={s.timerCard}>
-        <StreakRing progress={progress} size={232} stroke={14}>
+      <View style={s.hero}>
+        <StreakRing progress={progress} size={248} stroke={12}>
           {done && !session ? (
             <Ionicons name="checkmark" size={56} color={c.accent} />
           ) : (
@@ -252,90 +261,111 @@ export function FocusScreen() {
               </>
             )}
             {prefs.mode === 'stopwatch' && <AppText variant="caption" center>{t('focus.stopwatchSub')}</AppText>}
-            <View style={s.tagBlock}>
-              <AppText variant="label">{t('focus.focusingOnTitle')}</AppText>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tagRow}>
-                {FOCUS_TAGS.map((id) => {
-                  const on = prefs.tag === id;
-                  return (
-                    <Pressable
-                      key={id}
-                      onPress={() => actions.setFocusPrefs({ tag: on ? undefined : id })}
-                      style={[s.tagChip, { backgroundColor: on ? c.accent : c.surfaceAlt }]}
-                      accessibilityRole="radio"
-                      accessibilityState={{ checked: on }}
-                    >
-                      <AppText style={s.tagText} color={on ? c.onAccent : c.text}>{t(`rooms.tags.${id}`)}</AppText>
-                    </Pressable>
-                  );
-                })}
-              </ScrollView>
-            </View>
-            <View style={s.tagBlock}>
-              <AppText variant="label">{t('focus.subjectTitle')}</AppText>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tagRow}>
-                {mySubjects(prefs).map((id) => {
-                  const on = prefs.subject === id;
-                  return (
-                    <Pressable
-                      key={id}
-                      onPress={() => actions.setFocusPrefs({ subject: on ? undefined : id })}
-                      style={[s.tagChip, { backgroundColor: on ? c.accent : c.surfaceAlt }]}
-                      accessibilityRole="radio"
-                      accessibilityState={{ checked: on }}
-                    >
-                      <AppText style={s.tagText} color={on ? c.onAccent : c.text}>{t(`focus.subjectNames.${id}`)}</AppText>
-                    </Pressable>
-                  );
-                })}
-                <Pressable
-                  onPress={() => navigation.navigate('Study')}
-                  style={[s.tagChip, s.editChip, { borderColor: c.border }]}
-                  accessibilityRole="button"
-                  accessibilityLabel={t('study.subjectsTitle')}
-                >
-                  <Ionicons name="pencil" size={14} color={c.accentText} />
-                  <AppText style={s.tagText} color={c.accentText}>{t('focus.editSubjects')}</AppText>
-                </Pressable>
-              </ScrollView>
-            </View>
-            {dndAvailable && (
-              <>
-                <ToggleRow
-                  title={t('focus.dnd')}
-                  sub={
-                    prefs.dnd && !dndReady.access ? t('focus.dndNeedsAccess')
-                      : prefs.dnd && !dndReady.exact ? t('focus.dndNeedsExact')
-                        : t('focus.dndSub')
-                  }
-                  value={prefs.dnd}
-                  onChange={(on) => {
-                    actions.setFocusPrefs({ dnd: on });
-                    if (on) askDndPermissions();
-                  }}
-                />
-                {prefs.dnd && (!dndReady.access || !dndReady.exact) && (
-                  <Button variant="soft" label={t('focus.dndAllow')} onPress={askDndPermissions} />
-                )}
-              </>
-            )}
-            <ToggleRow title={t('focus.flip')} sub={t('focus.flipSub')} value={prefs.flip} onChange={(flip) => actions.setFocusPrefs({ flip })} />
-            {canBlock && (
-              <ToggleRow
-                title={t('focus.blockReels')}
-                sub={
-                  !premium
-                    ? `${t('premium.title')} · ${t('focus.blockReelsSub')}`
-                    : counterOn ? t('focus.blockReelsSub') : t('focus.blockReelsSetup')
-                }
-                value={blockOn}
-                onChange={setBlock}
-              />
-            )}
             <Button icon="play" label={t('focus.start')} onPress={start} />
           </View>
         )}
-      </Card>
+      </View>
+
+      {!session && !done && (
+        <Card style={s.card}>
+          <Pressable
+            onPress={() => setOptionsOpen(!optionsOpen)}
+            accessibilityRole="button"
+            accessibilityState={{ expanded: optionsOpen }}
+            style={s.optionsHead}
+          >
+            <View style={s.flex}>
+              <AppText variant="heading">{t('focus.optionsTitle')}</AppText>
+              <AppText variant="caption" numberOfLines={1}>{optionsSummary || t('focus.optionsNone')}</AppText>
+            </View>
+            <Ionicons name={optionsOpen ? 'chevron-up' : 'chevron-down'} size={20} color={c.textMuted} />
+          </Pressable>
+          {optionsOpen && (
+            <View style={s.options}>
+              <View style={s.tagBlock}>
+                <AppText variant="label">{t('focus.focusingOnTitle')}</AppText>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tagRow}>
+                  {FOCUS_TAGS.map((id) => {
+                    const on = prefs.tag === id;
+                    return (
+                      <Pressable
+                        key={id}
+                        onPress={() => actions.setFocusPrefs({ tag: on ? undefined : id })}
+                        style={[s.tagChip, { backgroundColor: on ? c.accent : c.surfaceAlt }]}
+                        accessibilityRole="radio"
+                        accessibilityState={{ checked: on }}
+                      >
+                        <AppText style={s.tagText} color={on ? c.onAccent : c.text}>{t(`rooms.tags.${id}`)}</AppText>
+                      </Pressable>
+                    );
+                  })}
+                </ScrollView>
+              </View>
+              <View style={s.tagBlock}>
+                <AppText variant="label">{t('focus.subjectTitle')}</AppText>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tagRow}>
+                  {mySubjects(prefs).map((id) => {
+                    const on = prefs.subject === id;
+                    return (
+                      <Pressable
+                        key={id}
+                        onPress={() => actions.setFocusPrefs({ subject: on ? undefined : id })}
+                        style={[s.tagChip, { backgroundColor: on ? c.accent : c.surfaceAlt }]}
+                        accessibilityRole="radio"
+                        accessibilityState={{ checked: on }}
+                      >
+                        <AppText style={s.tagText} color={on ? c.onAccent : c.text}>{t(`focus.subjectNames.${id}`)}</AppText>
+                      </Pressable>
+                    );
+                  })}
+                  <Pressable
+                    onPress={() => navigation.navigate('Study')}
+                    style={[s.tagChip, s.editChip, { borderColor: c.border }]}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('study.subjectsTitle')}
+                  >
+                    <Ionicons name="pencil" size={14} color={c.accentText} />
+                    <AppText style={s.tagText} color={c.accentText}>{t('focus.editSubjects')}</AppText>
+                  </Pressable>
+                </ScrollView>
+              </View>
+              {dndAvailable && (
+                <>
+                  <ToggleRow
+                    title={t('focus.dnd')}
+                    sub={
+                      prefs.dnd && !dndReady.access ? t('focus.dndNeedsAccess')
+                        : prefs.dnd && !dndReady.exact ? t('focus.dndNeedsExact')
+                          : t('focus.dndSub')
+                    }
+                    value={prefs.dnd}
+                    onChange={(on) => {
+                      actions.setFocusPrefs({ dnd: on });
+                      if (on) askDndPermissions();
+                    }}
+                  />
+                  {prefs.dnd && (!dndReady.access || !dndReady.exact) && (
+                    <Button variant="soft" label={t('focus.dndAllow')} onPress={askDndPermissions} />
+                  )}
+                </>
+              )}
+              <ToggleRow title={t('focus.flip')} sub={t('focus.flipSub')} value={prefs.flip} onChange={(flip) => actions.setFocusPrefs({ flip })} />
+              {canBlock && (
+                <ToggleRow
+                  title={t('focus.blockReels')}
+                  sub={
+                    !premium
+                      ? `${t('premium.title')} · ${t('focus.blockReelsSub')}`
+                      : counterOn ? t('focus.blockReelsSub') : t('focus.blockReelsSetup')
+                  }
+                  value={blockOn}
+                  onChange={setBlock}
+                />
+              )}
+            </View>
+          )}
+        </Card>
+      )}
 
       <Pressable
         onPress={() => navigation.navigate('Study')}
@@ -487,7 +517,9 @@ const s = StyleSheet.create({
   flex: { flex: 1 },
   full: { alignSelf: 'stretch', gap: 12 },
   header: { gap: 2, marginBottom: 16 },
-  timerCard: { alignItems: 'center', gap: 18 },
+  hero: { alignItems: 'center', gap: 18, marginTop: 8 },
+  optionsHead: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  options: { gap: 14, marginTop: 16 },
   tagBlock: { gap: 8 },
   tagRow: { gap: 8, paddingRight: 8 },
   tagChip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: radius.pill },
