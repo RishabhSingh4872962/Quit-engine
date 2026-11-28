@@ -19,6 +19,7 @@ import { MilestonesScreen } from '../screens/Milestones';
 import { AddHabitScreen, OnboardingScreen } from '../screens/Onboarding';
 import { PauseScreen } from '../screens/Pause';
 import { PaywallScreen } from '../screens/Paywall';
+import { ReelCheckScreen } from '../screens/ReelCheck';
 import { ReelCounterSetupScreen } from '../screens/ReelCounterSetup';
 import { ReelBlockingScreen } from '../screens/ReelBlocking';
 import { ReelStatsScreen } from '../screens/ReelStats';
@@ -81,6 +82,8 @@ const RootStack = createNativeStackNavigator({
         Paywall: { screen: PaywallScreen, options: { presentation: 'modal', animation: 'slide_from_bottom' } },
         ReelCounterSetup: { screen: ReelCounterSetupScreen, options: { presentation: 'modal', animation: 'slide_from_bottom' } },
         ReelBlocking: { screen: ReelBlockingScreen, options: { presentation: 'modal', animation: 'slide_from_bottom' } },
+        // "Check that counting works" (Settings → Reel counter)
+        ReelCheck: { screen: ReelCheckScreen, options: { presentation: 'modal', animation: 'slide_from_bottom' } },
         // Reels history; also opened by the weekly summary notification: quitengine://reels
         ReelStats: { screen: ReelStatsScreen, linking: 'reels', options: { presentation: 'modal', animation: 'slide_from_bottom' } },
         // Opened by the reel counter at the daily limit: quitengine://pause?app=<package>

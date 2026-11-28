@@ -35,6 +35,10 @@ features described to the user, with a prominent in-app disclosure, affirmative 
 >    pause and blocking rules apply (Back leaves the page). The address is compared on the phone and never
 >    stored or sent; page content, history and typed text are not read.
 >
+>    If an app changes its screens and those view IDs stop matching, a backup checks only whether the app's own
+>    "Reels"/"Shorts" bottom-bar tab is the selected one (its label), and counts the next reel when the main list's
+>    page view changes (view identity, not content). The app then shows a note that counts may be less exact.
+>
 > Every action is a fixed rule the user set up ("if the reel count reaches your limit, then pause"). The service
 > does not read messages, comments, captions, passwords or text input, does not act in other apps, and does not
 > send anything off the device. All counts are stored only on the phone. Users can turn it off at any time in

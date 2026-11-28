@@ -72,6 +72,8 @@ class ReelGuardService : AccessibilityService() {
   private var blockTries = 0
   private var lastStudyCheck = 0L
   private var misses = 0
+  private var lastTallSig = "" // debug calibration only
+  private var fallback = false // the current session was found by the reels tab label, not by view IDs
   private val debug by lazy { (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0 }
 
   // "Pause before opening" and app opens: the watched app in front right now (null = something else).
@@ -177,10 +179,14 @@ class ReelGuardService : AccessibilityService() {
 
   private fun onScrolled(event: AccessibilityEvent, pkg: String, rule: ReelRule) {
     val id = event.source?.viewIdResourceName?.substringAfter(":id/")
-    if (debug) dlog("scroll $pkg id=$id from=${event.fromIndex} to=${event.toIndex}")
-    if (id == null || id !in rule.pagerIds) return
-    if (active != pkg) enter(pkg)
-    if (rule.pageIds.isNotEmpty()) return // counted by page changes instead (checkScreen)
+    if (debug) dlog("scroll $pkg id=$id from=${event.fromIndex} to=${event.toIndex} class=${event.className}")
+    val known = id != null && id in rule.pagerIds
+    // Backup mode: the pager's ID is unknown, so any full list/pager that moves to another item counts.
+    val generic = !known && fallback && active == pkg && event.fromIndex >= 0 &&
+      event.className?.toString()?.let { "RecyclerView" in it || "ViewPager" in it } == true
+    if (!known && !generic) return
+    if (known && active != pkg) enter(pkg)
+    if (known && rule.pageIds.isNotEmpty()) return // counted by page changes instead (checkScreen)
     val from = event.fromIndex
     if (from >= 0) {
       if (from != event.toIndex) return // still between two reels
@@ -206,9 +212,12 @@ class ReelGuardService : AccessibilityService() {
     val pkg = root?.packageName?.toString()
     val rule = pkg?.let { rules[it] }
     val web = if (root != null && rule == null) pkg?.let { webRules[it] }?.let { webShort(root, it) } else null
-    val open = root != null && rule != null && rule.screenIds.any { id ->
+    val byIds = root != null && rule != null && rule.screenIds.any { id ->
       root.findAccessibilityNodeInfosByViewId("$pkg:id/$id").isNotEmpty()
     }
+    // Backup when the app changed its screens: its reels tab is the selected one in the bottom bar.
+    val byTab = !byIds && root != null && rule != null && rule.tabs.isNotEmpty() && selectedTab(root, rule.tabs)
+    val open = byIds || byTab
     val pipPkg = if (open || web != null) null else pipReels(apps)
     if (web != null) {
       // A short in a browser counts for its app (YouTube / Instagram): same limit, pauses and blocks.
@@ -222,8 +231,16 @@ class ReelGuardService : AccessibilityService() {
       misses = 0
       inPip = false
       if (active != pkg && isBlocked(pkg)) return block(pkg)
-      if (active != pkg || via != null) enter(pkg)
-      if (rule.pageIds.isNotEmpty()) trackPage(root, pkg, rule)
+      if (active != pkg || via != null) {
+        enter(pkg)
+        fallback = byTab
+        if (byTab) {
+          ReelStore.markFallback(this, pkg)
+          if (debug) dlog("fallback $pkg (tab label)")
+        }
+      }
+      if (byIds && rule.pageIds.isNotEmpty()) trackPage(root, pkg, rule)
+      if (byTab) trackGenericPage(root, pkg)
     } else if (pipPkg != null) {
       if (isBlocked(pipPkg)) return block(pipPkg)
       misses = 0 // still watching, in the floating window: time keeps counting
@@ -277,6 +294,93 @@ class ReelGuardService : AccessibilityService() {
   }
 
   /**
+   * Backup counting without view IDs: the largest scrolling container on screen is the reels pager,
+   * and its biggest child is the reel on screen. A different child (view identity, not content) is the
+   * next reel, like trackPage.
+   */
+  private fun trackGenericPage(root: AccessibilityNodeInfo, pkg: String) {
+    val bounds = Rect()
+    fun box(n: AccessibilityNodeInfo) = Rect().also { n.getBoundsInScreen(it) }
+    var pager: AccessibilityNodeInfo? = null
+    var best = 0L
+    var seen = 0
+    fun walk(n: AccessibilityNodeInfo?, depth: Int) {
+      if (n == null || depth > 30 || ++seen > 400) return
+      // Apps don't always mark their pager as scrollable (YouTube Shorts doesn't): lists and pagers by class too.
+      val cls = n.className?.toString().orEmpty()
+      if (n.isScrollable || "RecyclerView" in cls || "ViewPager" in cls) {
+        val b = box(n)
+        val area = b.width().toLong() * b.height()
+        if (area >= best) { // ties: the deeper one (the reels list inside a full-screen tab pager)
+          best = area
+          pager = n
+        }
+      }
+      for (i in 0 until n.childCount) walk(n.getChild(i), depth + 1)
+    }
+    walk(root, 0)
+    if (debug) {
+      // Calibration: full-height views (class, id, identity, depth), logged when the set changes.
+      val screenH = box(root).height()
+      val tall = mutableListOf<String>()
+      var n2 = 0
+      fun scan(n: AccessibilityNodeInfo?, depth: Int) {
+        if (n == null || depth > 30 || ++n2 > 400) return
+        if (box(n).height() >= screenH * 3 / 4) {
+          tall += "${depth}:${n.className?.toString()?.substringAfterLast('.')}:${n.viewIdResourceName?.substringAfter(":id/") ?: "-"}:${n.hashCode()}${if (n.isScrollable) ":S" else ""}:c${n.childCount}"
+        }
+        for (i in 0 until n.childCount) scan(n.getChild(i), depth + 1)
+      }
+      scan(root, 0)
+      val sig = tall.joinToString(" ")
+      if (sig != lastTallSig) {
+        lastTallSig = sig
+        dlog("tall $sig")
+      }
+    }
+    val p = pager ?: return
+    val pagerHeight = box(p).height()
+    var page: AccessibilityNodeInfo? = null
+    var pageHeight = 0
+    for (i in 0 until p.childCount) {
+      val child = p.getChild(i) ?: continue
+      val h = bounds.also { child.getBoundsInScreen(it) }.height()
+      if (h > pageHeight) {
+        pageHeight = h
+        page = child
+      }
+    }
+    val current = page ?: return
+    if (pageHeight < pagerHeight * 3 / 4) return // mid-swipe: wait until it settles
+    val id = current.hashCode()
+    if (debug && id != lastPage) dlog("backup page in ${p.className} children=${p.childCount}")
+    val settling = SystemClock.elapsedRealtime() - enteredAt < SETTLE_MS
+    when {
+      lastPage == null || settling -> lastPage = id
+      lastPage == id -> Unit
+      else -> {
+        lastPage = id
+        counted(pkg)
+        if (debug) dlog("next reel $pkg (backup)")
+      }
+    }
+  }
+
+  /** A node labelled like the reels tab ("Reels", "Shorts"…) that is selected (or inside a selected one). */
+  private fun selectedTab(root: AccessibilityNodeInfo, labels: List<String>): Boolean {
+    var seen = 0
+    fun walk(node: AccessibilityNodeInfo?, depth: Int, selectedAbove: Boolean): Boolean {
+      if (node == null || depth > 30 || ++seen > 400) return false
+      val selected = selectedAbove || node.isSelected
+      val label = (node.contentDescription ?: node.text)?.toString()?.trim()
+      if (selected && label != null && labels.any { it.equals(label, ignoreCase = true) }) return true
+      for (i in 0 until node.childCount) if (walk(node.getChild(i), depth + 1, selected)) return true
+      return false
+    }
+    return walk(root, 0, false)
+  }
+
+  /**
    * In a browser, the short-video page shown in the address bar: the app it counts for and the
    * page's id. Only the address bar's text is read (not while the user is typing in it), matched
    * here and never stored.
@@ -308,6 +412,7 @@ class ReelGuardService : AccessibilityService() {
     if (active != null) exit()
     active = pkg
     via = browser
+    fallback = false
     misses = 0
     lastIndex = UNKNOWN_START
     lastPage = null
@@ -632,6 +737,15 @@ class ReelGuardService : AccessibilityService() {
     }
     walk(rootInActiveWindow, 0)
     dlog("screen $pkg ids=$ids")
+    // Calibration (debug builds only): short labels and whether they're selected (* = selected).
+    val labels = mutableListOf<String>()
+    fun labelWalk(node: AccessibilityNodeInfo?, depth: Int) {
+      if (node == null || depth > 25 || labels.size > 60) return
+      (node.contentDescription ?: node.text)?.toString()?.takeIf { it.length in 1..20 }?.let { labels += if (node.isSelected) "$it*" else it }
+      for (i in 0 until node.childCount) labelWalk(node.getChild(i), depth + 1)
+    }
+    labelWalk(rootInActiveWindow, 0)
+    dlog("labels $pkg $labels")
   }
 
   /**

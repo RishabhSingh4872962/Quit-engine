@@ -62,6 +62,9 @@ data class ReelRule(
   val pagerIds: List<String>, // the vertical pager whose scroll means "next reel"
   val pageIds: List<String> = emptyList(), // one reel's page: a different page view on screen = next reel
   val pip: Boolean = false, // the app's picture-in-picture window only ever plays reels (Instagram)
+  // Backup when the view IDs stop matching (the app changed its screens): the reels tab's label in
+  // the bottom bar, selected. Coarser (no reels opened from the feed, rough swipe counts), but time counts.
+  val tabs: List<String> = emptyList(),
 )
 
 /** A browser and its address bar's view IDs: the only thing "count in browsers" reads there. */
@@ -92,11 +95,13 @@ object ReelStore {
     {"package":"com.instagram.android",
      "screen":["clips_viewer_view_pager","clips_viewer_root","root_clips_layout","clips_video_container"],
      "pager":["clips_viewer_view_pager","clips_viewer_root","root_clips_layout"],
-     "pip":true},
+     "pip":true,
+     "tab":["Reels","रील्स"]},
     {"package":"com.google.android.youtube",
      "screen":["reel_recycler","reel_watch_player","reel_player_page_container"],
      "pager":["reel_recycler"],
-     "page":["reel_player_page_container"]}
+     "page":["reel_player_page_container"],
+     "tab":["Shorts","शॉर्ट्स"]}
   ]"""
 
   /**
@@ -121,8 +126,19 @@ object ReelStore {
   private fun prefs(ctx: Context): SharedPreferences = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
   private fun day(time: Long): String = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date(time))
 
-  fun rules(ctx: Context): List<ReelRule> =
-    parseRules(prefs(ctx).getString(RULES_KEY, null)) ?: parseRules(DEFAULT_RULES).orEmpty()
+  fun rules(ctx: Context): List<ReelRule> {
+    val defaults = parseRules(DEFAULT_RULES).orEmpty()
+    val saved = parseRules(prefs(ctx).getString(RULES_KEY, null)) ?: return defaults
+    // Remote rules without tab labels keep the built-in ones, so the backup still works.
+    return saved.map { r -> if (r.tabs.isNotEmpty()) r else r.copy(tabs = defaults.firstOrNull { it.pkg == r.pkg }?.tabs.orEmpty()) }
+  }
+
+  /** Times the backup (tab label) detection was used for this app today: the app shows a note. */
+  fun markFallback(ctx: Context, pkg: String) {
+    val key = "${day(System.currentTimeMillis())}|$pkg|fb"
+    val p = prefs(ctx)
+    p.edit().putInt(key, p.getInt(key, 0) + 1).apply()
+  }
 
   /** Saves rules from JS (Remote Config). Invalid or empty JSON goes back to the built-in defaults. */
   fun saveRules(ctx: Context, json: String?) {
@@ -140,6 +156,7 @@ object ReelStore {
         o.getJSONArray("pager").strings(),
         o.optJSONArray("page")?.strings().orEmpty(),
         o.optBoolean("pip", false),
+        o.optJSONArray("tab")?.strings().orEmpty(),
       )
     }
   } catch (e: Exception) {
@@ -341,6 +358,7 @@ object ReelStore {
           "ms" -> app + ("ms" to (value as Long).toDouble())
           "o" -> app + ("opens" to (value as Int))
           "s" -> app + ("skips" to (value as Int))
+          "fb" -> app + ("fallback" to (value as Int))
           else -> app
         }
       }

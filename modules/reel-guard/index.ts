@@ -4,7 +4,7 @@ import type { EventSubscription } from 'expo';
 export interface ReelDay {
   day: string; // YYYY-MM-DD, local time
   // by package id; opens = times the app came to the front, skips = "Not now" on the pause before opening
-  apps: Record<string, { count: number; ms: number; opens?: number; skips?: number }>;
+  apps: Record<string, { count: number; ms: number; opens?: number; skips?: number; fallback?: number }>;
   hours: number[]; // reels per hour of the day (0–23), all apps together
 }
 

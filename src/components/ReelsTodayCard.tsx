@@ -28,6 +28,8 @@ export function ReelsTodayCard({ apps }: { apps: App[] }) {
   const used = apps.filter((a) => (today?.apps[a.id]?.count ?? 0) > 0);
   const opens = apps.reduce((n, a) => n + (today?.apps[a.id]?.opens ?? 0), 0);
   const skips = apps.reduce((n, a) => n + (today?.apps[a.id]?.skips ?? 0), 0);
+  // The app changed its screens and the backup detection was used today (counts may miss some).
+  const changed = apps.filter((a) => today?.apps[a.id]?.fallback).map((a) => a.name);
 
   return (
     <Card style={s.card}>
@@ -52,6 +54,9 @@ export function ReelsTodayCard({ apps }: { apps: App[] }) {
             </AppText>
             {total.count === 0 && <AppText variant="caption" style={s.tip}>{t('reels.restartTip')}</AppText>}
             {opens > 0 && <AppText variant="caption" style={s.tip}>{t('gate.todayLine', { opens, skips })}</AppText>}
+            {changed.length > 0 && (
+              <AppText variant="caption" style={s.tip}>{t('reels.fallbackNote', { apps: changed.join(', ') })}</AppText>
+            )}
           </View>
           {limit > 0 ? (
             <View style={s.limit}>

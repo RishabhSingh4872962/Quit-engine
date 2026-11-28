@@ -277,6 +277,7 @@ function ReelCounterSettings() {
           )}
         </View>
       )}
+      {enabled && <Button variant="ghost" label={t('reelCheck.title')} onPress={() => navigation.navigate('ReelCheck')} />}
       {enabled ? (
         <Button variant="soft" icon="settings-outline" label={t('reels.settingsManage')} onPress={openReelSettings} />
       ) : (
