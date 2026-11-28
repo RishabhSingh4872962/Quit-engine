@@ -135,6 +135,7 @@ export function LearnScreen({ route }: Props) {
                       onPress={() => answer(k)}
                       disabled={shown}
                       accessibilityRole="button"
+                      accessibilityLabel={o} // not the check/cross glyph
                       accessibilityState={{ disabled: shown, selected: k === picked }}
                       accessibilityHint={shown && isRight ? t('learn.right') : shown && k === picked ? t('learn.wrong') : undefined}
                       style={[

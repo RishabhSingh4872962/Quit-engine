@@ -271,6 +271,7 @@ export function FocusScreen() {
           <Pressable
             onPress={() => setOptionsOpen(!optionsOpen)}
             accessibilityRole="button"
+            accessibilityLabel={`${t('focus.optionsTitle')}, ${optionsSummary || t('focus.optionsNone')}`}
             accessibilityState={{ expanded: optionsOpen }}
             style={s.optionsHead}
           >
@@ -370,6 +371,15 @@ export function FocusScreen() {
       <Pressable
         onPress={() => navigation.navigate('Study')}
         accessibilityRole="button"
+        accessibilityLabel={[
+          `${t('focus.today')}: ${formatDuration(totals.today * 60_000, t)}`,
+          `${t('focus.week')}: ${formatDuration(totals.week * 60_000, t)}`,
+          prefs.goal > 0
+            ? totals.today >= prefs.goal
+              ? t('study.goalMet')
+              : t('study.goalProgress', { done: formatDuration(totals.today * 60_000, t), goal: formatDuration(prefs.goal * 60_000, t) })
+            : '',
+        ].filter(Boolean).join(', ')}
         accessibilityHint={t('study.open')}
         style={({ pressed }) => pressed && s.pressed}
       >
