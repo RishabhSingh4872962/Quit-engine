@@ -24,6 +24,11 @@ export interface HabitConfig {
    * Ids are stored on the phone only; labels in both languages.
    */
   triggers?: { id: string; label: Record<Lang, string> }[];
+  /**
+   * Money saved (Home card): suggested daily costs in ₹; the user picks one or types their own.
+   * Saved = days free in total × daily cost, so a slip never takes money away.
+   */
+  savings?: { suggestions: number[] };
   /** Exercises offered by the urge button. */
   urgeExercises: ('breathing' | 'timer')[];
   /** Streak milestones in days. */

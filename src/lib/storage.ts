@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { createMMKV, useMMKVBoolean, useMMKVObject, useMMKVString } from 'react-native-mmkv';
+import { createMMKV, useMMKVBoolean, useMMKVNumber, useMMKVObject, useMMKVString } from 'react-native-mmkv';
 import { HABIT_LIST, HABITS, isHabitId } from '../habits';
 import { HabitConfig, HabitId, Lang } from '../habits/types';
 
@@ -167,4 +167,14 @@ export const writeMilestoneAlerts = (on: boolean) => storage.set(MILESTONE_ALERT
 export function useMilestoneAlerts(): boolean {
   const [v] = useMMKVBoolean(MILESTONE_ALERTS_KEY, storage);
   return v ?? true;
+}
+
+// ---------- Money saved (habits with `savings`): what the habit cost a day, in ₹. Phone only. ----------
+
+const spendKey = (id: HabitId) => `savings.${id}`;
+export const writeDailySpend = (id: HabitId, rupees: number) => storage.set(spendKey(id), rupees);
+
+export function useDailySpend(id: HabitId): number | undefined {
+  const [v] = useMMKVNumber(spendKey(id), storage);
+  return v;
 }

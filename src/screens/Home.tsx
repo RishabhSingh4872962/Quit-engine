@@ -21,6 +21,7 @@ import { Card } from '../components/Card';
 import { HabitSwitcher } from '../components/HabitSwitcher';
 import { IconButton } from '../components/IconButton';
 import { JournalCard } from '../components/JournalCard';
+import { MoneyCard } from '../components/MoneyCard';
 import { AskCard } from './Buddy';
 import { Screen } from '../components/Screen';
 import { ReelsTodayCard } from '../components/ReelsTodayCard';
@@ -127,6 +128,12 @@ export function HomeScreen() {
       {started && (
         <Animated.View key={`journal-${habit.id}`} entering={FadeInDown.delay(330).duration(600)} style={s.screenTime}>
           <JournalCard habit={habit} now={now} />
+        </Animated.View>
+      )}
+
+      {started && habit.savings && (
+        <Animated.View key={`money-${habit.id}`} entering={FadeInDown.delay(340).duration(600)} style={s.screenTime}>
+          <MoneyCard habit={habit} now={now} />
         </Animated.View>
       )}
 

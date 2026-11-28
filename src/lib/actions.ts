@@ -9,6 +9,7 @@ import {
   readTracked,
   writeActive,
   writeCheckin,
+  writeDailySpend,
   writeMilestoneAlerts,
   writePaywallOffered,
   writeScreenTimeOff,
@@ -131,6 +132,11 @@ export const actions = {
     addUrge(id, { at: Date.now(), ...diary });
     addCare(CARE.urge);
     track('urge_exercise_done');
+  },
+
+  /** Money saved: what the habit cost a day (₹). Phone only, no analytics. */
+  setDailySpend(id: HabitId, rupees: number) {
+    writeDailySpend(id, rupees);
   },
 
   /** Today's promise (Home). */

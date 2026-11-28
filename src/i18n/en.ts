@@ -691,6 +691,18 @@ export const en = {
     roomSub: "Grows with everyone's focus here today: {{time}} together.",
     roomNext: '{{time}} more to the next stage',
   },
+  money: {
+    title: 'Money saved',
+    ask: 'About how much did it cost you a day?',
+    custom: 'Or type ₹ a day',
+    save: 'Save',
+    change: 'Change',
+    line_one: '{{perDay}} a day · {{count}} day free in total',
+    line_other: '{{perDay}} a day · {{count}} days free in total',
+    month: "That's about {{amount}} a month back in your pocket.",
+    first: 'Your first {{perDay}} is saved after your first day free.',
+    private: 'Only on this phone. A slip never takes saved money away.',
+  },
   learn: {
     title: 'Learn instead',
     sub_one: 'Get {{need}} of {{total}} right to earn {{count}} reel.',

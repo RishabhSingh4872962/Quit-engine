@@ -19,6 +19,7 @@ export const nicotine: HabitConfig = {
   ],
   urgeExercises: ['breathing', 'timer'],
   milestones: [1, 3, 7, 14, 30, 90, 180, 365],
+  savings: { suggestions: [20, 50, 100, 200, 400] }, // ₹ a day: a few cigarettes or pouches … a pack or more
   pledge: { en: "Today I won't smoke or chew tobacco.", hi: 'आज का वादा: न सिगरेट, न तंबाकू।' },
   triggers: [
     { id: 'meal', label: { en: 'After a meal', hi: 'खाने के बाद' } },
