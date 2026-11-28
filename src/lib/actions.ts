@@ -36,6 +36,7 @@ import {
   writeSession,
 } from './focus';
 import {
+  addReelExtraToday,
   dayTotals,
   endOfDay,
   localDay,
@@ -154,7 +155,7 @@ export const actions = {
   setReelLimit(limit: number) {
     writeReelLimit(limit);
     syncReelLimit();
-    resetReelPausesToday(); // a new limit means fresh rules for today
+    resetPausesKeepEarned(); // a new limit means fresh rules for today
     markReelBase(); // reels already watched today don't count against the new limit
   },
 
@@ -172,7 +173,7 @@ export const actions = {
 
   /** Undo "No more pauses today". */
   resumeReelPauses() {
-    resetReelPausesToday();
+    resetPausesKeepEarned();
   },
 
   /**
@@ -319,6 +320,13 @@ function armFocusTimer() {
   const s = readSession();
   const wait = s ? focusEnd(s) - Date.now() + 250 : 0;
   focusTimer = s ? setTimeout(() => actions.checkFocus(), Math.max(0, Math.min(wait, 60_000))) : null;
+}
+
+/** Clears today's pause state in the service ("5 more", pauses off); reels earned today stay added. */
+function resetPausesKeepEarned() {
+  resetReelPausesToday();
+  const earned = readEarned(localDay(Date.now()));
+  if (earned) addReelExtraToday(earned);
 }
 
 function finishFocus() {

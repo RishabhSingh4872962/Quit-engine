@@ -97,6 +97,7 @@ export function allowMoreReelsToday(n: number, reelAppIds: string[]) {
   ReelGuard?.addExtraToday(extra - state.extraToday);
 }
 export const stopPausesToday = () => ReelGuard?.setPausesOffToday();
+export const addReelExtraToday = (n: number) => ReelGuard?.addExtraToday(n);
 export const resetReelPausesToday = () => ReelGuard?.resetToday();
 export const openReelApp = (pkg: string) => ReelGuard?.openApp(pkg) ?? false;
 export const readReelDays = (days: number): ReelDay[] => ReelGuard?.getStats(days) ?? [];
