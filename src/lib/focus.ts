@@ -20,6 +20,7 @@ export interface FocusSession {
   brk?: number; // pomodoro: break minutes
   rounds?: number; // pomodoro: focus rounds
   tag?: FocusTag; // what I'm focusing on (shown on my tile in rooms)
+  earn?: number; // reels earned when it completes (started from the pause screen)
 }
 
 /** What the next session will be: a mode and its lengths. */
@@ -142,6 +143,7 @@ export function useFocusSession(): FocusSession | null {
 export interface FocusDone {
   minutes: number;
   complete: boolean; // false = ended early
+  earned?: number; // reels added to today's limit
 }
 
 const DONE_KEY = 'focus.done';

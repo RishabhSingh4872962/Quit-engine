@@ -119,7 +119,7 @@ export function FocusScreen() {
 
   // A stopwatch ends when you stop it, so no "are you sure".
   const confirmEnd = () =>
-    mode === 'stopwatch' ? actions.endFocus() : Alert.alert(t('focus.endTitle'), t('focus.endBody'), [
+    mode === 'stopwatch' ? actions.endFocus() : Alert.alert(t('focus.endTitle'), t(session?.earn ? 'focus.endEarnBody' : 'focus.endBody'), [
       { text: t('focus.keepGoing'), style: 'cancel' },
       { text: t('focus.endConfirm'), onPress: actions.endFocus },
     ]);
@@ -167,6 +167,9 @@ export function FocusScreen() {
         {session ? (
           <View style={s.full}>
             {session.tag && <AppText variant="caption" center>{t('focus.focusingOn', { tag: t(`rooms.tags.${session.tag}`) })}</AppText>}
+            {session.earn ? (
+              <AppText variant="caption" center color={c.accentText}>{t('focus.earnRunning', { count: session.earn })}</AppText>
+            ) : null}
             {session.blockReels && premium && (
               <AppText variant="caption" center>
                 {t('focus.blockingNow', {
@@ -187,6 +190,9 @@ export function FocusScreen() {
             <AppText variant="muted" center>
               {t(done.complete ? 'focus.doneBody' : 'focus.doneEarlyBody', { count: done.minutes })}
             </AppText>
+            {done.earned ? (
+              <AppText variant="caption" center color={c.accentText} style={s.earned}>{t('focus.earned', { count: done.earned })}</AppText>
+            ) : null}
             <Button icon="play" label={t('focus.again')} onPress={start} />
             <Button variant="ghost" label={t('focus.ok')} onPress={actions.dismissFocusDone} />
           </Animated.View>
@@ -376,6 +382,7 @@ const s = StyleSheet.create({
   tagRow: { gap: 8, paddingRight: 8 },
   tagChip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: radius.pill },
   tagText: { fontWeight: '600' },
+  earned: { fontWeight: '600' },
   clock: { fontFamily: fonts.bold, fontSize: 44, lineHeight: 54, includeFontPadding: false },
   totals: { flexDirection: 'row', alignItems: 'center', marginTop: 14 },
   stat: { flex: 1, alignItems: 'center', gap: 2 },

@@ -20,6 +20,7 @@ import { HABITS } from '../habits';
 import { BlockPrefs, syncReelBlock, writeBlock } from './blocking';
 import { GatePrefs, syncGate, writeGate } from './gate';
 import { addUrge, checkInDay, clearJournal, NOTE_MAX, writeDay } from './journal';
+import { earnReels, readEarned } from './earn';
 import {
   addFocusMinutes,
   focusedMinutes,
@@ -194,7 +195,7 @@ export const actions = {
         const d = days[i];
         if (d.day < startDay || d.day <= lastSlip) break;
         const before = d.day === storage.getString(BASE_DAY_KEY) ? storage.getNumber(BASE_COUNT_KEY) ?? 0 : 0;
-        if (dayTotals(d, apps).count - before <= limit) continue;
+        if (dayTotals(d, apps).count - before <= limit + readEarned(d.day)) continue; // earned reels don't count
         storage.set(`reels.slipDay.${id}`, d.day);
         this.relapse(id, d.day === today ? Date.now() : endOfDay(d.day));
         break;
@@ -234,15 +235,17 @@ export const actions = {
   /**
    * Starts a focus session. With blockReels (Premium) the reel service blocks reels until it ends.
    * `endsAt` lines the end up with a room's round (the start moves back by under a minute).
+   * `earn`: reels added to today's limit if the session is completed (pause screen).
    */
-  startFocus(plan: FocusPlan, blockReels: boolean, endsAt?: number) {
+  startFocus(plan: FocusPlan, blockReels: boolean, opts: { endsAt?: number; earn?: number } = {}) {
     writeFocusDone(null);
     const tag = readFocusPrefs().tag;
     writeSession({
-      startedAt: endsAt ? endsAt - plan.minutes * 60_000 : Date.now(),
+      startedAt: opts.endsAt ? opts.endsAt - plan.minutes * 60_000 : Date.now(),
       blockReels,
       ...plan,
       ...(tag ? { tag } : {}),
+      ...(opts.earn ? { earn: opts.earn } : {}),
     });
     armFocusTimer();
     syncReelBlock();
@@ -278,7 +281,8 @@ export const actions = {
     if (Date.now() < focusEnd(s)) return armFocusTimer();
     const minutes = focusedMinutes(s, focusEnd(s)); // pomodoro: focus rounds only
     addFocusMinutes(focusEnd(s), minutes);
-    writeFocusDone({ minutes, complete: true });
+    const earned = s.earn ? earnReels(s.earn) : 0; // only a completed session earns
+    writeFocusDone({ minutes, complete: true, ...(earned ? { earned } : {}) });
     finishFocus();
     void shareFocus(minutes, true); // "finished a 50-min session" in the room, + leaderboard
     track('focus_completed', { minutes, mode: sessionMode(s) });

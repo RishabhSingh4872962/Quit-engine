@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Alert, Pressable, Share, StyleSheet, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { StaticScreenProps, useNavigation } from '@react-navigation/native';
+import { StackActions, StaticScreenProps, useNavigation } from '@react-navigation/native';
 import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { useLang } from '../i18n';
@@ -109,7 +109,7 @@ export function RoomScreen({ route }: Props) {
   const focusWithRoom = () => {
     if (!room) return;
     const { minutes, endsAt } = roomSession(room, now, prefs.minutes);
-    actions.startFocus({ mode: 'timer', minutes }, premium && counterOn && prefs.blockReels, endsAt);
+    actions.startFocus({ mode: 'timer', minutes }, premium && counterOn && prefs.blockReels, { endsAt });
   };
 
   const menu = () => {
@@ -193,7 +193,7 @@ export function RoomScreen({ route }: Props) {
           <Button icon="enter-outline" label={t('rooms.join')} onPress={join} disabled={busy || !room} />
         ) : session && sessionLeft > 0 ? (
           <>
-            <Button icon="timer-outline" variant="soft" label={stopwatch && session ? t('rooms.focusingSoFar', { time: clock(now - session.startedAt) }) : t('rooms.focusing', { time: clock(sessionLeft) })} onPress={() => navigation.navigate('Main', { screen: 'Focus' })} />
+            <Button icon="timer-outline" variant="soft" label={stopwatch && session ? t('rooms.focusingSoFar', { time: clock(now - session.startedAt) }) : t('rooms.focusing', { time: clock(sessionLeft) })} onPress={() => navigation.dispatch(StackActions.popTo('Main', { screen: 'Focus' }))} />
           </>
         ) : (
           room && (

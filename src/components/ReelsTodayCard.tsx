@@ -3,8 +3,10 @@ import { StyleSheet, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
+import { useEarnedToday } from '../lib/earn';
 import { formatDuration } from '../lib/format';
 import { dayTotals, useReelCounter, useReelLimit } from '../lib/reels';
+import { useNow } from '../lib/streak';
 import { fonts, radius, useColors } from '../theme';
 import { AppText } from './AppText';
 import { Button } from './Button';
@@ -18,7 +20,9 @@ export function ReelsTodayCard({ apps }: { apps: App[] }) {
   const c = useColors();
   const navigation = useNavigation();
   const { enabled, stats } = useReelCounter(1);
-  const limit = useReelLimit();
+  const earned = useEarnedToday(useNow());
+  const baseLimit = useReelLimit();
+  const limit = baseLimit > 0 ? baseLimit + earned : 0; // earned reels raise today's limit
   const today = stats[stats.length - 1];
   const total = dayTotals(today, apps.map((a) => a.id));
   const used = apps.filter((a) => (today?.apps[a.id]?.count ?? 0) > 0);
@@ -62,7 +66,11 @@ export function ReelsTodayCard({ apps }: { apps: App[] }) {
                   ]}
                 />
               </View>
-              <AppText variant="caption">{t('reels.progress', { count: total.count, limit })}</AppText>
+              <AppText variant="caption">
+                {earned > 0
+                  ? `${t('reels.progress', { count: total.count, limit })} · ${t('pause.earnedToday', { count: earned })}`
+                  : t('reels.progress', { count: total.count, limit })}
+              </AppText>
             </View>
           ) : (
             <Button
