@@ -92,7 +92,7 @@ function CheckInForm({ habit, now, onSaved, onClose }: {
     const canSlip = kept === false && state.streakStart !== null && localDay(state.streakStart) < checkInDay(now);
     return (
       <View style={s.done}>
-        <Animated.View entering={ZoomIn.springify()} style={[s.badge, { backgroundColor: c.accentSoft }]}>
+        <Animated.View entering={ZoomIn.springify()} style={[s.badge, { backgroundColor: c.accentSoft, borderColor: c.glow, boxShadow: `0px 0px 48px ${c.glow}` }]}>
           {mood ? <AppText style={s.badgeEmoji}>{MOODS[mood - 1]}</AppText> : <Ionicons name="checkmark" size={48} color={c.accent} />}
         </Animated.View>
         <Animated.View entering={FadeIn.delay(150)} style={s.doneText}>
@@ -161,7 +161,7 @@ const s = StyleSheet.create({
   card: { gap: 12 },
   input: { borderRadius: radius.md, paddingHorizontal: 14, paddingVertical: 12, fontSize: 16, lineHeight: 22, minHeight: 96 },
   done: { alignItems: 'center', gap: 16, paddingTop: 48 },
-  badge: { width: 120, height: 120, borderRadius: 60, alignItems: 'center', justifyContent: 'center' },
+  badge: { width: 120, height: 120, borderRadius: 60, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
   badgeEmoji: { fontSize: 56, lineHeight: 68 },
   doneText: { gap: 6, marginBottom: 12 },
   stretch: { alignSelf: 'stretch' },

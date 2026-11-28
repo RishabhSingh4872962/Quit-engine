@@ -159,7 +159,7 @@ export function LearnScreen({ route }: Props) {
         </>
       ) : (
         <View style={s.result}>
-          <Animated.View entering={ZoomIn.springify()} style={[s.badge, { backgroundColor: c.accentSoft }]}>
+          <Animated.View entering={ZoomIn.springify()} style={[s.badge, { backgroundColor: c.accentSoft, borderColor: c.glow, boxShadow: `0px 0px 48px ${c.glow}` }]}>
             <AppText style={s.score} color={c.accentText}>{`${right}/${round.length}`}</AppText>
           </Animated.View>
           <AppText variant="title" center>{t('learn.score', { right, total: round.length })}</AppText>
@@ -199,7 +199,7 @@ const s = StyleSheet.create({
   dim: { opacity: 0.55 },
   next: { marginTop: 16 },
   result: { alignItems: 'center', gap: 10, marginTop: 28 },
-  badge: { width: 120, height: 120, borderRadius: 60, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
+  badge: { width: 120, height: 120, borderRadius: 60, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
   score: { fontFamily: fonts.bold, fontSize: 36, lineHeight: 46, includeFontPadding: false },
   buttons: { alignSelf: 'stretch', gap: 6, marginTop: 14 },
 });

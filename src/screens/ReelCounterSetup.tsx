@@ -9,6 +9,7 @@ import { useColors } from '../theme';
 import { AppText } from '../components/AppText';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
+import { GlowMark } from '../components/GlowMark';
 import { IconButton } from '../components/IconButton';
 import { Screen } from '../components/Screen';
 
@@ -38,9 +39,7 @@ export function ReelCounterSetupScreen() {
       </View>
 
       <Animated.View entering={FadeIn.duration(400)} style={s.hero}>
-        <View style={[s.badge, { backgroundColor: c.accentSoft }]}>
-          <Ionicons name="film" size={34} color={c.accent} />
-        </View>
+        <GlowMark icon="film" size={88} style={s.badge} />
         <AppText variant="title" center>{t('reels.setupTitle')}</AppText>
         <AppText variant="muted" center>{t('reels.setupIntro')}</AppText>
       </Animated.View>
@@ -84,7 +83,7 @@ const s = StyleSheet.create({
   flex: { flex: 1 },
   topRow: { flexDirection: 'row', justifyContent: 'flex-end', minHeight: 40 },
   hero: { alignItems: 'center', gap: 6, marginBottom: 20 },
-  badge: { width: 80, height: 80, borderRadius: 40, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
+  badge: { marginBottom: 16 },
   card: { gap: 12, marginBottom: 12 },
   row: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   rowIcon: { marginTop: 2 },
