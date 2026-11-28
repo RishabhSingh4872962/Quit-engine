@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { AppState } from 'react-native';
+import * as Notifications from 'expo-notifications';
 import { useMMKVBoolean, useMMKVString } from 'react-native-mmkv';
 import { getAuth } from '@react-native-firebase/auth';
 import { get, onValue, push, ref, serverTimestamp, set, update } from '@react-native-firebase/database';
@@ -8,6 +9,8 @@ import { earnReels } from './earn';
 import { readTodayMinutes } from './focus';
 import { checkInDay, readDays } from './journal';
 import { localDay } from './reels';
+import i18n from '../i18n';
+import { forgetBuddyPushToken, notifyBuddy, saveBuddyPushToken } from './push';
 import { db, roomsUid, useRoomsUid } from './rooms';
 import { readActive, readState, readTracked, storage } from './storage';
 import { streakDays } from './streak';
@@ -16,8 +19,9 @@ import { reportError } from './telemetry';
 /**
  * Accountability buddy: one person, paired with a one-time code (24 h). Each sees the other's summary
  * (a name, days on track, focus minutes today, today's check-in) and can say yes when the other asks
- * for "5 more" at their daily limit. Nothing here names or hints at a habit; rules and tests:
- * database.rules.json (pairs, buddy, bstatus, breq) and scripts/test-db-rules.mjs.
+ * for "5 more" at their daily limit. Asks and answers also send a push notification when the push
+ * Worker is set up (src/lib/push.ts). Nothing here names or hints at a habit; rules and tests:
+ * database.rules.json (pairs, buddy, bstatus, breq, push) and scripts/test-db-rules.mjs.
  */
 
 export interface BuddyStatus {
@@ -101,6 +105,7 @@ export async function joinPair(raw: string): Promise<JoinResult> {
   storage.set(CODE_KEY, code);
   storage.set(LINKED_KEY, code);
   void publishBuddyStatus();
+  void syncBuddyPush();
   return 'ok';
 }
 
@@ -109,7 +114,7 @@ export async function endPairing() {
   const code = readBuddyCode();
   const uid = getAuth().currentUser?.uid;
   if (code && uid) {
-    const mine = { [`bstatus/${uid}`]: null, [`buddy/${uid}`]: null };
+    const mine = { [`bstatus/${uid}`]: null, [`buddy/${uid}`]: null, [`push/${uid}`]: null };
     try {
       await update(ref(db()), { ...mine, [`breq/${code}`]: null, [`pairs/${code}`]: null });
     } catch {
@@ -117,6 +122,15 @@ export async function endPairing() {
     }
   }
   for (const key of [CODE_KEY, LINKED_KEY, ASK_KEY, ANSWER_KEY]) storage.remove(key);
+  forgetBuddyPushToken();
+}
+
+/** While paired, keeps this phone's push token (and language) where only my buddy can read it. */
+export function syncBuddyPush() {
+  const code = readBuddyCode();
+  const uid = getAuth().currentUser?.uid;
+  if (!code || !uid || storage.getString(LINKED_KEY) !== code) return;
+  return saveBuddyPushToken(uid);
 }
 
 /** Days on track (the shortest current streak), focus today and today's check-in, if I share them. */
@@ -157,13 +171,16 @@ export async function askBuddy() {
   await set(item, { from: uid, n: ASK_REELS, at: serverTimestamp(), state: 'wait' });
   if (item.key) storage.set(ASK_KEY, item.key);
   storage.remove(ANSWER_KEY);
+  if (item.key) void notifyBuddy('ask', item.key);
 }
 
 /** My buddy's answer to someone's request. */
 export function answerAsk(id: string, yes: boolean) {
   const code = readBuddyCode();
   if (!code) return;
-  update(ref(db(), `breq/${code}/${id}`), { state: yes ? 'yes' : 'no' }).catch((e: unknown) => reportError(e, 'answer ask'));
+  update(ref(db(), `breq/${code}/${id}`), { state: yes ? 'yes' : 'no' })
+    .then(() => notifyBuddy('answer', id))
+    .catch((e: unknown) => reportError(e, 'answer ask'));
 }
 
 /** My open request was answered: a yes adds the reels to today's limit (like earned ones). */
@@ -213,6 +230,7 @@ export function useBuddy(): Buddy {
       .then(() => {
         storage.set(LINKED_KEY, code);
         void publishBuddyStatus();
+        void syncBuddyPush();
       })
       .catch((e: unknown) => reportError(e, 'buddy link'));
   }, [other, code, uid]);
@@ -260,17 +278,32 @@ export function useBuddy(): Buddy {
 }
 
 /**
- * App-wide: shares my summary when the app comes to the front, and applies the answer to my open
- * request (while the app is open; otherwise the next time it opens).
+ * App-wide: shares my summary and keeps my push token current when the app comes to the front (or the
+ * token or language changes), and applies the answer to my open request (while the app is open;
+ * otherwise the next time it opens).
  */
 export function useBuddySync() {
   const [code] = useMMKVString(CODE_KEY, storage);
   const [askId] = useMMKVString(ASK_KEY, storage);
   useEffect(() => {
     if (!code) return;
-    void publishBuddyStatus();
-    const sub = AppState.addEventListener('change', (s) => s === 'active' && void publishBuddyStatus());
-    return () => sub.remove();
+    const refresh = () => {
+      void publishBuddyStatus();
+      void syncBuddyPush();
+    };
+    refresh();
+    const sub = AppState.addEventListener('change', (s) => s === 'active' && refresh());
+    const tokenSub = Notifications.addPushTokenListener(() => {
+      forgetBuddyPushToken();
+      void syncBuddyPush();
+    });
+    const onLang = () => void syncBuddyPush();
+    i18n.on('languageChanged', onLang);
+    return () => {
+      sub.remove();
+      tokenSub.remove();
+      i18n.off('languageChanged', onLang);
+    };
   }, [code]);
   useEffect(() => {
     if (!code || !askId) return;

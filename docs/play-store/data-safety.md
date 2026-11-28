@@ -37,7 +37,7 @@ Firebase and RevenueCat are service providers acting for us, so nothing below co
 | App activity → **Other user-generated content** | Yes | Optional | No | App functionality | Rooms: nicknames and names of rooms people create (shown to other users in rooms); buddy: the display name shown to the paired buddy |
 | App info and performance → **Crash logs** | Yes | Required | No | App functionality, Analytics | Firebase Crashlytics (release builds) |
 | App info and performance → **Diagnostics** | Yes | Required | No | App functionality, Analytics | Crashlytics device metadata and app state; Analytics device info |
-| Device or other IDs → **Device or other IDs** | Yes | Required | No | App functionality, Analytics | Firebase installation ID, Analytics app-instance ID, Crashlytics installation UUID, RevenueCat anonymous ID |
+| Device or other IDs → **Device or other IDs** | Yes | Required | No | App functionality, Analytics | Firebase installation ID, Analytics app-instance ID, Crashlytics installation UUID, RevenueCat anonymous ID; with an accountability buddy (optional): the phone's push token (FCM), so the buddy's requests and answers can notify it |
 
 Not collected: location (no location permission; Firebase only derives a rough country from the connection),
 photos and videos, audio, files, contacts, calendar, messages, web browsing, installed apps list, advertising ID
@@ -46,6 +46,12 @@ photos and videos, audio, files, contacts, calendar, messages, web browsing, ins
 ### Calls
 LiveKit (media) and Cloudflare (the token Worker) are service providers. Calls only exist in invite-only rooms,
 only while the app is on screen; microphone and camera are asked for when first used.
+
+### Buddy notifications
+While someone is paired with a buddy, their phone's FCM push token sits at `push/<uid>` in the Realtime Database,
+readable only by that buddy, and is deleted when the pairing ends. Cloudflare (the push Worker) and Google
+(Firebase Cloud Messaging) are service providers. The notification text never names a habit: "<name> asks for
+5 more today" / "Your buddy answered". Nothing else is sent.
 
 ### Rooms and "shared"
 What people show in rooms (nickname, focus minutes) is seen by other users because they chose to join.

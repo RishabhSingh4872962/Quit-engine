@@ -1,0 +1,16 @@
+# Buddy push notifications. Deploy: cd workers/buddy-push && npx wrangler deploy
+# Secret (never in git): npx wrangler secret put FCM_SERVICE_ACCOUNT  < the service account's JSON key
+# The service account needs only the "Firebase Cloud Messaging API Admin" role (see docs/play-store/README.md).
+name = "quit-engine-push"
+main = "src/index.js"
+compatibility_date = "2026-11-01"
+
+[vars]
+DB_URL = "https://quit-engine-app-default-rtdb.asia-southeast1.firebasedatabase.app"
+FIREBASE_PROJECT = "quit-engine-app"
+
+# At most 6 pushes a minute per person (Workers rate limiting; namespace_id is any number unique in your account).
+[[ratelimits]]
+name = "PUSH_LIMIT"
+namespace_id = "1301"
+simple = { limit = 6, period = 60 }

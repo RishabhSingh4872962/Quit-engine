@@ -10,6 +10,7 @@ import { DAY_MS } from './streak';
 import { reportError } from './telemetry';
 
 const CHANNEL = 'reminders';
+const BUDDY_CHANNEL = 'buddy'; // buddy push notifications (workers/buddy-push sends with this channel_id)
 
 // Show notifications that arrive while the app is open, too.
 Notifications.setNotificationHandler({
@@ -27,6 +28,10 @@ export async function setupNotifications() {
     await Notifications.setNotificationChannelAsync(CHANNEL, {
       name: i18n.t('notifications.channel'),
       importance: AndroidImportance.DEFAULT,
+    });
+    await Notifications.setNotificationChannelAsync(BUDDY_CHANNEL, {
+      name: i18n.t('notifications.buddyChannel'),
+      importance: AndroidImportance.HIGH,
     });
   }
 }
@@ -198,7 +203,10 @@ i18n.on('languageChanged', () => void syncNotifications());
 /** Tapping a milestone notification switches the app to that habit (also when it cold-starts the app). */
 export function routeNotificationTaps() {
   const open = (response: Notifications.NotificationResponse | null) => {
-    const data = response?.notification.request.content.data;
+    const request = response?.notification.request;
+    // A push opened from the tray keeps its data on the Firebase message; local ones on the content.
+    const remote = request?.trigger && 'remoteMessage' in request.trigger ? request.trigger.remoteMessage?.data : undefined;
+    const data = { ...remote, ...request?.content.data };
     const id = data?.habitId;
     if (isHabitId(id) && readTracked().includes(id)) writeActive(id);
     if (typeof data?.url === 'string' && data.url.startsWith('quitengine://')) void Linking.openURL(data.url);

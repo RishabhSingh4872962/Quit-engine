@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { ActivityIndicator, Alert, Share, StyleSheet, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, AppState, Linking, Pressable, Share, StyleSheet, View } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import {
@@ -16,7 +17,10 @@ import {
   validBuddyName,
   writeBuddyName,
   publishBuddyStatus,
+  syncBuddyPush,
 } from '../lib/buddy';
+import { hasPermission, requestPermission } from '../lib/notifications';
+import { buddyPushAvailable } from '../lib/push';
 import { formatDuration } from '../lib/format';
 import { localDay } from '../lib/reels';
 import { reportError } from '../lib/telemetry';
@@ -151,6 +155,7 @@ export function BuddyScreen() {
       {buddy.kind === 'paired' && (
         <>
           <BuddyCard status={buddy.status} />
+          <PushNote />
           {buddy.asks.map((a) => (
             <AskCard key={a.id} ask={a} name={buddy.status?.name} />
           ))}
@@ -209,6 +214,35 @@ function BuddyCard({ status }: { status: BuddyStatus | null }) {
   );
 }
 
+/** Paired, but notifications are off here: my buddy's asks and answers can't reach this phone. */
+function PushNote() {
+  const { t } = useTranslation();
+  const c = useColors();
+  const [allowed, setAllowed] = useState(true);
+  useEffect(() => {
+    if (!buddyPushAvailable) return;
+    const check = () => void hasPermission().then(setAllowed);
+    check();
+    const sub = AppState.addEventListener('change', (state) => state === 'active' && check());
+    return () => sub.remove();
+  }, []);
+  if (!buddyPushAvailable || allowed) return null;
+  const turnOn = async () => {
+    if (!(await requestPermission())) return void Linking.openSettings();
+    setAllowed(true);
+    void syncBuddyPush();
+  };
+  return (
+    <View style={[s.note, { backgroundColor: c.accentSoft }]}>
+      <Ionicons name="notifications-off-outline" size={18} color={c.accentText} />
+      <AppText variant="caption" color={c.accentText} style={s.flex}>{t('buddy.pushOff')}</AppText>
+      <Pressable onPress={() => void turnOn()} hitSlop={8} accessibilityRole="button">
+        <AppText style={s.link} color={c.accentText}>{t('settings.turnOn')}</AppText>
+      </Pressable>
+    </View>
+  );
+}
+
 /** "<name> asks for 5 more today": yes adds them to their limit, without breaking their streak. */
 export function AskCard({ ask, name }: { ask: BuddyAsk; name?: string }) {
   const { t } = useTranslation();
@@ -229,11 +263,13 @@ const s = StyleSheet.create({
   topRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 8 },
   card: { gap: 10, marginTop: 14 },
   input: { borderRadius: radius.md, paddingHorizontal: 14, paddingVertical: 12, fontSize: 17 },
-  codeInput: { letterSpacing: 4, fontWeight: '700', textAlign: 'center' },
+  codeInput: { letterSpacing: 4, fontFamily: fonts.bold, textAlign: 'center' },
   code: { fontFamily: fonts.bold, fontSize: 40, lineHeight: 50, letterSpacing: 6, includeFontPadding: false },
   name: { fontFamily: fonts.bold, fontSize: 26, lineHeight: 34, includeFontPadding: false },
   row: { flexDirection: 'row', gap: 10 },
   gap: { marginTop: 8 },
   loading: { marginTop: 32 },
   privacy: { marginTop: 18 },
+  note: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: radius.md, marginTop: 14 },
+  link: { fontSize: 14, lineHeight: 20, fontWeight: '700' },
 });

@@ -252,6 +252,18 @@
       }
     },
 
+    "push": {
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || root.child('buddy/' + $uid + '/with').val() === auth.uid)",
+        ".write": "auth != null && auth.uid === $uid",
+        ".validate": "newData.hasChildren(['t', 'lang', 'at'])",
+        "t": { ".validate": "newData.isString() && newData.val().length >= 20 && newData.val().length <= 4096" },
+        "lang": { ".validate": "newData.isString() && newData.val().matches(/^(en|hi)$/)" },
+        "at": { ".validate": "newData.isNumber() && newData.val() <= now" },
+        "$other": { ".validate": false }
+      }
+    },
+
     "reports": {
       "$id": {
         ".write": "auth != null && !data.exists() && newData.exists()",

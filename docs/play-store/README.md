@@ -71,6 +71,23 @@ Profiles in [`eas.json`](../../eas.json): `development` (dev client APK), `previ
 4. Play Console: microphone and camera are normal runtime permissions (no declaration); Data Safety rows are in
    [data-safety.md](data-safety.md).
 
+## 6a. Buddy push notifications (Cloudflare + Firebase Cloud Messaging)
+Without this, buddies still work: they see requests and answers when they open the app.
+1. Firebase console → Project settings → Cloud Messaging: check that "Firebase Cloud Messaging API (V1)" is enabled.
+2. Google Cloud console → IAM & Admin → Service accounts (project `quit-engine-app`) → Create service account
+   `buddy-push` with only the role **Firebase Cloud Messaging API Admin** → Keys → Add key → JSON. Save the file
+   outside the repo.
+3. Deploy the Worker with that key as a secret, then delete the key file:
+   ```sh
+   cd workers/buddy-push
+   npx wrangler login
+   npx wrangler secret put FCM_SERVICE_ACCOUNT < ~/Downloads/buddy-push-key.json
+   npx wrangler deploy                          # prints https://quit-engine-push.<you>.workers.dev
+   ```
+4. Set `EXPO_PUBLIC_PUSH_URL` to that Worker URL (`.env` locally, EAS env for builds).
+5. Test on two phones: pair, reach the reel limit on one, tap "Ask <name>"; the other gets a notification.
+   Logic tests: `npx -y firebase-tools@latest emulators:exec --only database "node scripts/test-buddy-push.mjs"`.
+
 ## 6b. Focus sounds, music and videos
 Extra content is listed in the Remote Config parameter `media_catalog` (JSON array; format in
 `src/media/catalog.ts`), with files in Firebase Storage or any https host. Only use files you're allowed to

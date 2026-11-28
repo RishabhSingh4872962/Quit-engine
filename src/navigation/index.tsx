@@ -95,7 +95,7 @@ const RootStack = createNativeStackNavigator({
         CheckIn: { screen: CheckInScreen, linking: 'checkin', options: { presentation: 'modal', animation: 'slide_from_bottom' } },
         Journal: { screen: JournalScreen, options: { presentation: 'modal', animation: 'slide_from_bottom' } },
         // Accountability buddy: pairing, their summary, "5 more" requests
-        Buddy: { screen: BuddyScreen, options: { presentation: 'modal', animation: 'slide_from_bottom' } },
+        Buddy: { screen: BuddyScreen, linking: 'buddy', options: { presentation: 'modal', animation: 'slide_from_bottom' } },
         // Study time by day and subject, daily goal, my subjects (from the Focus tab)
         Study: { screen: StudyScreen, options: { presentation: 'modal', animation: 'slide_from_bottom' } },
         // "Learn instead", from the pause screen

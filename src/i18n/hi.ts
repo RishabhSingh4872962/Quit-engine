@@ -194,6 +194,7 @@ export const hi: Shape<typeof en> = {
   },
   notifications: {
     channel: 'रिमाइंडर',
+    buddyChannel: 'बडी',
     milestoneTitle: 'लक्ष्य पूरा: {{label}} 🎉',
     milestoneBody: 'अपनी प्रगति का जश्न मनाने के लिए ऐप खोलें।',
     checkinTitle: 'छोटा सा चेक-इन',
@@ -680,6 +681,7 @@ export const hi: Shape<typeof en> = {
     endBody: 'आप और आपका बडी एक-दूसरे का सारांश देखना बंद कर देंगे। खुली रिक्वेस्ट मिट जाएँगी।',
     endConfirm: 'खत्म करें',
     askButton: '{{name}} से पूछें',
+    pushOff: 'नोटिफ़िकेशन बंद हैं, इसलिए बडी के पूछने या जवाब देने पर आपको पता नहीं चलेगा।',
     askWaiting: 'जवाब का इंतज़ार…',
     askTitle_one: '{{name}} की रिक्वेस्ट: आज {{count}} और',
     askTitle_other: '{{name}} की रिक्वेस्ट: आज {{count}} और',

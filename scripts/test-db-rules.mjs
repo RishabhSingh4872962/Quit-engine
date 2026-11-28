@@ -184,6 +184,17 @@ await expect('dave clears the answered request', true, del('breq/ABC234/r1', 'da
 await put('breq/ABC234/r5', 'dave', ask);
 await expect('eve deletes their requests', false, del('breq/ABC234', 'eve'));
 await expect('carol deletes all of the pair\'s requests', true, del('breq/ABC234', 'carol'));
+const pushToken = { t: 'x'.repeat(40), lang: 'en', at: TS };
+await expect('carol saves her push token', true, put('push/carol', 'carol', pushToken));
+await expect('push token with an extra field', false, put('push/carol', 'carol', { ...pushToken, habit: 'x' }));
+await expect('push token in an unknown language', false, put('push/carol', 'carol', { ...pushToken, lang: 'fr' }));
+await expect('push token that is too short', false, put('push/carol', 'carol', { ...pushToken, t: 'x' }));
+await expect('dave writes carol\'s push token', false, put('push/carol', 'dave', pushToken));
+await expect('dave (her buddy) reads her push token', true, get('push/carol', 'dave'));
+await expect('eve reads carol\'s push token', false, get('push/carol', 'eve'));
+await expect('signed-out read of a push token', false, get('push/carol', null));
+await expect('eve lists all push tokens', false, get('push', 'eve'));
+await expect('carol deletes her push token', true, del('push/carol', 'carol'));
 await expect('eve deletes their code', false, del('pairs/ABC234', 'eve'));
 await expect('carol ends the pairing (her record)', true, del('buddy/carol', 'carol'));
 await expect('carol deletes the code', true, del('pairs/ABC234', 'carol'));

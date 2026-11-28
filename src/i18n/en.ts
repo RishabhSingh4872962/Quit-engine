@@ -196,6 +196,7 @@ export const en = {
   },
   notifications: {
     channel: 'Reminders',
+    buddyChannel: 'Buddy',
     milestoneTitle: 'Milestone reached: {{label}} 🎉',
     milestoneBody: 'Open the app to celebrate your progress.',
     checkinTitle: 'Quick check-in',
@@ -683,6 +684,7 @@ export const en = {
     endBody: 'You and your buddy will stop seeing each other\'s summary. Open requests are deleted.',
     endConfirm: 'End',
     askButton: 'Ask {{name}}',
+    pushOff: "Notifications are off, so you won't hear when your buddy asks or answers.",
     askWaiting: 'Waiting for an answer…',
     askTitle_one: '{{name}} asks for {{count}} more today',
     askTitle_other: '{{name}} asks for {{count}} more today',

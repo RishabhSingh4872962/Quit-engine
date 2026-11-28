@@ -56,3 +56,6 @@ database-debug.log
 # Policy pages hold a personal email: keep them local until a support address exists (see docs/play-store).
 hosting/privacy.html
 hosting/delete-account.html
+
+# Wrangler local cache
+workers/*/.wrangler/
