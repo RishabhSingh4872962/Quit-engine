@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Alert, Linking, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { Alert, Linking, Pressable, StyleSheet, View } from 'react-native';
 import { StaticScreenProps, useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import {
@@ -15,8 +15,9 @@ import {
 import { endPairing } from '../lib/buddy';
 import { reportError } from '../lib/telemetry';
 import { AVATARS, avatarIds, FocusTag, FOCUS_TAGS, isBlockedText, NICK_RE } from '../rooms/data';
-import { radius, useColors } from '../theme';
+import { fonts, radius, useColors } from '../theme';
 import { AppText } from '../components/AppText';
+import { TextField } from '../components/TextField';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { IconButton } from '../components/IconButton';
@@ -100,7 +101,7 @@ function ProfileForm({ initial, join }: { initial: RoomProfile | null; join?: { 
 
       <Card style={s.card}>
         <AppText variant="label">{t('rooms.nick')}</AppText>
-        <TextInput
+        <TextField
           value={nick}
           onChangeText={(v) => {
             setNick(v.replace(/[^A-Za-z0-9_]/g, '').slice(0, 20));
@@ -111,7 +112,7 @@ function ProfileForm({ initial, join }: { initial: RoomProfile | null; join?: { 
           autoCapitalize="none"
           autoCorrect={false}
           maxLength={20}
-          style={[s.input, { color: c.text, backgroundColor: c.surfaceAlt }]}
+          style={s.input}
           accessibilityLabel={t('rooms.nick')}
         />
         <AppText variant="caption" color={error ? c.danger : undefined}>{error ?? t('rooms.nickHint')}</AppText>
@@ -177,7 +178,7 @@ const s = StyleSheet.create({
   flex: { flex: 1 },
   topRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 8 },
   card: { gap: 10, marginTop: 14 },
-  input: { borderRadius: radius.md, paddingHorizontal: 14, paddingVertical: 12, fontSize: 18, fontWeight: '600' },
+  input: { borderRadius: radius.md, paddingHorizontal: 14, paddingVertical: 12, fontSize: 18, fontFamily: fonts.semibold },
   avatars: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   avatar: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
   avatarEmoji: { fontSize: 24, lineHeight: 30 },

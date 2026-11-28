@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Alert, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, View } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
@@ -11,7 +11,8 @@ import { activeBlockUntil, APP_LIMIT_OPTIONS, BlockPrefs, strictLocked, TimeWind
 import { useNow } from '../lib/streak';
 import { radius, useColors } from '../theme';
 import { AppText } from '../components/AppText';
-import { Card } from '../components/Card';
+import { TextField } from '../components/TextField';
+import { Group, Row, RowIcon, RowLetter, rowPad } from '../components/Group';
 import { IconButton } from '../components/IconButton';
 import { Screen } from '../components/Screen';
 import { Segmented } from '../components/Segmented';
@@ -62,12 +63,14 @@ export function ReelBlockingScreen() {
   const windowRow = (key: WindowKey) => {
     const w = prefs[key];
     return (
-      <View key={key} style={s.group}>
+      <View key={key}>
         <ToggleRow
+          leading={<RowIcon icon={key === 'bedtime' ? 'moon-outline' : 'book-outline'} />}
           title={t(`blocking.${key}`)}
           sub={`${timeLabel(w.start)} – ${timeLabel(w.end)}`}
           value={w.on}
           onChange={(on) => setWindow(key, { on })}
+          style={rowPad}
         />
         {w.on && (
           <View style={s.times}>
@@ -75,7 +78,7 @@ export function ReelBlockingScreen() {
               <Pressable
                 key={field}
                 onPress={() => setPicking({ kind: 'time', key, field })}
-                style={[s.pill, { backgroundColor: c.surfaceAlt }]}
+                style={[s.pill, { backgroundColor: c.surfaceAlt, borderColor: c.border }]}
                 accessibilityRole="button"
               >
                 <AppText variant="caption">{t(field === 'start' ? 'blocking.from' : 'blocking.to')}</AppText>
@@ -96,7 +99,7 @@ export function ReelBlockingScreen() {
       </View>
 
       {locked && until !== null && (
-        <View style={[s.banner, { backgroundColor: c.accentSoft }]}>
+        <View style={[s.banner, { backgroundColor: c.accentSoft, borderColor: c.glow }]}>
           <Ionicons name="lock-closed" size={18} color={c.accentText} />
           <AppText style={s.flex} color={c.accentText}>
             {t('blocking.strictActive', { time: `${dateLabel(until)} ${timeLabel(new Date(until).getHours() * 60 + new Date(until).getMinutes())}` })}
@@ -106,112 +109,111 @@ export function ReelBlockingScreen() {
 
       {/* While Strict mode holds, nothing here can be loosened. */}
       <View pointerEvents={locked ? 'none' : 'auto'} style={locked && s.locked}>
-        <Card style={s.card}>
-          <AppText variant="label">{t('blocking.appsTitle')}</AppText>
-          <AppText variant="caption">{t('blocking.appsSub')}</AppText>
+        <Group label={t('blocking.appsTitle')} note={t('blocking.appsSub')}>
           {apps.map((a) => (
             <ToggleRow
               key={a.id}
+              leading={<RowLetter text={a.name} />}
               title={a.name}
               sub={prefs.apps.includes(a.id) ? t('blocking.blockedAlways') : t('blocking.allowed')}
               value={prefs.apps.includes(a.id)}
               onChange={(on) =>
                 actions.setReelBlock({ apps: on ? [...prefs.apps, a.id] : prefs.apps.filter((p) => p !== a.id) })
               }
+              style={rowPad}
             />
           ))}
-        </Card>
+        </Group>
 
-        <Card style={s.card}>
-          <AppText variant="label">{t('blocking.windowsTitle')}</AppText>
+        <Group label={t('blocking.windowsTitle')}>
           {windowRow('bedtime')}
           {windowRow('study')}
-        </Card>
+        </Group>
 
-        <Card style={s.card}>
-          <AppText variant="label">{t('blocking.studyTitle')}</AppText>
-          <AppText variant="caption">{t('blocking.studySub')}</AppText>
-          <Segmented
-            options={[
-              { value: 'off' as const, label: t('reels.limitOff') },
-              { value: 'study' as const, label: t('blocking.studyDuring') },
-              { value: 'always' as const, label: t('blocking.studyAlways') },
-            ]}
-            value={prefs.studyMode}
-            onChange={setStudyMode}
-          />
-          {prefs.studyMode !== 'off' && (
-            <>
-              <View style={s.addRow}>
-                <TextInput
-                  value={channel}
-                  onChangeText={setChannel}
-                  onSubmitEditing={addChannel}
-                  placeholder={t('blocking.studyPlaceholder')}
-                  placeholderTextColor={c.textMuted}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  returnKeyType="done"
-                  style={[s.input, { color: c.text, backgroundColor: c.surfaceAlt }]}
-                />
-                <Pressable onPress={addChannel} style={[s.addBtn, { backgroundColor: c.accent }]} accessibilityRole="button" accessibilityLabel={t('blocking.studyAdd')}>
-                  <Ionicons name="add" size={22} color={c.onAccent} />
-                </Pressable>
-              </View>
-              <View style={s.chips}>
-                {prefs.studyChannels.map((name) => (
-                  <Pressable
-                    key={name}
-                    onPress={() => actions.setReelBlock({ studyChannels: prefs.studyChannels.filter((n) => n !== name) })}
-                    style={[s.chip, { backgroundColor: c.accentSoft }]}
-                    accessibilityRole="button"
-                    accessibilityLabel={t('blocking.studyRemove', { name })}
-                  >
-                    <AppText style={s.chipText} color={c.accentText}>{name}</AppText>
-                    <Ionicons name="close" size={14} color={c.accentText} />
+        <Group label={t('blocking.studyTitle')} note={t('blocking.studySub')}>
+          <View style={[rowPad, s.block]}>
+            <Segmented
+              options={[
+                { value: 'off' as const, label: t('reels.limitOff') },
+                { value: 'study' as const, label: t('blocking.studyDuring') },
+                { value: 'always' as const, label: t('blocking.studyAlways') },
+              ]}
+              value={prefs.studyMode}
+              onChange={setStudyMode}
+            />
+            {prefs.studyMode !== 'off' && (
+              <>
+                <View style={s.addRow}>
+                  <TextField
+                    value={channel}
+                    onChangeText={setChannel}
+                    onSubmitEditing={addChannel}
+                    placeholder={t('blocking.studyPlaceholder')}
+                    placeholderTextColor={c.textMuted}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    returnKeyType="done"
+                    style={s.input}
+                  />
+                  <Pressable onPress={addChannel} style={[s.addBtn, { backgroundColor: c.accent }]} accessibilityRole="button" accessibilityLabel={t('blocking.studyAdd')}>
+                    <Ionicons name="add" size={22} color={c.onAccent} />
                   </Pressable>
-                ))}
-              </View>
-              {prefs.studyChannels.length === 0 && <AppText variant="caption">{t('blocking.studyNone')}</AppText>}
-              {prefs.studyMode === 'study' && !prefs.study.on && (
-                <AppText variant="caption">{t('blocking.studyNeedWindow')}</AppText>
-              )}
-            </>
-          )}
-        </Card>
+                </View>
+                {prefs.studyChannels.length > 0 && (
+                  <View style={s.chips}>
+                    {prefs.studyChannels.map((name) => (
+                      <Pressable
+                        key={name}
+                        onPress={() => actions.setReelBlock({ studyChannels: prefs.studyChannels.filter((n) => n !== name) })}
+                        style={[s.chip, { backgroundColor: c.accentSoft }]}
+                        accessibilityRole="button"
+                        accessibilityLabel={t('blocking.studyRemove', { name })}
+                      >
+                        <AppText style={s.chipText} color={c.accentText}>{name}</AppText>
+                        <Ionicons name="close" size={14} color={c.accentText} />
+                      </Pressable>
+                    ))}
+                  </View>
+                )}
+                {prefs.studyChannels.length === 0 && <AppText variant="caption">{t('blocking.studyNone')}</AppText>}
+                {prefs.studyMode === 'study' && !prefs.study.on && (
+                  <AppText variant="caption">{t('blocking.studyNeedWindow')}</AppText>
+                )}
+              </>
+            )}
+          </View>
+        </Group>
 
-        <Card style={s.card}>
-          <AppText variant="label">{t('blocking.limitsTitle')}</AppText>
-          <AppText variant="caption">{t('blocking.limitsSub')}</AppText>
+        <Group label={t('blocking.limitsTitle')} note={t('blocking.limitsSub')}>
           {apps.map((a) => (
-            <View key={a.id} style={s.group}>
-              <AppText style={s.appName}>{a.name}</AppText>
+            <Row key={a.id} leading={<RowLetter text={a.name} />} title={a.name}>
               <Segmented
                 options={APP_LIMIT_OPTIONS.map((n) => ({ value: String(n), label: n ? String(n) : t('reels.limitOff') }))}
                 value={String(prefs.appLimits[a.id] ?? 0)}
                 onChange={(v) => actions.setReelBlock({ appLimits: { ...prefs.appLimits, [a.id]: Number(v) } })}
               />
-            </View>
+            </Row>
           ))}
-        </Card>
+        </Group>
 
-        <Card style={s.card}>
+        <Group>
           <ToggleRow
+            leading={<RowIcon icon="school-outline" />}
             title={t('blocking.examTitle')}
             sub={prefs.examUntil > now ? t('blocking.examUntil', { date: dateLabel(prefs.examUntil) }) : t('blocking.examSub')}
             value={prefs.examUntil > now}
             onChange={(on) => (on ? setPicking({ kind: 'date' }) : actions.setReelBlock({ examUntil: 0 }))}
+            style={rowPad}
           />
-        </Card>
-
-        <Card style={s.card}>
           <ToggleRow
+            leading={<RowIcon icon="lock-closed-outline" />}
             title={t('blocking.strictTitle')}
             sub={t('blocking.strictSub')}
             value={prefs.strict}
             onChange={(strict) => actions.setReelBlock({ strict })}
+            style={rowPad}
           />
-        </Card>
+        </Group>
       </View>
 
       {picking?.kind === 'time' && (
@@ -245,18 +247,16 @@ export function ReelBlockingScreen() {
 
 const s = StyleSheet.create({
   flex: { flex: 1 },
-  topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
-  banner: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14, borderRadius: radius.md, marginBottom: 4 },
+  topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
+  banner: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14, borderRadius: radius.md, borderWidth: 1, marginBottom: 20 },
   locked: { opacity: 0.5 },
-  card: { gap: 12, marginTop: 12 },
-  group: { gap: 10 },
-  times: { flexDirection: 'row', gap: 10 },
-  pill: { flex: 1, paddingVertical: 8, paddingHorizontal: 14, borderRadius: radius.md, gap: 2 },
-  pillValue: { fontSize: 17, fontWeight: '700' },
-  appName: { fontSize: 16, fontWeight: '600' },
+  block: { gap: 12 },
+  times: { flexDirection: 'row', gap: 10, paddingHorizontal: 16, paddingBottom: 14 },
+  pill: { flex: 1, paddingVertical: 8, paddingHorizontal: 14, borderRadius: radius.md, borderWidth: 1, gap: 2 },
+  pillValue: { fontSize: 17, lineHeight: 24, fontWeight: '700' },
   addRow: { flexDirection: 'row', gap: 10 },
-  input: { flex: 1, borderRadius: radius.md, paddingHorizontal: 14, paddingVertical: 10, fontSize: 16 },
-  addBtn: { width: 46, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center' },
+  input: { flex: 1, borderRadius: radius.md, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 10, fontSize: 15 },
+  addBtn: { width: 48, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center' },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 6, borderRadius: radius.pill },
   chipText: { fontWeight: '600' },

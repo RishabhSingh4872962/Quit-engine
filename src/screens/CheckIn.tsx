@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, TextInput, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, ZoomIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -16,6 +16,7 @@ import { useActiveHabitId, useHabitState, useTracked } from '../lib/storage';
 import { useNow } from '../lib/streak';
 import { radius, useColors } from '../theme';
 import { AppText } from '../components/AppText';
+import { TextField } from '../components/TextField';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { IconButton } from '../components/IconButton';
@@ -129,7 +130,7 @@ function CheckInForm({ habit, now, onSaved, onClose }: {
 
       <Card style={s.card}>
         <AppText variant="heading">{t('journal.note')}</AppText>
-        <TextInput
+        <TextField
           value={note}
           onChangeText={(v) => setNote(v.slice(0, NOTE_MAX))}
           placeholder={t('journal.notePlaceholder')}
@@ -137,7 +138,7 @@ function CheckInForm({ habit, now, onSaved, onClose }: {
           maxLength={NOTE_MAX}
           multiline
           textAlignVertical="top"
-          style={[s.input, { color: c.text, backgroundColor: c.surfaceAlt }]}
+          style={s.input}
           accessibilityLabel={t('journal.note')}
         />
         <AppText variant="caption">{t('journal.noteHint')}</AppText>

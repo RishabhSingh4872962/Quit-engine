@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
@@ -19,8 +19,9 @@ import {
 import { reportError } from '../lib/telemetry';
 import { useNow } from '../lib/streak';
 import { avatarEmoji, RoomKind, ROOM_KINDS } from '../rooms/data';
-import { radius, useColors } from '../theme';
+import { fonts, radius, useColors } from '../theme';
 import { AppText } from '../components/AppText';
+import { TextField } from '../components/TextField';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { RoomCard } from '../components/RoomCard';
@@ -128,7 +129,7 @@ export function RoomsScreen() {
         <Card style={s.card}>
           <Button icon="add" label={t('rooms.create')} onPress={() => navigation.navigate('CreateRoom')} />
           <View style={s.codeRow}>
-            <TextInput
+            <TextField
               value={code}
               onChangeText={(v) => setCode(v.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6))}
               onSubmitEditing={() => void joinWithCode()}
@@ -137,7 +138,7 @@ export function RoomsScreen() {
               autoCapitalize="characters"
               autoCorrect={false}
               maxLength={6}
-              style={[s.input, { color: c.text, backgroundColor: c.surfaceAlt }]}
+              style={s.input}
               accessibilityLabel={t('rooms.joinCode')}
             />
             <Button variant="soft" label={t('rooms.joinCode')} onPress={() => void joinWithCode()} disabled={busy || code.length !== 6} style={s.codeButton} />
@@ -202,7 +203,7 @@ const s = StyleSheet.create({
   kindSub: { marginTop: 2 },
   list: { gap: 12, marginTop: 12 },
   codeRow: { flexDirection: 'row', gap: 10, alignItems: 'center' },
-  input: { flex: 1, borderRadius: radius.md, paddingHorizontal: 14, paddingVertical: 10, fontSize: 18, letterSpacing: 3, fontWeight: '700' },
+  input: { flex: 1, borderRadius: radius.md, paddingHorizontal: 14, paddingVertical: 10, fontSize: 18, letterSpacing: 3, fontFamily: fonts.bold },
   codeButton: { flex: 1.4 },
   loading: { alignSelf: 'center', marginTop: 24 },
 });

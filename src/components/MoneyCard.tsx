@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
 import { HabitConfig } from '../habits/types';
@@ -9,6 +9,7 @@ import { useDailySpend, useHabitState } from '../lib/storage';
 import { streakDays } from '../lib/streak';
 import { fonts, radius, useColors } from '../theme';
 import { AppText } from './AppText';
+import { TextField } from './TextField';
 import { Button } from './Button';
 import { Card } from './Card';
 import { ChoiceChips } from './Pickers';
@@ -53,13 +54,13 @@ export function MoneyCard({ habit, now }: { habit: HabitConfig; now: number }) {
           clearable={false}
         />
         <View style={s.row}>
-          <TextInput
+          <TextField
             value={custom}
             onChangeText={(v) => setCustom(v.replace(/[^0-9]/g, '').slice(0, 6))}
             placeholder={t('money.custom')}
             placeholderTextColor={c.textMuted}
             keyboardType="number-pad"
-            style={[s.input, { color: c.text, backgroundColor: c.surfaceAlt }]}
+            style={s.input}
             accessibilityLabel={t('money.custom')}
           />
           <Button variant="soft" label={t('money.save')} onPress={() => save(Number(custom))} disabled={!(Number(custom) > 0)} />

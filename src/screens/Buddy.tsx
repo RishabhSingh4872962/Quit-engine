@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, Alert, Share, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Share, StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import {
@@ -23,6 +23,7 @@ import { reportError } from '../lib/telemetry';
 import { useNow } from '../lib/streak';
 import { fonts, radius, useColors } from '../theme';
 import { AppText } from '../components/AppText';
+import { TextField } from '../components/TextField';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { IconButton } from '../components/IconButton';
@@ -91,7 +92,7 @@ export function BuddyScreen() {
         <>
           <Card style={s.card}>
             <AppText variant="label">{t('buddy.nameTitle')}</AppText>
-            <TextInput
+            <TextField
               value={name}
               onChangeText={(v) => {
                 setName(v.slice(0, 20));
@@ -100,7 +101,7 @@ export function BuddyScreen() {
               placeholder={t('buddy.namePlaceholder')}
               placeholderTextColor={c.textMuted}
               maxLength={20}
-              style={[s.input, { color: c.text, backgroundColor: c.surfaceAlt }]}
+              style={s.input}
               accessibilityLabel={t('buddy.nameTitle')}
             />
             <AppText variant="caption">{t('buddy.nameSub')}</AppText>
@@ -112,7 +113,7 @@ export function BuddyScreen() {
           </Card>
           <Card style={s.card}>
             <AppText variant="heading">{t('buddy.haveCode')}</AppText>
-            <TextInput
+            <TextField
               value={code}
               onChangeText={(v) => {
                 setCode(v.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6));
@@ -123,7 +124,7 @@ export function BuddyScreen() {
               autoCapitalize="characters"
               autoCorrect={false}
               maxLength={6}
-              style={[s.input, s.codeInput, { color: c.text, backgroundColor: c.surfaceAlt }]}
+              style={[s.input, s.codeInput]}
               accessibilityLabel={t('buddy.haveCode')}
             />
             <Button variant="soft" label={t('buddy.pair')} onPress={join} disabled={busy || code.length !== 6} />
@@ -157,7 +158,7 @@ export function BuddyScreen() {
             <AppText variant="heading">{t('buddy.youTitle')}</AppText>
             <ToggleRow title={t('buddy.shareTitle')} sub={t('buddy.shareSub')} value={share} onChange={setShare} />
             <AppText variant="label" style={s.gap}>{t('buddy.nameTitle')}</AppText>
-            <TextInput
+            <TextField
               value={name}
               onChangeText={(v) => {
                 setName(v.slice(0, 20));
@@ -165,7 +166,7 @@ export function BuddyScreen() {
               }}
               onEndEditing={() => name !== savedName && saveName()}
               maxLength={20}
-              style={[s.input, { color: c.text, backgroundColor: c.surfaceAlt }]}
+              style={s.input}
               accessibilityLabel={t('buddy.nameTitle')}
             />
           </Card>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Alert, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, View } from 'react-native';
 import { StackActions, useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { createRoom, enterRoom } from '../lib/rooms';
@@ -7,6 +7,7 @@ import { reportError } from '../lib/telemetry';
 import { FocusTag, FOCUS_TAGS, hasLink, isBlockedText, ROOM_TIMERS } from '../rooms/data';
 import { radius, useColors } from '../theme';
 import { AppText } from '../components/AppText';
+import { TextField } from '../components/TextField';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { IconButton } from '../components/IconButton';
@@ -58,7 +59,7 @@ export function CreateRoomScreen() {
 
       <Card style={s.card}>
         <AppText variant="label">{t('rooms.name')}</AppText>
-        <TextInput
+        <TextField
           value={name}
           onChangeText={(v) => {
             setName(v.slice(0, 40));
@@ -67,7 +68,7 @@ export function CreateRoomScreen() {
           placeholder={t('rooms.namePlaceholder')}
           placeholderTextColor={c.textMuted}
           maxLength={40}
-          style={[s.input, { color: c.text, backgroundColor: c.surfaceAlt }]}
+          style={s.input}
           accessibilityLabel={t('rooms.name')}
         />
         {error && <AppText variant="caption" color={c.danger}>{error}</AppText>}
