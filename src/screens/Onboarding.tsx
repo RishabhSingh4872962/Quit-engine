@@ -91,12 +91,22 @@ function Welcome({ onNext }: { onNext: () => void }) {
 
   return (
     <Screen edges={['top', 'bottom']} style={s.between}>
+      <View pointerEvents="none" style={[s.halo, { backgroundImage: `radial-gradient(circle, ${c.glow} 0%, rgba(0,0,0,0) 62%)` }]} />
       <Animated.View entering={FadeInDown.duration(600)} style={s.hero}>
-        <View style={[s.badge, { backgroundColor: c.accentSoft }]}>
-          <Ionicons name="leaf" size={40} color={c.accent} />
+        <View
+          style={[
+            s.mark,
+            {
+              backgroundColor: c.accent,
+              backgroundImage: `radial-gradient(circle at 34% 28%, ${c.accentLight} 0%, ${c.accent} 50%, ${c.accentDeep} 100%)`,
+              boxShadow: `0px 0px 60px ${c.glow}`,
+            },
+          ]}
+        >
+          <Ionicons name="leaf" size={52} color="#FFFFFF" />
         </View>
-        <AppText variant="title">{t('app.name')}</AppText>
-        <AppText variant="muted">{t('app.tagline')}</AppText>
+        <AppText variant="title" center style={s.appName}>{t('app.name')}</AppText>
+        <AppText variant="muted" center>{t('app.tagline')}</AppText>
       </Animated.View>
 
       <Animated.View entering={FadeInDown.delay(150).duration(600)}>
@@ -239,8 +249,10 @@ function Question({ habit, q, index, total, selected, onPick, onBack }: {
 const s = StyleSheet.create({
   flex: { flex: 1 },
   between: { justifyContent: 'space-between' },
-  hero: { marginTop: 40, gap: 6 },
-  badge: { width: 76, height: 76, borderRadius: radius.lg, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
+  halo: { position: 'absolute', top: -40, left: -80, right: -80, height: 520 },
+  hero: { marginTop: 48, gap: 6, alignItems: 'center' },
+  mark: { width: 120, height: 120, borderRadius: 60, alignItems: 'center', justifyContent: 'center', marginBottom: 22 },
+  appName: { fontSize: 34, lineHeight: 44 },
   sectionLabel: { marginBottom: 12 },
   privacy: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 14 },
   topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 16, minHeight: 40 },
